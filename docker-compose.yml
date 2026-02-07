@@ -24,6 +24,7 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy-data:/data
       - caddy-config:/config
+    env_file: .env
     depends_on:
       - frontend
     restart: unless-stopped
