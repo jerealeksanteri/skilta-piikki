@@ -40,3 +40,7 @@ export function promoteUser(userId: number): Promise<User> {
 export function demoteUser(userId: number): Promise<User> {
   return apiRequest<User>(`/users/${userId}/demote`, { method: 'PUT' });
 }
+
+export function deleteAllNonAdminUsers(): Promise<{ deactivated: number }> {
+  return apiRequest<{ deactivated: number }>('/users/all', { method: 'DELETE' });
+}

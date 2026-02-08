@@ -84,6 +84,21 @@ def bulk_create_users(
     return created
 
 
+@router.delete("/users/all")
+def delete_all_non_admin_users(
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    users = db.query(User).filter(User.is_admin == False).all()  # noqa: E712
+    count = 0
+    for user in users:
+        user.is_active = False
+        user.balance = 0.0
+        count += 1
+    db.commit()
+    return {"deactivated": count}
+
+
 @router.put("/users/{user_id}/activate", response_model=UserOut)
 def activate_user(
     user_id: int,

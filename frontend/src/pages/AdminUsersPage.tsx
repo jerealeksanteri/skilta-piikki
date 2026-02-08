@@ -7,6 +7,7 @@ import {
   deactivateUser,
   promoteUser,
   demoteUser,
+  deleteAllNonAdminUsers,
 } from '../api/users';
 import type { User } from '../types';
 
@@ -207,6 +208,17 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (!confirm('Deactivate ALL non-admin users and reset their balances to 0? This cannot be undone.')) return;
+    try {
+      const result = await deleteAllNonAdminUsers();
+      showToast(`${result.deactivated} users deactivated`);
+      fetchUsers();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Failed');
+    }
+  };
+
   if (!currentUser?.is_admin) {
     return <div style={styles.empty}>Admin access required.</div>;
   }
@@ -317,6 +329,23 @@ export default function AdminUsersPage() {
           </div>
         </div>
       )}
+
+      <div style={styles.section}>
+        <button
+          style={{
+            width: '100%',
+            padding: '12px',
+            borderRadius: '10px',
+            fontSize: '15px',
+            fontWeight: 600,
+            backgroundColor: 'var(--destructive)',
+            color: '#fff',
+          }}
+          onClick={handleDeleteAll}
+        >
+          Deactivate All Users
+        </button>
+      </div>
 
       {toast && <div style={styles.toast}>{toast}</div>}
     </div>
