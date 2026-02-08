@@ -159,6 +159,10 @@ def approve_transaction(
     tx.approved_by_id = admin.id
 
     target_user = db.query(User).filter(User.id == tx.user_id).first()
+    
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
     target_user.balance += tx.amount
 
     db.commit()
