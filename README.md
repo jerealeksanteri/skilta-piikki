@@ -4,10 +4,13 @@ A Telegram Mini App for managing beverage tabs in a student organization. Member
 
 ## Features
 
+- **Self-registration** — open the Mini App to register; admins approve new users
 - **Drink logging** — tap a product to deduct from your balance (auto-approved)
 - **Payment requests** — users submit cash payments for admin approval
-- **Leaderboard** — ranked list of balances across all active users
-- **User management** — whitelist model: admins add/remove/promote users
+- **Leaderboard** — ranked list of balances with a blacklist section for heavy debtors
+- **Rank on home page** — see your position among all users at a glance
+- **Product management** — admins add, edit, reorder, and deactivate products
+- **User management** — admins approve, deactivate, promote/demote users, or reset all
 - **Admin panel** — approve/reject pending transactions, log payments on behalf of users
 - **Transaction history** — full per-user history with status tracking
 
@@ -80,10 +83,15 @@ Releases are triggered manually via GitHub Actions:
 | GET | `/api/users` | List all users |
 | POST | `/api/users` | Add a user |
 | POST | `/api/users/bulk` | Bulk add users |
-| PUT | `/api/users/{id}/activate` | Reactivate user |
+| PUT | `/api/users/{id}/activate` | Approve / reactivate user |
 | PUT | `/api/users/{id}/deactivate` | Soft-delete user |
 | PUT | `/api/users/{id}/promote` | Make admin |
 | PUT | `/api/users/{id}/demote` | Remove admin |
+| DELETE | `/api/users/all` | Deactivate all non-admin users and reset balances |
+| GET | `/api/products/all` | List all products (including inactive) |
+| POST | `/api/products` | Create a product |
+| PUT | `/api/products/{id}` | Update a product |
+| DELETE | `/api/products/{id}` | Soft-delete a product |
 | POST | `/api/transactions/payment` | Log payment for a user |
 | GET | `/api/transactions/pending` | List pending transactions |
 | PUT | `/api/transactions/{id}/approve` | Approve transaction |
