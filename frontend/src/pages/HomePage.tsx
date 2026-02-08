@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../App';
 import { listProducts } from '../api/products';
+import { getLeaderboard } from '../api/users';
 import { createPurchase } from '../api/transactions';
 import type { Product } from '../types';
 import BalanceDisplay from '../components/BalanceDisplay';
@@ -15,9 +16,18 @@ export default function HomePage() {
   const [selected, setSelected] = useState<Product | null>(null);
   const [purchasing, setPurchasing] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [rank, setRank] = useState<number | undefined>(undefined);
+  const [totalUsers, setTotalUsers] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     listProducts().then(setProducts).catch(console.error);
+    getLeaderboard()
+      .then((lb) => {
+        setTotalUsers(lb.length);
+        const idx = lb.findIndex((u) => u.id === user?.id);
+        if (idx !== -1) setRank(idx + 1);
+      })
+      .catch(console.error);
   }, []);
 
   const handlePurchase = async () => {
@@ -39,7 +49,7 @@ export default function HomePage() {
 
   return (
     <div>
-      <BalanceDisplay balance={user?.balance ?? 0} />
+      <BalanceDisplay balance={user?.balance ?? 0} rank={rank} totalUsers={totalUsers} />
       <ProductGrid products={products} onSelect={setSelected} />
 
       <div style={{ padding: '8px 16px 0' }}>

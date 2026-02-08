@@ -22,9 +22,11 @@ const styles = {
 
 interface Props {
   balance: number;
+  rank?: number;
+  totalUsers?: number;
 }
 
-export default function BalanceDisplay({ balance }: Props) {
+export default function BalanceDisplay({ balance, rank, totalUsers }: Props) {
   const isNegative = balance < 0;
   const displayAmount = Math.abs(balance).toFixed(2);
 
@@ -46,6 +48,11 @@ export default function BalanceDisplay({ balance }: Props) {
             ? 'All settled!'
             : `${displayAmount} € credit`}
       </div>
+      {rank !== undefined && totalUsers !== undefined && (
+        <div style={{ ...styles.subtext, marginTop: '8px', fontWeight: 600, color: 'var(--text)' }}>
+          Rank: {rank}/{totalUsers}
+        </div>
+      )}
     </div>
   );
 }
