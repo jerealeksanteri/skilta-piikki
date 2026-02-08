@@ -184,7 +184,7 @@ export default function AdminUsersPage() {
         showToast(`${u.first_name} deactivated`);
       } else {
         await activateUser(u.id);
-        showToast(`${u.first_name} activated`);
+        showToast(`${u.first_name} approved`);
       }
       fetchUsers();
     } catch (e) {
@@ -291,7 +291,7 @@ export default function AdminUsersPage() {
 
       {inactiveUsers.length > 0 && (
         <div style={styles.section}>
-          <div style={styles.header}>Inactive ({inactiveUsers.length})</div>
+          <div style={styles.header}>Pending approval ({inactiveUsers.length})</div>
           <div style={styles.card}>
             {inactiveUsers.map((u, i) => (
               <div key={u.id}>
@@ -304,12 +304,12 @@ export default function AdminUsersPage() {
                     </div>
                     <div style={styles.meta}>ID: {u.telegram_id}</div>
                   </div>
-                  <span style={{ ...styles.badge, ...styles.inactiveBadge }}>Inactive</span>
+                  <span style={{ ...styles.badge, ...styles.inactiveBadge }}>Pending</span>
                   <button
                     style={styles.actionBtn}
                     onClick={() => handleToggleActive(u)}
                   >
-                    Activate
+                    Approve
                   </button>
                 </div>
               </div>
