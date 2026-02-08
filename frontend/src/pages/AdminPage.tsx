@@ -155,6 +155,12 @@ export default function AdminPage() {
         >
           👥 Manage Users
         </button>
+        <button
+          style={{ ...styles.paymentBtn, backgroundColor: 'var(--secondary-bg)', color: 'var(--text)', marginTop: '0' }}
+          onClick={() => navigate('/admin/products')}
+        >
+          📦 Manage Products
+        </button>
       </div>
 
       <div style={styles.section}>
