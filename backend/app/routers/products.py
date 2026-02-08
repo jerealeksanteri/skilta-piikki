@@ -23,13 +23,21 @@ def list_products(
     )
 
 
+@router.get("/products/all", response_model=list[ProductOut])
+def list_all_products(
+    _admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    return db.query(Product).order_by(Product.sort_order, Product.name).all()
+
+
 @router.post("/products", response_model=ProductOut)
 def create_product(
     data: ProductCreate,
     _admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    product = Product(name=data.name, price=data.price, emoji=data.emoji)
+    product = Product(name=data.name, price=data.price, emoji=data.emoji, sort_order=data.sort_order)
     db.add(product)
     db.commit()
     db.refresh(product)

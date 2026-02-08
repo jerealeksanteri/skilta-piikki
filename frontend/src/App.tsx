@@ -8,8 +8,10 @@ import HistoryPage from './pages/HistoryPage';
 import AdminPage from './pages/AdminPage';
 import AdminPaymentPage from './pages/AdminPaymentPage';
 import AdminUsersPage from './pages/AdminUsersPage';
+import AdminProductsPage from './pages/AdminProductsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import PaymentRequestPage from './pages/PaymentRequestPage';
+import PendingApprovalPage from './pages/PendingApprovalPage';
 
 interface UserContextType {
   user: User | null;
@@ -59,6 +61,10 @@ export default function App() {
     );
   }
 
+  if (user && !user.is_active) {
+    return <PendingApprovalPage />;
+  }
+
   return (
     <UserContext.Provider value={{ user, refreshUser }}>
       <BrowserRouter>
@@ -71,6 +77,7 @@ export default function App() {
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/payment" element={<AdminPaymentPage />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/products" element={<AdminProductsPage />} />
           </Routes>
         </Layout>
       </BrowserRouter>

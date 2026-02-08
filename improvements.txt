@@ -1,0 +1,7 @@
+- Adding users is too hard since no-ones willing to look up every single users telegram ID. Browse for a telegram API method for fectching users with telegram nickname (username)
+- There should also be a way to mass add users to the bot, for example by writing a list of telegram usernames one per line to a field and then clicking "add" and the bot will fetch the telegram IDs for those usernames and add them to the bot as users. Of adding users that it finds and skipping those it doesn't find and showing a message about that.
+- Add a "delete all users" button to the bot, so that if you want to start over with a new list of users, you can just click that button and then add the new users. This is especially useful if you have a large number of users and want to quickly clear them out before adding new ones. Admins should never be abled to be deleted.
+- The bot could also send a message to all users when a new user is added, welcoming them to the bot and giving them instructions on how to use it. This would help new users get started with the bot and make them feel more welcome.
+- Admins should be abled to edit, delete and add products.
+- In the ranking, there should two rankings. One for "Blacklist" which lists all users that are below -50 € and other for just the casual rankin like it is now. This way, users can see how they are doing in the ranking and also see who is on the blacklist.
+- There could be the users ranking shown on the start page aside the balance.

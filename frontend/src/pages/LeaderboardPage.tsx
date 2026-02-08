@@ -74,8 +74,41 @@ export default function LeaderboardPage() {
     return <div style={styles.loading}>Loading...</div>;
   }
 
+  const blacklisted = users.filter((u) => u.balance <= -50);
+
   return (
     <div>
+      {blacklisted.length > 0 && (
+        <div style={styles.section}>
+          <div style={{ ...styles.header, color: 'var(--destructive)' }}>💀 Blacklist</div>
+          <div style={{ ...styles.card, border: '1px solid var(--destructive)' }}>
+            {blacklisted.map((u, i) => {
+              const isCurrentUser = u.id === currentUser?.id;
+              return (
+                <div key={u.id}>
+                  {i > 0 && <div style={styles.separator} />}
+                  <div
+                    style={{
+                      ...styles.row,
+                      ...(isCurrentUser ? styles.highlight : {}),
+                    }}
+                  >
+                    <span style={styles.rank}>💀</span>
+                    <span style={styles.name}>
+                      {u.first_name}
+                      {isCurrentUser ? ' (you)' : ''}
+                    </span>
+                    <span style={{ ...styles.balance, color: 'var(--destructive)' }}>
+                      {u.balance.toFixed(2)} €
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div style={styles.section}>
         <div style={styles.header}>Ranking</div>
         <div style={styles.card}>

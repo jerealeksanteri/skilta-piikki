@@ -7,6 +7,7 @@ import {
   deactivateUser,
   promoteUser,
   demoteUser,
+  deleteAllNonAdminUsers,
 } from '../api/users';
 import type { User } from '../types';
 
@@ -184,7 +185,7 @@ export default function AdminUsersPage() {
         showToast(`${u.first_name} deactivated`);
       } else {
         await activateUser(u.id);
-        showToast(`${u.first_name} activated`);
+        showToast(`${u.first_name} approved`);
       }
       fetchUsers();
     } catch (e) {
@@ -201,6 +202,17 @@ export default function AdminUsersPage() {
         await promoteUser(u.id);
         showToast(`${u.first_name} promoted to admin`);
       }
+      fetchUsers();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Failed');
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (!confirm('Deactivate ALL non-admin users and reset their balances to 0? This cannot be undone.')) return;
+    try {
+      const result = await deleteAllNonAdminUsers();
+      showToast(`${result.deactivated} users deactivated`);
       fetchUsers();
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Failed');
@@ -291,7 +303,7 @@ export default function AdminUsersPage() {
 
       {inactiveUsers.length > 0 && (
         <div style={styles.section}>
-          <div style={styles.header}>Inactive ({inactiveUsers.length})</div>
+          <div style={styles.header}>Pending approval ({inactiveUsers.length})</div>
           <div style={styles.card}>
             {inactiveUsers.map((u, i) => (
               <div key={u.id}>
@@ -304,12 +316,12 @@ export default function AdminUsersPage() {
                     </div>
                     <div style={styles.meta}>ID: {u.telegram_id}</div>
                   </div>
-                  <span style={{ ...styles.badge, ...styles.inactiveBadge }}>Inactive</span>
+                  <span style={{ ...styles.badge, ...styles.inactiveBadge }}>Pending</span>
                   <button
                     style={styles.actionBtn}
                     onClick={() => handleToggleActive(u)}
                   >
-                    Activate
+                    Approve
                   </button>
                 </div>
               </div>
@@ -317,6 +329,23 @@ export default function AdminUsersPage() {
           </div>
         </div>
       )}
+
+      <div style={styles.section}>
+        <button
+          style={{
+            width: '100%',
+            padding: '12px',
+            borderRadius: '10px',
+            fontSize: '15px',
+            fontWeight: 600,
+            backgroundColor: 'var(--destructive)',
+            color: '#fff',
+          }}
+          onClick={handleDeleteAll}
+        >
+          Deactivate All Users
+        </button>
+      </div>
 
       {toast && <div style={styles.toast}>{toast}</div>}
     </div>

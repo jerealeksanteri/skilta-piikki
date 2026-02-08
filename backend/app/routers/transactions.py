@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.auth.telegram import get_current_user, require_admin
+from app.auth.telegram import require_active_user, require_admin
 from app.config import settings
 from app.database import get_db
 from app.models.product import Product
@@ -38,7 +38,7 @@ def _to_out(tx: Transaction) -> TransactionOut:
 @router.post("/transactions/purchase", response_model=TransactionOut)
 def create_purchase(
     data: PurchaseRequest,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ):
     product = db.query(Product).filter(Product.id == data.product_id, Product.is_active == True).first()  # noqa: E712
@@ -94,7 +94,7 @@ def create_payment(
 @router.post("/transactions/payment-request", response_model=TransactionOut)
 def create_payment_request(
     data: UserPaymentRequest,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ):
     if data.amount <= 0:
@@ -116,7 +116,7 @@ def create_payment_request(
 
 @router.get("/transactions/mine", response_model=list[TransactionOut])
 def my_transactions(
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ):
     txs = (

@@ -16,6 +16,7 @@ export interface Product {
   price: number;
   emoji: string;
   is_active: boolean;
+  sort_order: number;
 }
 
 export interface Transaction {
