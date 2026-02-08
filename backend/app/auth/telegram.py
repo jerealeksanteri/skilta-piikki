@@ -101,19 +101,20 @@ def get_current_user(
 
     telegram_id = tg_user["id"]
 
-    # Whitelist model: user must exist in DB (added by admin or seeded)
     user = db.query(User).filter(User.telegram_id == telegram_id).first()
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied. Contact an admin to be added.",
+        # Auto-create as pending (inactive) user
+        user = User(
+            telegram_id=telegram_id,
+            first_name=tg_user.get("first_name", "Unknown"),
+            last_name=tg_user.get("last_name"),
+            username=tg_user.get("username"),
+            is_active=False,
         )
-
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your account has been deactivated. Contact an admin.",
-        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user
 
     # Update profile info from Telegram
     user.first_name = tg_user.get("first_name", user.first_name)
@@ -125,7 +126,17 @@ def get_current_user(
     return user
 
 
-def require_admin(user: User = Depends(get_current_user)) -> User:
+def require_active_user(user: User = Depends(get_current_user)) -> User:
+    """Dependency that requires the current user to be active (approved)."""
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is pending approval.",
+        )
+    return user
+
+
+def require_admin(user: User = Depends(require_active_user)) -> User:
     """Dependency that requires the current user to be an admin."""
     if not user.is_admin:
         raise HTTPException(

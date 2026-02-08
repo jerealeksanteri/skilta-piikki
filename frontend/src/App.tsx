@@ -10,6 +10,7 @@ import AdminPaymentPage from './pages/AdminPaymentPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import PaymentRequestPage from './pages/PaymentRequestPage';
+import PendingApprovalPage from './pages/PendingApprovalPage';
 
 interface UserContextType {
   user: User | null;
@@ -57,6 +58,10 @@ export default function App() {
         <span style={{ color: 'var(--destructive)', fontSize: '14px' }}>{error}</span>
       </div>
     );
+  }
+
+  if (user && !user.is_active) {
+    return <PendingApprovalPage />;
   }
 
   return (
