@@ -149,6 +149,12 @@ export default function AdminPage() {
         <button style={styles.paymentBtn} onClick={() => navigate('/admin/payment')}>
           💰 Log Cash Payment
         </button>
+        <button
+          style={{ ...styles.paymentBtn, backgroundColor: 'var(--secondary-bg)', color: 'var(--text)', marginTop: '0' }}
+          onClick={() => navigate('/admin/users')}
+        >
+          👥 Manage Users
+        </button>
       </div>
 
       <div style={styles.section}>
@@ -171,6 +177,11 @@ export default function AdminPage() {
                       {tx.user_name ? ` — ${tx.user_name}` : ''}
                     </div>
                     <div style={styles.txMeta}>
+                      {tx.type === 'payment' && tx.created_by_id === tx.user_id
+                        ? 'User request · '
+                        : tx.type === 'payment' && tx.created_by_name
+                          ? `By ${tx.created_by_name} · `
+                          : ''}
                       {new Date(tx.created_at).toLocaleDateString('fi-FI', {
                         day: 'numeric',
                         month: 'short',

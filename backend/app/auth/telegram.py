@@ -101,25 +101,26 @@ def get_current_user(
 
     telegram_id = tg_user["id"]
 
-    # Upsert user
+    # Whitelist model: user must exist in DB (added by admin or seeded)
     user = db.query(User).filter(User.telegram_id == telegram_id).first()
     if user is None:
-        user = User(
-            telegram_id=telegram_id,
-            first_name=tg_user.get("first_name", ""),
-            last_name=tg_user.get("last_name"),
-            username=tg_user.get("username"),
-            is_admin=telegram_id in settings.admin_ids,
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. Contact an admin to be added.",
         )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    else:
-        user.first_name = tg_user.get("first_name", user.first_name)
-        user.last_name = tg_user.get("last_name", user.last_name)
-        user.username = tg_user.get("username", user.username)
-        db.commit()
-        db.refresh(user)
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been deactivated. Contact an admin.",
+        )
+
+    # Update profile info from Telegram
+    user.first_name = tg_user.get("first_name", user.first_name)
+    user.last_name = tg_user.get("last_name", user.last_name)
+    user.username = tg_user.get("username", user.username)
+    db.commit()
+    db.refresh(user)
 
     return user
 

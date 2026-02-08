@@ -7,6 +7,9 @@ import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
 import AdminPage from './pages/AdminPage';
 import AdminPaymentPage from './pages/AdminPaymentPage';
+import AdminUsersPage from './pages/AdminUsersPage';
+import LeaderboardPage from './pages/LeaderboardPage';
+import PaymentRequestPage from './pages/PaymentRequestPage';
 
 interface UserContextType {
   user: User | null;
@@ -63,8 +66,11 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/history" element={<HistoryPage />} />
+            <Route path="/ranking" element={<LeaderboardPage />} />
+            <Route path="/payment" element={<PaymentRequestPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/payment" element={<AdminPaymentPage />} />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
           </Routes>
         </Layout>
       </BrowserRouter>

@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute next version
+        id: version
+        run: |
+          LAST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -n1)
+          if [ -z "$LAST_TAG" ]; then
+            LAST_TAG="v0.0.0"
+          fi
+          MAJOR=$(echo "$LAST_TAG" | sed 's/^v//' | cut -d. -f1)
+          MINOR=$(echo "$LAST_TAG" | sed 's/^v//' | cut -d. -f2)
+          PATCH=$(echo "$LAST_TAG" | sed 's/^v//' | cut -d. -f3)
+          case "${{ inputs.bump }}" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+          echo "TAG=v${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_OUTPUT
+          echo "VERSION=${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_OUTPUT
+          echo "PREV_TAG=${LAST_TAG}" >> $GITHUB_OUTPUT
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-backend:${{ steps.version.outputs.VERSION }}
+            ${{ env.IMAGE_PREFIX }}-backend:latest
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-frontend:${{ steps.version.outputs.VERSION }}
+            ${{ env.IMAGE_PREFIX }}-frontend:latest
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.TAG }}
+          VERSION: ${{ steps.version.outputs.VERSION }}
+          PREFIX: ${{ env.IMAGE_PREFIX }}
+        run: |
+          NOTES=$(gh api repos/${{ github.repository }}/releases/generate-notes \
+            -f tag_name="$TAG" -f target_commitish="${{ github.sha }}" \
+            --jq '.body')
+
+          BODY=$(cat <<EOF
+          ## Docker Images
+
+          \`\`\`
+          docker pull ${PREFIX}-backend:${VERSION}
+          docker pull ${PREFIX}-frontend:${VERSION}
+          \`\`\`
+
+          ${NOTES}
+          EOF
+          )
+
+          gh release create "$TAG" \
+            --target "${{ github.sha }}" \
+            --title "$TAG" \
+            --notes "$BODY" \
+            --latest

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useUser } from '../App';
 import { listProducts } from '../api/products';
 import { createPurchase } from '../api/transactions';
@@ -8,6 +9,7 @@ import ProductGrid from '../components/ProductGrid';
 import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const { user, refreshUser } = useUser();
   const [products, setProducts] = useState<Product[]>([]);
   const [selected, setSelected] = useState<Product | null>(null);
@@ -39,6 +41,24 @@ export default function HomePage() {
     <div>
       <BalanceDisplay balance={user?.balance ?? 0} />
       <ProductGrid products={products} onSelect={setSelected} />
+
+      <div style={{ padding: '8px 16px 0' }}>
+        <button
+          onClick={() => navigate('/payment')}
+          style={{
+            display: 'block',
+            width: '100%',
+            padding: '14px',
+            borderRadius: '12px',
+            fontSize: '15px',
+            fontWeight: 600,
+            backgroundColor: 'var(--secondary-bg)',
+            color: 'var(--text)',
+          }}
+        >
+          💰 Log Payment
+        </button>
+      </div>
 
       {selected && (
         <ConfirmDialog

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { getMyTransactions } from '../api/transactions';
 import type { Transaction } from '../types';
 import TransactionList from '../components/TransactionList';
@@ -20,15 +21,17 @@ const styles = {
 };
 
 export default function HistoryPage() {
+  const location = useLocation();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     getMyTransactions()
       .then(setTransactions)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [location.key]);
 
   if (loading) {
     return <div style={styles.loading}>Loading...</div>;

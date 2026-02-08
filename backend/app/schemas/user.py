@@ -3,6 +3,17 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class UserCreate(BaseModel):
+    telegram_id: int
+    first_name: str
+    last_name: str | None = None
+    username: str | None = None
+
+
+class UserBulkCreate(BaseModel):
+    users: list[UserCreate]
+
+
 class UserOut(BaseModel):
     id: int
     telegram_id: int
@@ -10,6 +21,7 @@ class UserOut(BaseModel):
     last_name: str | None
     username: str | None
     is_admin: bool
+    is_active: bool
     balance: float
     created_at: datetime
 
