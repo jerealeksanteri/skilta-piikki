@@ -6,10 +6,10 @@ from app.models.product import Product
 from app.models.user import User
 
 PRODUCTS = [
-    {"name": "Olut", "price": 2.00, "emoji": "🍺", "sort_order": 0},
-    {"name": "Siideri", "price": 2.50, "emoji": "🍏", "sort_order": 1},
+    {"name": "Olut", "price": 1.00, "emoji": "🍺", "sort_order": 0},
+    {"name": "Siideri", "price": 2.00, "emoji": "🍏", "sort_order": 1},
     {"name": "Limsa", "price": 1.00, "emoji": "🥤", "sort_order": 2},
-    {"name": "Lonkero", "price": 2.50, "emoji": "🍋", "sort_order": 3},
+    {"name": "Lonkero", "price": 2.00, "emoji": "🍋", "sort_order": 3},
 ]
 
 
