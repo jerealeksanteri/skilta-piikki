@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   backend:
     image: ghcr.io/jerealeksanteri/skilta-piikki-backend:latest
@@ -7,13 +9,16 @@ services:
     environment:
       - DATABASE_URL=sqlite:////app/data/skilta_piikki.db
     restart: unless-stopped
+    networks:
+      - piikki-net
 
   frontend:
     image: ghcr.io/jerealeksanteri/skilta-piikki-frontend:latest
     depends_on:
       - backend
     restart: unless-stopped
-
+    networks:
+      - piikki-net
 
   caddy:
     image: caddy:2-alpine
@@ -29,8 +34,14 @@ services:
     depends_on:
       - frontend
     restart: unless-stopped
+    networks:
+      - piikki-net
 
 volumes:
   db-data:
   caddy-data:
   caddy-config:
+
+networks:
+  piikki-net:
+    driver: bridge
