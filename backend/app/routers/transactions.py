@@ -7,7 +7,12 @@ from app.database import get_db
 from app.models.product import Product
 from app.models.transaction import Transaction
 from app.models.user import User
-from app.schemas.transaction import PaymentRequest, PurchaseRequest, TransactionOut
+from app.schemas.transaction import (
+    PaymentRequest,
+    PurchaseRequest,
+    TransactionOut,
+    UserPaymentRequest,
+)
 
 router = APIRouter()
 
@@ -21,6 +26,8 @@ def _to_out(tx: Transaction) -> TransactionOut:
         amount=tx.amount,
         status=tx.status,
         approved_by_id=tx.approved_by_id,
+        created_by_id=tx.created_by_id,
+        created_by_name=tx.created_by.first_name if tx.created_by else None,
         note=tx.note,
         created_at=tx.created_at,
         product_name=tx.product.name if tx.product else None,
@@ -45,6 +52,7 @@ def create_purchase(
         type="purchase",
         amount=-product.price,
         status="approved" if auto_approve else "pending",
+        created_by_id=user.id,
     )
     db.add(tx)
 
@@ -75,6 +83,30 @@ def create_payment(
         amount=data.amount,
         status="pending",
         note=data.note,
+        created_by_id=admin.id,
+    )
+    db.add(tx)
+    db.commit()
+    db.refresh(tx)
+    return _to_out(tx)
+
+
+@router.post("/transactions/payment-request", response_model=TransactionOut)
+def create_payment_request(
+    data: UserPaymentRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if data.amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be positive")
+
+    tx = Transaction(
+        user_id=user.id,
+        type="payment",
+        amount=data.amount,
+        status="pending",
+        note=data.note,
+        created_by_id=user.id,
     )
     db.add(tx)
     db.commit()

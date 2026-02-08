@@ -13,6 +13,11 @@ class PaymentRequest(BaseModel):
     note: str | None = None
 
 
+class UserPaymentRequest(BaseModel):
+    amount: float
+    note: str | None = None
+
+
 class TransactionOut(BaseModel):
     id: int
     user_id: int
@@ -21,6 +26,8 @@ class TransactionOut(BaseModel):
     amount: float
     status: str
     approved_by_id: int | None
+    created_by_id: int | None = None
+    created_by_name: str | None = None
     note: str | None
     created_at: datetime
     product_name: str | None = None

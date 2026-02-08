@@ -1,6 +1,6 @@
 services:
   backend:
-    build: ./backend
+    image: ghcr.io/jerealeksanteri/skilta-piikki-backend:latest
     env_file: .env
     volumes:
       - db-data:/app/data
@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: ./frontend
+    image: ghcr.io/jerealeksanteri/skilta-piikki-frontend:latest
     depends_on:
       - backend
     restart: unless-stopped

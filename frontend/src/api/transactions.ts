@@ -19,6 +19,16 @@ export function createPayment(
   });
 }
 
+export function createPaymentRequest(
+  amount: number,
+  note?: string,
+): Promise<Transaction> {
+  return apiRequest<Transaction>('/transactions/payment-request', {
+    method: 'POST',
+    body: JSON.stringify({ amount, note }),
+  });
+}
+
 export function getMyTransactions(): Promise<Transaction[]> {
   return apiRequest<Transaction[]>('/transactions/mine');
 }

@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "*"
     DEV_MODE: bool = False
 
-    model_config = {"env_file": ".env"}
+    model_config = {"env_file": ".env", "secrets_dir": "/run/secrets"}
 
     @computed_field
     @property

@@ -29,6 +29,9 @@ class Transaction(Base):
     approved_by_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=True
     )
+    created_by_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=True
+    )
     note: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
@@ -43,3 +46,4 @@ class Transaction(Base):
     user: Mapped[User] = relationship(foreign_keys=[user_id])
     product: Mapped[Product | None] = relationship()
     approved_by: Mapped[User | None] = relationship(foreign_keys=[approved_by_id])
+    created_by: Mapped[User | None] = relationship(foreign_keys=[created_by_id])

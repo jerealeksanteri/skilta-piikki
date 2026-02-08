@@ -53,6 +53,7 @@ interface Tab {
 const TABS: Tab[] = [
   { path: '/', label: 'Home', icon: '🏠' },
   { path: '/history', label: 'History', icon: '📋' },
+  { path: '/ranking', label: 'Ranking', icon: '🏆' },
   { path: '/admin', label: 'Admin', icon: '⚙️', adminOnly: true },
 ];
 

@@ -5,6 +5,7 @@ export interface User {
   last_name: string | null;
   username: string | null;
   is_admin: boolean;
+  is_active: boolean;
   balance: number;
   created_at: string;
 }
@@ -25,6 +26,8 @@ export interface Transaction {
   amount: number;
   status: 'pending' | 'approved' | 'rejected';
   approved_by_id: number | null;
+  created_by_id: number | null;
+  created_by_name: string | null;
   note: string | null;
   created_at: string;
   product_name: string | null;
