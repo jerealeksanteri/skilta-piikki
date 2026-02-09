@@ -35,10 +35,20 @@
         - Users can pay off their fiscal debts
         - Users only see fiscal debts that have not been paid
 ---
-- Fiscal Year Messages (researchable)
-    - Find out if its possible to send messages to the users from bot
-    - Idea is that when a fiscal year is closed and the fiscal year debts calculated, the bot send messages to all people with debts i.ex. "Hey ***name***, you have ***X,XX*** € to be paid back! Contact ***@admin1 @admin2 @admin3 ...*** for more details!"
----
-- Blacklist Messages (same as Fiscal Year Messages)
-    - When a user makes product transactions while having under -50€ balance (being in blacklist), send them a message i.ex. "Hey ***name***, you are ***X,XX*** € in debt! Pay up!"
----
+- Messaging System
+    - Bot sends messages to users
+    - These messages can be
+        - If fiscal period is closed, all users in debt during the period will be messaged
+            - i.ex. "Dear ***user***, you are ***X,XX*** € in debt during the last fiscal period. Pay up!"
+        - User is accepted to join the application by admin
+            - i.ex. "Hello ***user***! Your registration to the app was accepted. Open the app for more."
+        - User's cash payment was approved/rejected
+            - i.ex. "Your cash payment ***approved/accepted***!"
+        - User has been deactivated
+        - User has been promoted / demoted
+
+    - Preferrable that the messages can be customized by admins!
+    - Customization could be:
+        - Message types
+            - Message templates for the type
+                - Admin connects type with template
