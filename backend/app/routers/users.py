@@ -12,9 +12,30 @@ from app.services.messaging import send_event_message
 router = APIRouter()
 
 
-@router.get("/me", response_model=UserOut)
-def get_me(user: User = Depends(get_current_user)):
-    return user
+@router.get("/me", response_model=MeOut)
+def get_me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    debt_total = (
+        db.query(func.coalesce(func.sum(FiscalDebt.amount), 0.0))
+        .filter(
+            FiscalDebt.user_id == user.id,
+            FiscalDebt.status.in_(["unpaid", "payment_pending"]),
+        )
+        .scalar()
+    )
+    debt_total = float(debt_total or 0)
+    return MeOut(
+        id=user.id,
+        telegram_id=user.telegram_id,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        username=user.username,
+        is_admin=user.is_admin,
+        is_active=user.is_active,
+        balance=user.balance,
+        created_at=user.created_at,
+        fiscal_debt_total=debt_total,
+        total_balance=user.balance - debt_total,
+    )
 
 
 @router.get("/users", response_model=list[UserOut])
@@ -114,6 +135,9 @@ def activate_user(
     user.is_active = True
     db.commit()
     db.refresh(user)
+
+    send_event_message(db, "user_approved", user, {"user": user.first_name})
+
     return user
 
 
@@ -131,6 +155,9 @@ def deactivate_user(
     user.is_active = False
     db.commit()
     db.refresh(user)
+
+    send_event_message(db, "user_deactivated", user, {"user": user.first_name})
+
     return user
 
 
@@ -146,6 +173,9 @@ def promote_user(
     user.is_admin = True
     db.commit()
     db.refresh(user)
+
+    send_event_message(db, "user_promoted", user, {"user": user.first_name})
+
     return user
 
 
@@ -167,4 +197,7 @@ def demote_user(
     user.is_admin = False
     db.commit()
     db.refresh(user)
+
+    send_event_message(db, "user_demoted", user, {"user": user.first_name})
+
     return user
