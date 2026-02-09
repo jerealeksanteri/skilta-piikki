@@ -1,10 +1,10 @@
 import { apiRequest } from './client';
 import type { Transaction } from '../types';
 
-export function createPurchase(productId: number): Promise<Transaction> {
+export function createPurchase(productId: number, quantity = 1): Promise<Transaction> {
   return apiRequest<Transaction>('/transactions/purchase', {
     method: 'POST',
-    body: JSON.stringify({ product_id: productId }),
+    body: JSON.stringify({ product_id: productId, quantity }),
   });
 }
 
