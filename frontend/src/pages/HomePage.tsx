@@ -21,6 +21,8 @@ const fab = {
   color: 'var(--btn-text)',
   fontSize: '32px',
   fontWeight: 700,
+  lineHeight: '64px',
+  textAlign: 'center' as const,
   display: 'flex',
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
