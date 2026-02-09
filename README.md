@@ -114,6 +114,10 @@ Releases are triggered manually via GitHub Actions:
 | GET | `/api/message-templates` | List all message templates |
 | PUT | `/api/message-templates/{id}` | Update template text or active state |
 
+## License
+
+This project is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE). You may use, modify, and distribute the software for any **non-commercial** purpose. Commercial use requires explicit permission from the author.
+
 ## Project Structure
 
 ```
