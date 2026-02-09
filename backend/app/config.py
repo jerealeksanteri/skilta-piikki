@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     BOT_TOKEN: str = ""
-    DATABASE_URL: str = "sqlite:///./skilta_piikki.db"
+    DATABASE_URL: str = "postgresql://piikki:piikki@db:5432/piikki"
     ADMIN_TELEGRAM_IDS: str = ""
     AUTO_APPROVE_PURCHASES: bool = True
     CORS_ORIGINS: str = "*"

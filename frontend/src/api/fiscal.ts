@@ -40,3 +40,7 @@ export function rejectDebtPayment(debtId: number): Promise<FiscalDebt> {
 export function markDebtPaid(debtId: number): Promise<FiscalDebt> {
   return apiRequest<FiscalDebt>(`/fiscal-debts/${debtId}/mark-paid`, { method: 'PUT' });
 }
+
+export function getPendingDebts(): Promise<FiscalDebt[]> {
+  return apiRequest<FiscalDebt[]>('/fiscal-debts/pending');
+}
