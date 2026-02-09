@@ -131,7 +131,7 @@ const styles = {
     fontSize: '14px',
     color: 'var(--link)',
     backgroundColor: 'transparent',
-    padding: '8px 0',
+    padding: '8px 16px',
     marginBottom: '8px',
   },
 };

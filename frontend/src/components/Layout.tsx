@@ -10,7 +10,7 @@ const styles = {
   },
   content: {
     flex: 1,
-    paddingBottom: '72px',
+    paddingBottom: '80px',
   },
   nav: {
     position: 'fixed' as const,
@@ -28,7 +28,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'center' as const,
-    padding: '8px 0',
+    padding: '12px 0',
     fontSize: '11px',
     color: 'var(--hint)',
     backgroundColor: 'transparent',
