@@ -11,6 +11,9 @@ venv/
 # Environment
 .env
 
+# PostgreSQL auth (contains real IPs)
+pg_hba.conf
+
 # Node
 node_modules/
 frontend/dist/

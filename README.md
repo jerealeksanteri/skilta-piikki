@@ -21,7 +21,7 @@ A Telegram Mini App for managing beverage tabs in a student organization. Member
 
 ## Tech Stack
 
-- **Backend**: Python, FastAPI, SQLAlchemy, SQLite, Alembic
+- **Backend**: Python, FastAPI, SQLAlchemy, PostgreSQL 17, Alembic
 - **Frontend**: React, TypeScript, Vite
 - **Auth**: Telegram Mini App init data (HMAC-SHA256)
 - **Infra**: Docker, Caddy (auto-HTTPS), GitHub Actions, GHCR
@@ -32,10 +32,12 @@ A Telegram Mini App for managing beverage tabs in a student organization. Member
 cp .env.example .env
 # Edit .env — set BOT_TOKEN, ADMIN_TELEGRAM_IDS, DEV_MODE=true
 
-docker compose -f docker-compose.dev.yml up --build
+docker compose up --build
 ```
 
 The app is available at `http://localhost:80`. With `DEV_MODE=true`, auth is bypassed with a fake dev user.
+
+PostgreSQL data is persisted in a Docker volume (`pg-data`). The dev database is accessible at `localhost:5432` (user: `piikki`, password: `piikki`).
 
 ## Production Deployment
 
@@ -43,12 +45,23 @@ Requires a server with Docker and a domain pointing to it.
 
 ```bash
 cp .env.example .env
-# Edit .env — set BOT_TOKEN, ADMIN_TELEGRAM_IDS, DOMAIN
+# Edit .env — set BOT_TOKEN, ADMIN_TELEGRAM_IDS, DOMAIN,
+#              POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
 
-docker compose up -d
+# Set up PostgreSQL IP whitelisting
+cp pg_hba.conf.example pg_hba.conf
+# Edit pg_hba.conf — add your IP address for remote DB access (optional)
+
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 Caddy handles TLS automatically. Images are pulled from GHCR.
+
+The database is **not exposed** outside the Docker network. Only containers on the internal network can reach it. To access the database from your machine, add your IP to `pg_hba.conf` and expose the port, or use:
+
+```bash
+docker exec -it <db_container> psql -U <POSTGRES_USER> -d <POSTGRES_DB>
+```
 
 ## Releasing
 
@@ -63,12 +76,15 @@ Releases are triggered manually via GitHub Actions:
 | Variable | Description | Default |
 |---|---|---|
 | `BOT_TOKEN` | Telegram Bot API token | (required) |
-| `DATABASE_URL` | SQLAlchemy database URL | `sqlite:///./skilta_piikki.db` |
+| `DATABASE_URL` | SQLAlchemy database URL | `postgresql://piikki:piikki@db:5432/piikki` |
 | `ADMIN_TELEGRAM_IDS` | Comma-separated Telegram IDs to bootstrap as admins | `""` |
 | `AUTO_APPROVE_PURCHASES` | Auto-approve drink purchases | `true` |
 | `CORS_ORIGINS` | Allowed CORS origins | `*` |
 | `DEV_MODE` | Bypass Telegram auth for local dev | `false` |
 | `DOMAIN` | Domain for Caddy TLS (production only) | (required in prod) |
+| `POSTGRES_USER` | PostgreSQL user (production) | (required in prod) |
+| `POSTGRES_PASSWORD` | PostgreSQL password (production) | (required in prod) |
+| `POSTGRES_DB` | PostgreSQL database name | `piikki` |
 
 ## API Endpoints
 
@@ -108,6 +124,7 @@ Releases are triggered manually via GitHub Actions:
 | POST | `/api/fiscal-periods/close` | Close current period (creates debts, resets balances) |
 | GET | `/api/fiscal-periods/{id}/stats` | Period statistics |
 | GET | `/api/fiscal-periods/{id}/debts` | All debts for a period |
+| GET | `/api/fiscal-debts/pending` | All pending debt payments across all periods |
 | PUT | `/api/fiscal-debts/{id}/approve` | Approve debt payment |
 | PUT | `/api/fiscal-debts/{id}/reject` | Reject debt payment |
 | PUT | `/api/fiscal-debts/{id}/mark-paid` | Mark debt as paid directly |
