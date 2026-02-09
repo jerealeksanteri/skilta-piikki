@@ -2,9 +2,9 @@ services:
   db:
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: piikki
-      POSTGRES_PASSWORD: piikki
-      POSTGRES_DB: piikki
+      POSTGRES_USER: ${POSTGRES_USER:-piikki}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-piikki}
+      POSTGRES_DB: ${POSTGRES_DB:-piikki}
     volumes:
       - pg-data:/var/lib/postgresql/data
     ports:
@@ -15,7 +15,7 @@ services:
     build: ./backend
     env_file: .env
     environment:
-      - DATABASE_URL=postgresql://piikki:piikki@db:5432/piikki
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-piikki}:${POSTGRES_PASSWORD:-piikki}@db:5432/${POSTGRES_DB:-piikki}
     depends_on:
       - db
     restart: unless-stopped
