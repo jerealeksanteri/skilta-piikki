@@ -66,7 +66,9 @@ export default function TransactionItem({ transaction: tx, showUser }: Props) {
       <div style={styles.icon}>{isPurchase ? '🍺' : '💰'}</div>
       <div style={styles.details}>
         <div style={styles.title}>
-          {isPurchase ? tx.product_name || 'Purchase' : 'Payment'}
+          {isPurchase
+            ? `${tx.quantity > 1 ? `${tx.quantity}x ` : ''}${tx.product_name || 'Purchase'}`
+            : 'Payment'}
           {showUser && tx.user_name ? ` — ${tx.user_name}` : ''}
         </div>
         <div style={styles.meta}>
