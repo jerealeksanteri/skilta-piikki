@@ -3,24 +3,49 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../App';
 import { listProducts } from '../api/products';
 import { getLeaderboard } from '../api/users';
+import { getMyDebts } from '../api/fiscal';
 import { createPurchase } from '../api/transactions';
-import type { Product } from '../types';
+import type { Product, FiscalDebt } from '../types';
 import BalanceDisplay from '../components/BalanceDisplay';
-import ProductGrid from '../components/ProductGrid';
-import ConfirmDialog from '../components/ConfirmDialog';
+import ProductOverlay from '../components/ProductOverlay';
+import FiscalDebtsList from '../components/FiscalDebtsList';
+
+const fab = {
+  position: 'fixed' as const,
+  bottom: '80px',
+  right: '20px',
+  width: '56px',
+  height: '56px',
+  borderRadius: '16px',
+  backgroundColor: 'var(--btn)',
+  color: 'var(--btn-text)',
+  fontSize: '28px',
+  fontWeight: 700,
+  display: 'flex',
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+  zIndex: 100,
+};
 
 export default function HomePage() {
   const navigate = useNavigate();
   const { user, refreshUser } = useUser();
   const [products, setProducts] = useState<Product[]>([]);
-  const [selected, setSelected] = useState<Product | null>(null);
+  const [debts, setDebts] = useState<FiscalDebt[]>([]);
+  const [showOverlay, setShowOverlay] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [rank, setRank] = useState<number | undefined>(undefined);
   const [totalUsers, setTotalUsers] = useState<number | undefined>(undefined);
 
+  const fetchDebts = () => {
+    getMyDebts().then(setDebts).catch(console.error);
+  };
+
   useEffect(() => {
     listProducts().then(setProducts).catch(console.error);
+    fetchDebts();
     getLeaderboard()
       .then((lb) => {
         setTotalUsers(lb.length);
@@ -30,27 +55,32 @@ export default function HomePage() {
       .catch(console.error);
   }, []);
 
-  const handlePurchase = async () => {
-    if (!selected) return;
+  const handlePurchase = async (product: Product, quantity: number) => {
     setPurchasing(true);
     try {
-      await createPurchase(selected.id);
+      await createPurchase(product.id, quantity);
       await refreshUser();
-      setToast(`${selected.emoji} ${selected.name} logged!`);
+      setToast(`${product.emoji} ${quantity > 1 ? `${quantity}x ` : ''}${product.name} logged!`);
       setTimeout(() => setToast(null), 2000);
+      setShowOverlay(false);
     } catch (e) {
       setToast(e instanceof Error ? e.message : 'Failed to log purchase');
       setTimeout(() => setToast(null), 3000);
     } finally {
       setPurchasing(false);
-      setSelected(null);
     }
   };
 
   return (
     <div>
-      <BalanceDisplay balance={user?.balance ?? 0} rank={rank} totalUsers={totalUsers} />
-      <ProductGrid products={products} onSelect={setSelected} />
+      <BalanceDisplay
+        balance={user?.total_balance ?? 0}
+        fiscalDebtTotal={user?.fiscal_debt_total}
+        rank={rank}
+        totalUsers={totalUsers}
+      />
+
+      <FiscalDebtsList debts={debts} onUpdate={fetchDebts} />
 
       <div style={{ padding: '8px 16px 0' }}>
         <button
@@ -70,13 +100,15 @@ export default function HomePage() {
         </button>
       </div>
 
-      {selected && (
-        <ConfirmDialog
-          emoji={selected.emoji}
-          title={`Log ${selected.name}?`}
-          subtitle={`${selected.price.toFixed(2)} € will be deducted from your balance`}
+      <button style={fab} onClick={() => setShowOverlay(true)}>
+        +
+      </button>
+
+      {showOverlay && (
+        <ProductOverlay
+          products={products}
           onConfirm={handlePurchase}
-          onCancel={() => setSelected(null)}
+          onClose={() => setShowOverlay(false)}
           loading={purchasing}
         />
       )}

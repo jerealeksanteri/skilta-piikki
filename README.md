@@ -1,12 +1,17 @@
 # SkiltaPiikki
 
-A Telegram Mini App for managing beverage tabs in a student organization. Members log drinks from a shared fridge, track their balance, and request payments. Admins approve transactions and manage users.
+A Telegram Mini App for managing beverage tabs in a student organization. Members log drinks from a shared fridge, track their balance, and request payments. Admins approve transactions, manage users, and handle fiscal periods.
 
 ## Features
 
 - **Self-registration** — open the Mini App to register; admins approve new users
-- **Drink logging** — tap a product to deduct from your balance (auto-approved)
+- **Drink logging** — tap the + button to open the product overlay, pick a product, set quantity, and confirm
+- **Quantity support** — log multiple items at once (e.g., 3x Beer); history shows quantity prefix
 - **Payment requests** — users submit cash payments for admin approval
+- **Fiscal periods** — time-based accounting: admins close periods, negative balances become debts, all balances reset to zero
+- **Debt management** — users see outstanding debts on the home page and request payment; admins approve or reject
+- **Telegram notifications** — bot messages on key events (approvals, rejections, period closures, promotions)
+- **Message templates** — admins customize notification text and toggle individual event messages on/off
 - **Leaderboard** — ranked list of balances with a blacklist section for heavy debtors
 - **Rank on home page** — see your position among all users at a glance
 - **Product management** — admins add, edit, reorder, and deactivate products
@@ -70,12 +75,15 @@ Releases are triggered manually via GitHub Actions:
 ### Public (authenticated user)
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/me` | Current user info |
+| GET | `/api/me` | Current user info (includes fiscal debt totals) |
 | GET | `/api/products` | List active products |
-| POST | `/api/transactions/purchase` | Log a drink purchase |
+| POST | `/api/transactions/purchase` | Log a drink purchase (with quantity) |
 | POST | `/api/transactions/payment-request` | Request a payment (pending) |
 | GET | `/api/transactions/mine` | User's transaction history |
 | GET | `/api/leaderboard` | Active users ranked by balance |
+| GET | `/api/fiscal-periods/current` | Current open fiscal period |
+| GET | `/api/my/debts` | User's unpaid/pending fiscal debts |
+| POST | `/api/fiscal-debts/{id}/request-payment` | Request to pay a fiscal debt |
 
 ### Admin
 | Method | Path | Description |
@@ -96,6 +104,19 @@ Releases are triggered manually via GitHub Actions:
 | GET | `/api/transactions/pending` | List pending transactions |
 | PUT | `/api/transactions/{id}/approve` | Approve transaction |
 | PUT | `/api/transactions/{id}/reject` | Reject transaction |
+| GET | `/api/fiscal-periods` | List all fiscal periods |
+| POST | `/api/fiscal-periods/close` | Close current period (creates debts, resets balances) |
+| GET | `/api/fiscal-periods/{id}/stats` | Period statistics |
+| GET | `/api/fiscal-periods/{id}/debts` | All debts for a period |
+| PUT | `/api/fiscal-debts/{id}/approve` | Approve debt payment |
+| PUT | `/api/fiscal-debts/{id}/reject` | Reject debt payment |
+| PUT | `/api/fiscal-debts/{id}/mark-paid` | Mark debt as paid directly |
+| GET | `/api/message-templates` | List all message templates |
+| PUT | `/api/message-templates/{id}` | Update template text or active state |
+
+## License
+
+This project is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE). You may use, modify, and distribute the software for any **non-commercial** purpose. Commercial use requires explicit permission from the author.
 
 ## Project Structure
 
@@ -103,13 +124,14 @@ Releases are triggered manually via GitHub Actions:
 backend/
   app/
     auth/          # Telegram init data validation
-    models/        # SQLAlchemy models (User, Product, Transaction)
+    models/        # SQLAlchemy models (User, Product, Transaction, FiscalPeriod, FiscalDebt, MessageTemplate)
     routers/       # FastAPI route handlers
     schemas/       # Pydantic request/response schemas
+    services/      # Telegram bot client, event messaging
     config.py      # Settings via pydantic-settings
     database.py    # Engine, session, Base
     main.py        # App entrypoint, lifespan, migrations
-    seed.py        # Product + admin seeding
+    seed.py        # Product, admin, fiscal period, and message template seeding
   alembic/         # Database migrations
 frontend/
   src/

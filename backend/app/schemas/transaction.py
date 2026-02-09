@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class PurchaseRequest(BaseModel):
     product_id: int
+    quantity: int = 1
 
 
 class PaymentRequest(BaseModel):
@@ -28,6 +29,7 @@ class TransactionOut(BaseModel):
     approved_by_id: int | None
     created_by_id: int | None = None
     created_by_name: str | None = None
+    quantity: int = 1
     note: str | None
     created_at: datetime
     product_name: str | None = None

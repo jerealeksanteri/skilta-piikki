@@ -1,0 +1,54 @@
+# Next Features
+
+---
+- Fiscal periods
+    - Like a fiscal year, but for an undefined period
+    - Management for admins only
+    - First fiscal period starts on first application startup
+        - Create a period with an open end
+        - If the application restarts, checks if any periods are open
+    - Fiscal periods can be closed any time
+        - Generates a debtor list of all open debts to be collected
+    - Users can see all the periods of which they have participated in
+    - Users see their debts in the start menu
+        - See feature: Start menu
+    - When the fiscal year is ended, all users reset their balance
+        - The balance is now in the fiscal period debts
+            - Fiscal period debts must be calculated to the total balance
+    - Admins can see the current Fiscal Periods statistics
+        - How much cash accepted?
+        - How many drinks bought etc.
+    - Admins can see closed fiscal years
+        - How much debt to be collected and from whom (a list of users and their debts)
+        - Which people have already paid their debts
+    - More on feature: Start menu
+---
+- Start Menu
+    - Needs a cleaned up:
+        - Adding products to Piikki will now be under a + button overlay on the start menu
+            - Clicking will open up an overlay where you can select the products like they used to be
+                - New "Select amount" field with plus and minus buttons to add multiple once
+                - Confirmation toast after the amount
+
+    - Fiscal Debts
+        - Users can see a list of their fiscal debts
+        - Users can pay off their fiscal debts
+        - Users only see fiscal debts that have not been paid
+---
+- Messaging System
+    - Bot sends messages to users
+    - These messages can be
+        - If fiscal period is closed, all users in debt during the period will be messaged
+            - i.ex. "Dear ***user***, you are ***X,XX*** € in debt during the last fiscal period. Pay up!"
+        - User is accepted to join the application by admin
+            - i.ex. "Hello ***user***! Your registration to the app was accepted. Open the app for more."
+        - User's cash payment was approved/rejected
+            - i.ex. "Your cash payment ***approved/accepted***!"
+        - User has been deactivated
+        - User has been promoted / demoted
+
+    - Preferrable that the messages can be customized by admins!
+    - Customization could be:
+        - Message types
+            - Message templates for the type
+                - Admin connects type with template

@@ -7,6 +7,7 @@ import {
   deleteProduct,
 } from '../api/products';
 import type { Product } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 const styles = {
   section: {
@@ -116,10 +117,18 @@ const styles = {
     zIndex: 300,
     whiteSpace: 'nowrap' as const,
   },
+  backBtn: {
+    fontSize: '14px',
+    color: 'var(--link)',
+    backgroundColor: 'transparent',
+    padding: '8px 0',
+    marginBottom: '8px',
+  },
 };
 
 export default function AdminProductsPage() {
   const { user: currentUser } = useUser();
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
@@ -233,6 +242,9 @@ export default function AdminProductsPage() {
 
   return (
     <div>
+      <button style={styles.backBtn} onClick={() => navigate('/admin')}>
+        ← Back to Admin
+      </button>
       <div style={styles.section}>
         <div style={styles.header}>Add product</div>
         <div style={styles.form}>
