@@ -14,12 +14,12 @@ const fab = {
   position: 'fixed' as const,
   bottom: '80px',
   right: '20px',
-  width: '56px',
-  height: '56px',
-  borderRadius: '16px',
+  width: '64px',
+  height: '64px',
+  borderRadius: '50%',
   backgroundColor: 'var(--btn)',
   color: 'var(--btn-text)',
-  fontSize: '28px',
+  fontSize: '32px',
   fontWeight: 700,
   display: 'flex',
   alignItems: 'center' as const,
@@ -92,8 +92,8 @@ export default function HomePage() {
             borderRadius: '12px',
             fontSize: '15px',
             fontWeight: 600,
-            backgroundColor: 'var(--secondary-bg)',
-            color: 'var(--text)',
+            backgroundColor: 'var(--btn)',
+            color: 'var(--btn-text)',
           }}
         >
           💰 Log Payment
