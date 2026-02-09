@@ -26,3 +26,8 @@ class UserOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class MeOut(UserOut):
+    fiscal_debt_total: float = 0.0
+    total_balance: float = 0.0

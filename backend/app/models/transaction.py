@@ -32,6 +32,7 @@ class Transaction(Base):
     created_by_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=True
     )
+    quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     note: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
