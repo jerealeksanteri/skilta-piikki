@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.auth.telegram import get_current_user, require_admin
 from app.database import get_db
+from app.models.fiscal_debt import FiscalDebt
 from app.models.user import User
-from app.schemas.user import UserBulkCreate, UserCreate, UserOut
+from app.schemas.user import MeOut, UserBulkCreate, UserCreate, UserOut
+from app.services.messaging import send_event_message
 
 router = APIRouter()
 

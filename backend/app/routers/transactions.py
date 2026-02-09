@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.auth.telegram import require_active_user, require_admin
 from app.config import settings
 from app.database import get_db
+from app.services.messaging import send_event_message
 from app.models.product import Product
 from app.models.transaction import Transaction
 from app.models.user import User
@@ -28,6 +29,7 @@ def _to_out(tx: Transaction) -> TransactionOut:
         approved_by_id=tx.approved_by_id,
         created_by_id=tx.created_by_id,
         created_by_name=tx.created_by.first_name if tx.created_by else None,
+        quantity=tx.quantity,
         note=tx.note,
         created_at=tx.created_at,
         product_name=tx.product.name if tx.product else None,
@@ -45,12 +47,14 @@ def create_purchase(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
+    quantity = max(1, data.quantity)
     auto_approve = settings.AUTO_APPROVE_PURCHASES
     tx = Transaction(
         user_id=user.id,
         product_id=product.id,
         type="purchase",
-        amount=-product.price,
+        amount=-(product.price * quantity),
+        quantity=quantity,
         status="approved" if auto_approve else "pending",
         created_by_id=user.id,
     )
@@ -167,6 +171,13 @@ def approve_transaction(
 
     db.commit()
     db.refresh(tx)
+
+    if tx.type == "payment":
+        send_event_message(db, "payment_approved", target_user, {
+            "user": target_user.first_name,
+            "amount": f"{tx.amount:.2f}",
+        })
+
     return _to_out(tx)
 
 
@@ -187,4 +198,13 @@ def reject_transaction(
 
     db.commit()
     db.refresh(tx)
+
+    if tx.type == "payment":
+        target_user = db.query(User).filter(User.id == tx.user_id).first()
+        if target_user:
+            send_event_message(db, "payment_rejected", target_user, {
+                "user": target_user.first_name,
+                "amount": f"{tx.amount:.2f}",
+            })
+
     return _to_out(tx)
