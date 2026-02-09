@@ -161,6 +161,18 @@ export default function AdminPage() {
         >
           📦 Manage Products
         </button>
+        <button
+          style={{ ...styles.paymentBtn, backgroundColor: 'var(--secondary-bg)', color: 'var(--text)', marginTop: '0' }}
+          onClick={() => navigate('/admin/fiscal')}
+        >
+          📊 Fiscal Periods
+        </button>
+        <button
+          style={{ ...styles.paymentBtn, backgroundColor: 'var(--secondary-bg)', color: 'var(--text)', marginTop: '0' }}
+          onClick={() => navigate('/admin/messages')}
+        >
+          💬 Message Templates
+        </button>
       </div>
 
       <div style={styles.section}>
