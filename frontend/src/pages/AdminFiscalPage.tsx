@@ -6,6 +6,7 @@ import {
   closeFiscalPeriod,
   getPeriodStats,
   getPeriodDebts,
+  getPendingDebts,
   approveDebtPayment,
   rejectDebtPayment,
   markDebtPaid,
@@ -162,11 +163,16 @@ export default function AdminFiscalPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [stats, setStats] = useState<Record<number, FiscalPeriodStats>>({});
   const [debts, setDebts] = useState<Record<number, FiscalDebt[]>>({});
+  const [pendingDebts, setPendingDebts] = useState<FiscalDebt[]>([]);
 
   const fetchData = async () => {
     try {
-      const p = await listFiscalPeriods();
+      const [p, pd] = await Promise.all([
+        listFiscalPeriods(),
+        getPendingDebts(),
+      ]);
       setPeriods(p);
+      setPendingDebts(pd);
     } catch (e) {
       console.error(e);
     } finally {
@@ -217,8 +223,12 @@ export default function AdminFiscalPage() {
   const handleApproveDebt = async (debtId: number, periodId: number) => {
     try {
       await approveDebtPayment(debtId);
-      const d = await getPeriodDebts(periodId);
+      const [d, pd] = await Promise.all([
+        getPeriodDebts(periodId),
+        getPendingDebts(),
+      ]);
       setDebts((prev) => ({ ...prev, [periodId]: d }));
+      setPendingDebts(pd);
       showToast('Debt payment approved');
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Failed');
@@ -228,8 +238,12 @@ export default function AdminFiscalPage() {
   const handleRejectDebt = async (debtId: number, periodId: number) => {
     try {
       await rejectDebtPayment(debtId);
-      const d = await getPeriodDebts(periodId);
+      const [d, pd] = await Promise.all([
+        getPeriodDebts(periodId),
+        getPendingDebts(),
+      ]);
       setDebts((prev) => ({ ...prev, [periodId]: d }));
+      setPendingDebts(pd);
       showToast('Debt payment rejected');
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Failed');
@@ -257,16 +271,6 @@ export default function AdminFiscalPage() {
 
   const currentPeriod = periods.find((p) => !p.ended_at);
   const closedPeriods = periods.filter((p) => p.ended_at);
-
-  // Collect all pending debt payments across all loaded periods
-  const pendingDebts: (FiscalDebt & { _periodId: number })[] = [];
-  for (const [periodId, periodDebts] of Object.entries(debts)) {
-    for (const d of periodDebts) {
-      if (d.status === 'payment_pending') {
-        pendingDebts.push({ ...d, _periodId: Number(periodId) });
-      }
-    }
-  }
 
   return (
     <div>
@@ -311,13 +315,13 @@ export default function AdminFiscalPage() {
                   </span>
                   <button
                     style={{ ...styles.actionBtn, ...styles.approveBtn }}
-                    onClick={() => handleApproveDebt(debt.id, debt._periodId)}
+                    onClick={() => handleApproveDebt(debt.id, debt.fiscal_period_id)}
                   >
                     ✓
                   </button>
                   <button
                     style={{ ...styles.actionBtn, ...styles.rejectBtn }}
-                    onClick={() => handleRejectDebt(debt.id, debt._periodId)}
+                    onClick={() => handleRejectDebt(debt.id, debt.fiscal_period_id)}
                   >
                     ✕
                   </button>

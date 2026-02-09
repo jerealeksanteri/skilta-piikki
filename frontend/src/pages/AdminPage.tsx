@@ -150,25 +150,25 @@ export default function AdminPage() {
           💰 Log Cash Payment
         </button>
         <button
-          style={{ ...styles.paymentBtn, backgroundColor: 'var(--secondary-bg)', color: 'var(--text)', marginTop: '0' }}
+          style={{ ...styles.paymentBtn, marginTop: '0' }}
           onClick={() => navigate('/admin/users')}
         >
           👥 Manage Users
         </button>
         <button
-          style={{ ...styles.paymentBtn, backgroundColor: 'var(--secondary-bg)', color: 'var(--text)', marginTop: '0' }}
+          style={{ ...styles.paymentBtn, marginTop: '0' }}
           onClick={() => navigate('/admin/products')}
         >
           📦 Manage Products
         </button>
         <button
-          style={{ ...styles.paymentBtn, backgroundColor: 'var(--secondary-bg)', color: 'var(--text)', marginTop: '0' }}
+          style={{ ...styles.paymentBtn, marginTop: '0' }}
           onClick={() => navigate('/admin/fiscal')}
         >
           📊 Fiscal Periods
         </button>
         <button
-          style={{ ...styles.paymentBtn, backgroundColor: 'var(--secondary-bg)', color: 'var(--text)', marginTop: '0' }}
+          style={{ ...styles.paymentBtn, marginTop: '0' }}
           onClick={() => navigate('/admin/messages')}
         >
           💬 Message Templates

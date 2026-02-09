@@ -1,0 +1,19 @@
+# PostgreSQL Client Authentication Configuration File
+# ===================================================
+# Copy this file to pg_hba.conf and add your own IP address(es).
+# pg_hba.conf is gitignored so your IPs stay private.
+#
+# TYPE  DATABASE  USER  ADDRESS             METHOD
+#
+# Allow local (unix socket) connections
+local   all       all                       trust
+
+# Allow Docker internal network (required for backend container)
+host    all       all   172.16.0.0/12       scram-sha-256
+
+# Add your own IP(s) below for remote access
+# host  all       all   YOUR.IP.HERE/32     scram-sha-256
+
+# Deny everything else
+host    all       all   0.0.0.0/0           reject
+host    all       all   ::/0                reject

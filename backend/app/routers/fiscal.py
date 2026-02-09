@@ -191,6 +191,21 @@ def get_period_debts(
     return [_debt_to_out(d) for d in debts]
 
 
+@router.get("/fiscal-debts/pending", response_model=list[FiscalDebtOut])
+def get_all_pending_debts(
+    _admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Get all pending debt payments across all fiscal periods."""
+    debts = (
+        db.query(FiscalDebt)
+        .filter(FiscalDebt.status == "payment_pending")
+        .order_by(FiscalDebt.created_at.desc())
+        .all()
+    )
+    return [_debt_to_out(d) for d in debts]
+
+
 @router.get("/my/debts", response_model=list[FiscalDebtOut])
 def get_my_debts(
     user: User = Depends(require_active_user),
