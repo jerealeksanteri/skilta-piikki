@@ -44,3 +44,7 @@ export function demoteUser(userId: number): Promise<User> {
 export function deleteAllNonAdminUsers(): Promise<{ deactivated: number }> {
   return apiRequest<{ deactivated: number }>('/users/all', { method: 'DELETE' });
 }
+
+export function denyUser(userId: number): Promise<{ message: string }> {
+  return apiRequest<{ message: string }>(`/users/${userId}/deny`, { method: 'DELETE' });
+}

@@ -201,3 +201,26 @@ def demote_user(
     send_event_message(db, "user_demoted", user, {"user": user.first_name})
 
     return user
+
+
+@router.delete("/users/{user_id}/deny")
+def deny_user(
+    user_id: int,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.is_active:
+        raise HTTPException(status_code=400, detail="Cannot deny an active user")
+    if user.id == admin.id:
+        raise HTTPException(status_code=400, detail="Cannot deny yourself")
+    
+    user_name = user.first_name
+    
+    # Delete the user from the database
+    db.delete(user)
+    db.commit()
+    
+    return {"message": f"User {user_name} has been denied and removed"}

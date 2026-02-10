@@ -74,10 +74,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.version.outputs.TAG }}
           VERSION: ${{ steps.version.outputs.VERSION }}
+          PREV_TAG: ${{ steps.version.outputs.PREV_TAG }}
           PREFIX: ${{ env.IMAGE_PREFIX }}
         run: |
           NOTES=$(gh api repos/${{ github.repository }}/releases/generate-notes \
             -f tag_name="$TAG" -f target_commitish="${{ github.sha }}" \
+            -f previous_tag_name="$PREV_TAG" \
             --jq '.body')
 
           BODY=$(cat <<EOF
