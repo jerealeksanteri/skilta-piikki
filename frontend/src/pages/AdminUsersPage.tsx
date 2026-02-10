@@ -8,6 +8,7 @@ import {
   promoteUser,
   demoteUser,
   deleteAllNonAdminUsers,
+  denyUser,
 } from '../api/users';
 import type { User } from '../types';
 import { useNavigate } from 'react-router-dom';
@@ -228,6 +229,17 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleDenyUser = async (u: User) => {
+    if (!confirm(`Deny access for ${u.first_name}? This will permanently remove them from the system.`)) return;
+    try {
+      await denyUser(u.id);
+      showToast(`${u.first_name} denied`);
+      fetchUsers();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Failed');
+    }
+  };
+
   if (!currentUser?.is_admin) {
     return <div style={styles.empty}>Admin access required.</div>;
   }
@@ -334,6 +346,12 @@ export default function AdminUsersPage() {
                     onClick={() => handleToggleActive(u)}
                   >
                     Approve
+                  </button>
+                  <button
+                    style={{ ...styles.actionBtn, ...styles.dangerBtn }}
+                    onClick={() => handleDenyUser(u)}
+                  >
+                    Deny
                   </button>
                 </div>
               </div>
