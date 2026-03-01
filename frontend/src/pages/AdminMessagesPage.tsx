@@ -118,6 +118,7 @@ const EVENT_LABELS: Record<string, string> = {
   user_demoted: 'User Demoted',
   debt_payment_approved: 'Debt Payment Approved',
   debt_payment_rejected: 'Debt Payment Rejected',
+  reward_granted: 'Reward Granted',
 };
 
 const EVENT_VARIABLES: Record<string, string> = {
@@ -130,6 +131,7 @@ const EVENT_VARIABLES: Record<string, string> = {
   user_demoted: '{user}',
   debt_payment_approved: '{user}, {amount}',
   debt_payment_rejected: '{user}, {amount}',
+  reward_granted: '{user}, {reward_name}, {amount}',
 };
 
 export default function AdminMessagesPage() {
