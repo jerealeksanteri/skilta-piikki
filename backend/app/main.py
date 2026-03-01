@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import fiscal, messages, products, transactions, users
+from app.routers import fiscal, messages, products, rewards, transactions, users
 
 
 def run_migrations():
@@ -37,3 +37,4 @@ app.include_router(products.router, prefix="/api")
 app.include_router(transactions.router, prefix="/api")
 app.include_router(fiscal.router, prefix="/api")
 app.include_router(messages.router, prefix="/api")
+app.include_router(rewards.router, prefix="/api")

@@ -51,6 +51,10 @@ MESSAGE_TEMPLATES = [
         "event_type": "debt_payment_rejected",
         "template": "Your debt payment of {amount} \u20ac was not confirmed. Please contact an admin.",
     },
+    {
+        "event_type": "reward_granted",
+        "template": "🎁 Congratulations {user}! You've received a reward: {reward_name} (+{amount} \u20ac). Your new balance is updated!",
+    },
 ]
 
 
