@@ -177,7 +177,7 @@ export default function AdminPage() {
           style={{ ...styles.paymentBtn, marginTop: '0' }}
           onClick={() => navigate('/admin/rewards')}
         >
-          🎁 Manage Rewards
+          🎁 Manage Rewards (beta)
         </button>
       </div>
 
