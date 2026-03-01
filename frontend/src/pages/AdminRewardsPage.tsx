@@ -195,14 +195,34 @@ export default function AdminRewardsPage() {
   const [recurUsers, setRecurUsers] = useState<number[]>([]);
 
   useEffect(() => {
-    Promise.all([listUsers(), listRewards(), listAllGrants(50)])
-      .then(([u, r, g]) => {
+    const fetchData = async () => {
+      try {
+        // Fetch users first (always needed)
+        const u = await listUsers();
         setUsers(u);
-        setRewards(r);
-        setGrants(g);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+
+        // Try to fetch rewards and grants (may fail if migration not run)
+        try {
+          const r = await listRewards();
+          setRewards(r);
+        } catch (e) {
+          console.warn('Failed to load rewards:', e);
+        }
+
+        try {
+          const g = await listAllGrants(50);
+          setGrants(g);
+        } catch (e) {
+          console.warn('Failed to load grants:', e);
+        }
+      } catch (e) {
+        console.error('Failed to load users:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const showToast = (msg: string) => {
