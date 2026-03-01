@@ -11,6 +11,7 @@ import AdminUsersPage from './pages/AdminUsersPage';
 import AdminProductsPage from './pages/AdminProductsPage';
 import AdminFiscalPage from './pages/AdminFiscalPage';
 import AdminMessagesPage from './pages/AdminMessagesPage';
+import AdminRewardsPage from './pages/AdminRewardsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import PaymentRequestPage from './pages/PaymentRequestPage';
 import PendingApprovalPage from './pages/PendingApprovalPage';
@@ -82,6 +83,7 @@ export default function App() {
             <Route path="/admin/products" element={<AdminProductsPage />} />
             <Route path="/admin/fiscal" element={<AdminFiscalPage />} />
             <Route path="/admin/messages" element={<AdminMessagesPage />} />
+            <Route path="/admin/rewards" element={<AdminRewardsPage />} />
           </Routes>
         </Layout>
       </BrowserRouter>
