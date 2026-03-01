@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import fiscal, messages, products, transactions, users
+from app.routers import fiscal, messages, products, rewards, transactions, users
 
 
 def run_migrations():
@@ -19,7 +19,15 @@ async def lifespan(app: FastAPI):
     run_migrations()
     from app.seed import seed
     seed()
+
+    # Start scheduler
+    from app.services.scheduler import start_scheduler, stop_scheduler
+    start_scheduler()
+
     yield
+
+    # Stop scheduler on shutdown
+    stop_scheduler()
 
 
 app = FastAPI(title="SkiltaPiikki", lifespan=lifespan)
@@ -37,3 +45,4 @@ app.include_router(products.router, prefix="/api")
 app.include_router(transactions.router, prefix="/api")
 app.include_router(fiscal.router, prefix="/api")
 app.include_router(messages.router, prefix="/api")
+app.include_router(rewards.router, prefix="/api")
