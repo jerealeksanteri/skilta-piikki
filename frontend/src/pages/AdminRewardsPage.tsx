@@ -395,7 +395,7 @@ export default function AdminRewardsPage() {
                   <input
                     style={styles.input}
                     type="number"
-                    step="0.50"
+                    step="0.01"
                     min="0.01"
                     placeholder="10.00"
                     value={oneTimeAmount}
@@ -507,7 +507,7 @@ export default function AdminRewardsPage() {
                   <input
                     style={styles.input}
                     type="number"
-                    step="0.50"
+                    step="0.01"
                     min="0.01"
                     placeholder="5.00"
                     value={recurAmount}
