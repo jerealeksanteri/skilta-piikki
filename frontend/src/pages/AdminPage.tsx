@@ -173,6 +173,12 @@ export default function AdminPage() {
         >
           💬 Message Templates
         </button>
+        <button
+          style={{ ...styles.paymentBtn, marginTop: '0' }}
+          onClick={() => navigate('/admin/rewards')}
+        >
+          🎁 Manage Rewards (beta)
+        </button>
       </div>
 
       <div style={styles.section}>

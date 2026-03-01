@@ -77,3 +77,30 @@ export interface MessageTemplate {
   template: string;
   is_active: boolean;
 }
+
+export interface Reward {
+  id: number;
+  name: string;
+  description: string | null;
+  amount: number;
+  reward_type: 'one_time' | 'recurring';
+  recurrence_frequency: 'daily' | 'weekly' | 'monthly' | 'yearly' | null;
+  assigned_user_ids: number[];
+  is_active: boolean;
+  next_grant_date: string | null;
+  created_by_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RewardGrant {
+  id: number;
+  reward_id: number;
+  user_id: number;
+  user_name: string | null;
+  reward_name: string;
+  amount: number;
+  note: string | null;
+  granted_at: string;
+  granted_by_scheduler: boolean;
+}
