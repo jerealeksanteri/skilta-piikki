@@ -19,7 +19,15 @@ async def lifespan(app: FastAPI):
     run_migrations()
     from app.seed import seed
     seed()
+
+    # Start scheduler
+    from app.services.scheduler import start_scheduler, stop_scheduler
+    start_scheduler()
+
     yield
+
+    # Stop scheduler on shutdown
+    stop_scheduler()
 
 
 app = FastAPI(title="SkiltaPiikki", lifespan=lifespan)
