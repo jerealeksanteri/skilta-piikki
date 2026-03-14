@@ -33,12 +33,13 @@ def spin_slot_machine(
     - Records the spin in history
     """
     bet_amount = SlotMachineService.BET_AMOUNT
+    BLACKLIST_LIMIT = -50.0
 
-    # Check if user has enough balance
-    if user.balance < bet_amount:
+    # Check if user has reached blacklist limit (-50€)
+    if user.balance < -49:
         raise HTTPException(
             status_code=400,
-            detail=f"Insufficient balance. You need at least {bet_amount:.2f}€ to play."
+            detail=f"You have reached the blacklist limit ({BLACKLIST_LIMIT:.2f}€). Cannot gamble further!"
         )
 
     # Deduct bet amount
