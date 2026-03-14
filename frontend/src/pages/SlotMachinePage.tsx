@@ -303,23 +303,23 @@ export default function SlotMachinePage() {
         <div style={styles.stats}>
           <div style={styles.statRow}>
             <span>🍒 🍒 🍒</span>
-            <span style={styles.statValue}>2€</span>
+            <span style={styles.statValue}>4€</span>
           </div>
           <div style={styles.statRow}>
             <span>🍋 🍋 🍋</span>
-            <span style={styles.statValue}>3€</span>
+            <span style={styles.statValue}>7€</span>
           </div>
           <div style={styles.statRow}>
             <span>🍊 🍊 🍊</span>
-            <span style={styles.statValue}>5€</span>
+            <span style={styles.statValue}>12€</span>
           </div>
           <div style={styles.statRow}>
             <span>🍇 🍇 🍇</span>
-            <span style={styles.statValue}>10€</span>
+            <span style={styles.statValue}>22€</span>
           </div>
           <div style={styles.statRow}>
             <span>🔔 🔔 🔔</span>
-            <span style={styles.statValue}>20€</span>
+            <span style={styles.statValue}>37€</span>
           </div>
           <div style={styles.statRow}>
             <span>7️⃣ 7️⃣ 7️⃣</span>

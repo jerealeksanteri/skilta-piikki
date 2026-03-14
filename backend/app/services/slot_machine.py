@@ -30,11 +30,11 @@ class SlotMachineService:
     SYMBOL_WEIGHTS = [30, 25, 20, 15, 7, 3]  # Weights for each symbol
 
     PAYOUTS = {
-        "cherry": 2.0,
-        "lemon": 3.0,
-        "orange": 5.0,
-        "plum": 10.0,
-        "bell": 20.0,
+        "cherry": 4.0,
+        "lemon": 7.0,
+        "orange": 12.0,
+        "plum": 22.0,
+        "bell": 37.0,
         "seven": 50.0,
     }
 
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     total_bet = 0.0
     total_won = 0.0
 
-    for _ in range(10000):
+    for _ in range(100000):
         symbols, win = SlotMachineService.spin()
         total_bet += SlotMachineService.BET_AMOUNT
         total_won += win
