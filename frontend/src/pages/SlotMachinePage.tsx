@@ -153,8 +153,8 @@ export default function SlotMachinePage() {
 
   const handleSpin = async () => {
     if (spinning) return;
-    if (!user || user.balance < 1) {
-      showToast('Insufficient balance! You need at least 1€ to play.');
+    if (!user || user.balance < -49) {
+      showToast('You have reached the blacklist limit (-50€). Cannot gamble further!');
       return;
     }
 
