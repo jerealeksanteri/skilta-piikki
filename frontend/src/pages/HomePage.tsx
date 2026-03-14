@@ -84,7 +84,7 @@ export default function HomePage() {
 
       <FiscalDebtsList debts={debts} onUpdate={fetchDebts} />
 
-      <div style={{ padding: '8px 16px 0' }}>
+      <div style={{ padding: '8px 16px 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <button
           onClick={() => navigate('/payment')}
           style={{
@@ -99,6 +99,21 @@ export default function HomePage() {
           }}
         >
           💰 Log Payment
+        </button>
+        <button
+          onClick={() => navigate('/slot-machine')}
+          style={{
+            display: 'block',
+            width: '100%',
+            padding: '14px',
+            borderRadius: '12px',
+            fontSize: '15px',
+            fontWeight: 600,
+            backgroundColor: '#9c27b0',
+            color: '#fff',
+          }}
+        >
+          🎰 Slot Machine
         </button>
       </div>
 
