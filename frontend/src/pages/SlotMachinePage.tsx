@@ -242,10 +242,10 @@ export default function SlotMachinePage() {
         <button
           style={{
             ...styles.spinBtn,
-            ...(spinning || user.balance < 1 ? styles.spinBtnDisabled : {}),
+            ...(spinning || user.balance < -49 ? styles.spinBtnDisabled : {}),
           }}
           onClick={handleSpin}
-          disabled={spinning || user.balance < 1}
+          disabled={spinning || user.balance < -49}
         >
           {spinning ? 'Spinning...' : 'Spin (1€)'}
         </button>
