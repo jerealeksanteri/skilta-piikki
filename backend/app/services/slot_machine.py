@@ -31,10 +31,10 @@ class SlotMachineService:
 
     PAYOUTS = {
         "cherry": 4.0,
-        "lemon": 7.0,
-        "orange": 12.0,
+        "lemon": 8.0,
+        "orange": 15.0,
         "plum": 22.0,
-        "bell": 37.0,
+        "bell": 40.0,
         "seven": 50.0,
     }
 
@@ -84,7 +84,8 @@ class SlotMachineService:
 
         # Check for 2 matching symbols (return bet)
         if symbols[0] == symbols[1] or symbols[1] == symbols[2] or symbols[0] == symbols[2]:
-            return bet_amount  # Return the bet
+            return_multiplier = 1.0  # Return bet (1€) + 1€ win = 2€
+            return bet_amount * return_multiplier  # Return the bet
 
         # No match
         return 0.0
@@ -131,7 +132,7 @@ class SlotMachineService:
 # For debugging/testing
 if __name__ == "__main__":
     print(f"Theoretical RTP: {SlotMachineService.get_theoretical_rtp():.2f}%")
-    print("\nSimulating 10,000 spins:")
+    print("\nSimulating 100,000 spins:")
 
     total_bet = 0.0
     total_won = 0.0
