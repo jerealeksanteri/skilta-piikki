@@ -15,6 +15,7 @@ import AdminRewardsPage from './pages/AdminRewardsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import PaymentRequestPage from './pages/PaymentRequestPage';
 import PendingApprovalPage from './pages/PendingApprovalPage';
+import SlotMachinePage from './pages/SlotMachinePage';
 
 interface UserContextType {
   user: User | null;
@@ -77,6 +78,7 @@ export default function App() {
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/ranking" element={<LeaderboardPage />} />
             <Route path="/payment" element={<PaymentRequestPage />} />
+            <Route path="/slot-machine" element={<SlotMachinePage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/payment" element={<AdminPaymentPage />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
