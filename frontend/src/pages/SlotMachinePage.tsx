@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../App';
-import { spinSlotMachine, getSlotMachineStats } from '../api/slot-machine';
+import { spinSlotMachine, getSlotMachineStats, getSlotMachineStatus } from '../api/slot-machine';
 import type { SlotMachineStats } from '../api/slot-machine';
 
 const styles = {
