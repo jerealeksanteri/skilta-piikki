@@ -38,3 +38,44 @@ export function getSlotMachineHistory(limit: number = 50): Promise<SlotMachineHi
 export function getSlotMachineStats(): Promise<SlotMachineStats> {
   return apiRequest<SlotMachineStats>('/slot-machine/stats');
 }
+
+export interface SlotMachineTopWinner {
+  user_id: number;
+  user_name: string;
+  total_spins: number;
+  total_bet: number;
+  total_won: number;
+  net_result: number;
+}
+
+export interface SlotMachineAdminStats {
+  total_spins: number;
+  total_bet: number;
+  total_won: number;
+  house_profit: number;
+  actual_rtp: number;
+  theoretical_rtp: number;
+  top_winners: SlotMachineTopWinner[];
+  period_start: string | null;
+  period_end: string | null;
+  enabled: boolean;
+}
+
+export interface SlotMachineStatusResponse {
+  enabled: boolean;
+}
+
+export function getSlotMachineAdminStats(): Promise<SlotMachineAdminStats> {
+  return apiRequest<SlotMachineAdminStats>('/slot-machine/admin/stats');
+}
+
+export function getSlotMachineStatus(): Promise<SlotMachineStatusResponse> {
+  return apiRequest<SlotMachineStatusResponse>('/slot-machine/status');
+}
+
+export function toggleSlotMachine(enabled: boolean): Promise<SlotMachineStatusResponse> {
+  return apiRequest<SlotMachineStatusResponse>('/slot-machine/admin/toggle', {
+    method: 'PUT',
+    body: JSON.stringify({ enabled }),
+  });
+}
