@@ -35,3 +35,37 @@ class SlotMachineStats(BaseModel):
     total_won: float
     net_result: float
     biggest_win: float
+
+
+class SlotMachineTopWinner(BaseModel):
+    """Schema for a top winner entry."""
+    user_id: int
+    user_name: str
+    total_spins: int
+    total_bet: float
+    total_won: float
+    net_result: float
+
+
+class SlotMachineAdminStats(BaseModel):
+    """Schema for admin slot machine statistics."""
+    total_spins: int
+    total_bet: float
+    total_won: float
+    house_profit: float
+    actual_rtp: float
+    theoretical_rtp: float
+    top_winners: list[SlotMachineTopWinner]
+    period_start: datetime | None
+    period_end: datetime | None
+    enabled: bool
+
+
+class SlotMachineStatusResponse(BaseModel):
+    """Schema for slot machine status."""
+    enabled: bool
+
+
+class SlotMachineToggleRequest(BaseModel):
+    """Schema for toggling slot machine."""
+    enabled: bool
