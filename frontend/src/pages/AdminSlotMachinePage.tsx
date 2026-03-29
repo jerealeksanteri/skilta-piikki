@@ -105,6 +105,27 @@ const styles = {
     fontSize: '14px',
     fontWeight: 600,
   },
+  scopeToggle: {
+    display: 'flex',
+    backgroundColor: 'var(--secondary-bg)',
+    borderRadius: '8px',
+    padding: '4px',
+    gap: '4px',
+  },
+  scopeBtn: {
+    flex: 1,
+    padding: '8px 12px',
+    fontSize: '13px',
+    fontWeight: 600,
+    borderRadius: '6px',
+    backgroundColor: 'transparent',
+    color: 'var(--hint)',
+    transition: 'all 0.2s',
+  },
+  scopeBtnActive: {
+    backgroundColor: 'var(--bg)',
+    color: 'var(--text)',
+  },
 };
 
 function formatDate(dateStr: string | null): string {
@@ -123,10 +144,12 @@ export default function AdminSlotMachinePage() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
   const [toggling, setToggling] = useState(false);
+  const [scope, setScope] = useState<'fiscal_period' | 'all_time'>('fiscal_period');
 
   const fetchData = async () => {
     try {
-      const data = await getSlotMachineAdminStats();
+      setLoading(true);
+      const data = await getSlotMachineAdminStats(scope);
       setStats(data);
     } catch (e) {
       console.error(e);
@@ -137,7 +160,7 @@ export default function AdminSlotMachinePage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [scope]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -199,15 +222,42 @@ export default function AdminSlotMachinePage() {
       {/* Period info */}
       <div style={styles.section}>
         <div style={styles.header}>
-          Current fiscal period
+          {scope === 'fiscal_period' ? 'Current fiscal period' : 'All Time Period'}
         </div>
         <div style={styles.card}>
           <div style={styles.statRow}>
             <span style={styles.statLabel}>Period</span>
             <span style={styles.statValue}>
-              {formatDate(stats.period_start)} — {formatDate(stats.period_end)}
+              {scope === 'fiscal_period'
+                ? `${formatDate(stats.period_start)} — ${formatDate(stats.period_end)}`
+                : 'All time'}
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Scope Toggle */}
+      <div style={styles.section}>
+        <div style={styles.header}>View Statistics</div>
+        <div style={styles.scopeToggle}>
+          <button
+            style={{
+              ...styles.scopeBtn,
+              ...(scope === 'fiscal_period' ? styles.scopeBtnActive : {}),
+            }}
+            onClick={() => setScope('fiscal_period')}
+          >
+            Current Period
+          </button>
+          <button
+            style={{
+              ...styles.scopeBtn,
+              ...(scope === 'all_time' ? styles.scopeBtnActive : {}),
+            }}
+            onClick={() => setScope('all_time')}
+          >
+            All Time
+          </button>
         </div>
       </div>
 
