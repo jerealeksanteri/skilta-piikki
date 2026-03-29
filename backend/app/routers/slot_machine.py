@@ -176,19 +176,25 @@ def get_slot_machine_stats(
 
 @router.get("/slot-machine/admin/stats", response_model=SlotMachineAdminStats)
 def get_admin_slot_machine_stats(
+    scope: str = "fiscal_period",
     _admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    """Get global slot machine statistics scoped to current fiscal period."""
+    """
+    Get global slot machine statistics.
+    
+    Args:
+        scope: "fiscal_period" (default) or "all_time"
+    """
     # Get current fiscal period
     current_period = db.query(FiscalPeriod).filter(FiscalPeriod.ended_at.is_(None)).first()
 
-    period_start = current_period.started_at if current_period else None
+    period_start = current_period.started_at if current_period and scope == "fiscal_period" else None
     period_end = None
 
     # Base query filter for fiscal period
     period_filter = []
-    if period_start:
+    if scope == "fiscal_period" and period_start:
         period_filter.append(SlotMachineSpin.created_at >= period_start)
 
     # Global stats

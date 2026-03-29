@@ -65,8 +65,8 @@ export interface SlotMachineStatusResponse {
   enabled: boolean;
 }
 
-export function getSlotMachineAdminStats(): Promise<SlotMachineAdminStats> {
-  return apiRequest<SlotMachineAdminStats>('/slot-machine/admin/stats');
+export function getSlotMachineAdminStats(scope: 'fiscal_period' | 'all_time' = 'fiscal_period'): Promise<SlotMachineAdminStats> {
+  return apiRequest<SlotMachineAdminStats>(`/slot-machine/admin/stats?scope=${scope}`);
 }
 
 export function getSlotMachineStatus(): Promise<SlotMachineStatusResponse> {
