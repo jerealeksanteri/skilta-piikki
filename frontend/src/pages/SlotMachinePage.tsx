@@ -132,9 +132,13 @@ export default function SlotMachinePage() {
   const [result, setResult] = useState<string | null>(null);
   const [stats, setStats] = useState<SlotMachineStats | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [enabled, setEnabled] = useState(true);
 
   useEffect(() => {
     fetchStats();
+    getSlotMachineStatus()
+      .then((s) => setEnabled(s.enabled))
+      .catch(() => {});
   }, []);
 
   const fetchStats = async () => {
@@ -152,7 +156,7 @@ export default function SlotMachinePage() {
   };
 
   const handleSpin = async () => {
-    if (spinning) return;
+    if (spinning || !enabled) return;
     if (!user || user.balance < -49) {
       showToast('You have reached the blacklist limit (-50€). Cannot gamble further!');
       return;
@@ -239,13 +243,30 @@ export default function SlotMachinePage() {
           ))}
         </div>
 
+        {!enabled && (
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '12px',
+              marginBottom: '16px',
+              backgroundColor: 'var(--secondary-bg)',
+              borderRadius: '12px',
+              fontSize: '14px',
+              color: 'var(--destructive)',
+              fontWeight: 500,
+            }}
+          >
+            Slot machine is currently disabled.
+          </div>
+        )}
+
         <button
           style={{
             ...styles.spinBtn,
-            ...(spinning || user.balance < -49 ? styles.spinBtnDisabled : {}),
+            ...(spinning || !enabled || user.balance < -49 ? styles.spinBtnDisabled : {}),
           }}
           onClick={handleSpin}
-          disabled={spinning || user.balance < -49}
+          disabled={spinning || !enabled || user.balance < -49}
         >
           {spinning ? 'Spinning...' : 'Spin (1€)'}
         </button>
