@@ -177,7 +177,13 @@ export default function AdminPage() {
           style={{ ...styles.paymentBtn, marginTop: '0' }}
           onClick={() => navigate('/admin/rewards')}
         >
-          🎁 Manage Rewards (beta)
+          🎁 Manage Rewards
+        </button>
+        <button
+          style={{ ...styles.paymentBtn, marginTop: '0' }}
+          onClick={() => navigate('/admin/slot-machine')}
+        >
+          🎰 Slot Machine
         </button>
       </div>
 
