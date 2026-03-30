@@ -292,26 +292,6 @@ export default function SlotMachinePage() {
               <span style={styles.statValue}>{stats.total_spins}</span>
             </div>
             <div style={styles.statRow}>
-              <span style={styles.statLabel}>Total Bet:</span>
-              <span style={styles.statValue}>{stats.total_bet.toFixed(2)}€</span>
-            </div>
-            <div style={styles.statRow}>
-              <span style={styles.statLabel}>Total Won:</span>
-              <span style={styles.statValue}>{stats.total_won.toFixed(2)}€</span>
-            </div>
-            <div style={styles.statRow}>
-              <span style={styles.statLabel}>Net Result:</span>
-              <span
-                style={{
-                  ...styles.statValue,
-                  color: stats.net_result >= 0 ? '#4caf50' : '#f44336',
-                }}
-              >
-                {stats.net_result >= 0 ? '+' : ''}
-                {stats.net_result.toFixed(2)}€
-              </span>
-            </div>
-            <div style={styles.statRow}>
               <span style={styles.statLabel}>Biggest Win:</span>
               <span style={styles.statValue}>{stats.biggest_win.toFixed(2)}€</span>
             </div>
