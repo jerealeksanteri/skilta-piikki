@@ -16,23 +16,23 @@ class SlotMachineService:
 
     Payouts (for 1€ bet):
     - 3x Seven: 50€ (jackpot)
-    - 3x Bell: 37€
+    - 3x Bell: 40€
     - 3x Plum: 22€
     - 3x Orange: 12€
     - 3x Lemon: 7€
     - 3x Cherry: 4€
     - 2x matching: 1€ (return bet)
 
-    Target RTP: 90.09%
+    Target RTP: 92%
     """
 
     SYMBOLS = ["cherry", "lemon", "orange", "plum", "bell", "seven"]
-    SYMBOL_WEIGHTS = [30, 25, 20, 15, 7, 3]  # Weights for each symbol
+    SYMBOL_WEIGHTS = [30, 25, 21, 15, 6, 3]  # Weights for each symbol
 
     PAYOUTS = {
         "cherry": 4.0,
-        "lemon": 8.0,
-        "orange": 15.0,
+        "lemon": 7.0,
+        "orange": 12.0,
         "plum": 22.0,
         "bell": 40.0,
         "seven": 50.0,
@@ -84,7 +84,7 @@ class SlotMachineService:
 
         # Check for 2 matching symbols (return bet)
         if symbols[0] == symbols[1] or symbols[1] == symbols[2] or symbols[0] == symbols[2]:
-            return_multiplier = 1.0  # Return bet (1€) + 1€ win = 2€
+            return_multiplier = 1.0
             return bet_amount * return_multiplier  # Return the bet
 
         # No match
