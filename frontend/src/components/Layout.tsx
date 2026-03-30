@@ -10,7 +10,7 @@ const styles = {
   },
   content: {
     flex: 1,
-    paddingBottom: '80px',
+    paddingBottom: '110px',
   },
   nav: {
     position: 'fixed' as const,
@@ -18,10 +18,21 @@ const styles = {
     left: 0,
     right: 0,
     display: 'flex',
+    flexDirection: 'column' as const,
     backgroundColor: 'var(--bg)',
     borderTop: '1px solid var(--secondary-bg)',
     paddingBottom: 'env(safe-area-inset-bottom)',
     zIndex: 100,
+  },
+  tabs: {
+    display: 'flex',
+  },
+  footer: {
+    textAlign: 'center' as const,
+    fontSize: '10px',
+    color: 'var(--hint)',
+    padding: '4px 0',
+    opacity: 0.6,
   },
   tab: {
     flex: 1,
@@ -68,6 +79,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     <div style={styles.container}>
       <div style={styles.content}>{children}</div>
       <nav style={styles.nav}>
+        <div style={styles.tabs}>
         {visibleTabs.map((tab) => {
           const isActive =
             tab.path === '/'
@@ -87,6 +99,8 @@ export default function Layout({ children }: { children: ReactNode }) {
             </button>
           );
         })}
+        </div>
+        <footer style={styles.footer}>&copy; Jere Niemi, 2026</footer>
       </nav>
     </div>
   );
