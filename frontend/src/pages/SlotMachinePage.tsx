@@ -320,7 +320,7 @@ export default function SlotMachinePage() {
           </div>
           <div style={styles.statRow}>
             <span>🔔 🔔 🔔</span>
-            <span style={styles.statValue}>37€</span>
+            <span style={styles.statValue}>40€</span>
           </div>
           <div style={styles.statRow}>
             <span>7️⃣ 7️⃣ 7️⃣</span>
