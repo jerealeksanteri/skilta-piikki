@@ -12,7 +12,7 @@ import FiscalDebtsList from '../components/FiscalDebtsList';
 
 const fab = {
   position: 'fixed' as const,
-  bottom: '80px',
+  bottom: '104px',
   right: '20px',
   width: '64px',
   height: '64px',
@@ -134,7 +134,7 @@ export default function HomePage() {
         <div
           style={{
             position: 'fixed',
-            bottom: '84px',
+            bottom: '104px',
             left: '50%',
             transform: 'translateX(-50%)',
             backgroundColor: 'var(--text)',

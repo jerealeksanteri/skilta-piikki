@@ -105,7 +105,7 @@ const styles = {
   },
   toast: {
     position: 'fixed' as const,
-    bottom: '84px',
+    bottom: '104px',
     left: '50%',
     transform: 'translateX(-50%)',
     backgroundColor: 'var(--text)',
