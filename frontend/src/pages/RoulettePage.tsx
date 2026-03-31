@@ -24,7 +24,8 @@ const COLOR_MAP = {
   green: '#2e7d32',
 };
 
-const CHIP_VALUES = [0.1, 0.25, 0.5, 1.0];
+const CHIP_VALUES = [0.05, 0.10, 0.20, 0.50];
+const MAX_BET_PER_SPOT = 1.0;
 
 // Table grid: rows 1-12, each row has 3 numbers
 const TABLE_ROWS: number[][] = [];
@@ -44,7 +45,7 @@ interface PlacedBet {
 export default function RoulettePage() {
   const navigate = useNavigate();
   const { user, refreshUser } = useUser();
-  const [selectedChip, setSelectedChip] = useState(0.25);
+  const [selectedChip, setSelectedChip] = useState(0.10);
   const [bets, setBets] = useState<PlacedBet[]>([]);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<{ number: number; color: string; results: RouletteBetResult[]; total_win: number } | null>(null);
@@ -81,9 +82,12 @@ export default function RoulettePage() {
     setBets((prev) => {
       const existing = prev.find((b) => b.key === key);
       if (existing) {
-        return prev.map((b) => (b.key === key ? { ...b, amount: Math.round((b.amount + selectedChip) * 100) / 100 } : b));
+        const newAmount = Math.min(Math.round((existing.amount + selectedChip) * 100) / 100, MAX_BET_PER_SPOT);
+        if (newAmount === existing.amount) return prev;
+        return prev.map((b) => (b.key === key ? { ...b, amount: newAmount } : b));
       }
-      return [...prev, { key, bet_type, bet_value, amount: selectedChip, label }];
+      const initialAmount = Math.min(selectedChip, MAX_BET_PER_SPOT);
+      return [...prev, { key, bet_type, bet_value, amount: initialAmount, label }];
     });
   };
 
