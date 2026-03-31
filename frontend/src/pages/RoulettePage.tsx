@@ -297,6 +297,30 @@ export default function RoulettePage() {
         <div style={styles.disabledMsg}>Roulette is currently disabled.</div>
       )}
 
+      {/* Action buttons */}
+      <div style={{ padding: '0 16px', display: 'flex', gap: '8px', marginBottom: '12px' }}>
+        <button
+          style={{
+            ...styles.clearBtn,
+            opacity: bets.length === 0 || spinning ? 0.5 : 1,
+          }}
+          onClick={clearBets}
+          disabled={bets.length === 0 || spinning}
+        >
+          Clear
+        </button>
+        <button
+          style={{
+            ...styles.spinBtn,
+            opacity: bets.length === 0 || spinning || !enabled ? 0.5 : 1,
+          }}
+          onClick={handleSpin}
+          disabled={bets.length === 0 || spinning || !enabled}
+        >
+          {spinning ? 'Spinning...' : `Spin (${totalBet.toFixed(2)}€)`}
+        </button>
+      </div>
+
       {/* Betting Board */}
       <div style={styles.board}>
         {/* Zero */}
@@ -419,30 +443,6 @@ export default function RoulettePage() {
           </div>
         </div>
       )}
-
-      {/* Action buttons */}
-      <div style={{ padding: '0 16px', display: 'flex', gap: '8px', marginBottom: '16px' }}>
-        <button
-          style={{
-            ...styles.clearBtn,
-            opacity: bets.length === 0 || spinning ? 0.5 : 1,
-          }}
-          onClick={clearBets}
-          disabled={bets.length === 0 || spinning}
-        >
-          Clear
-        </button>
-        <button
-          style={{
-            ...styles.spinBtn,
-            opacity: bets.length === 0 || spinning || !enabled ? 0.5 : 1,
-          }}
-          onClick={handleSpin}
-          disabled={bets.length === 0 || spinning || !enabled}
-        >
-          {spinning ? 'Spinning...' : `Spin (${totalBet.toFixed(2)}€)`}
-        </button>
-      </div>
 
       {/* Stats */}
       {stats && stats.total_spins > 0 && (
