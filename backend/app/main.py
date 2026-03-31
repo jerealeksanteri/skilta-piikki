@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import fiscal, messages, products, rewards, slot_machine, transactions, users
+from app.routers import fiscal, messages, products, rewards, roulette, slot_machine, transactions, users
 
 
 def run_migrations():
@@ -47,3 +47,4 @@ app.include_router(fiscal.router, prefix="/api")
 app.include_router(messages.router, prefix="/api")
 app.include_router(rewards.router, prefix="/api")
 app.include_router(slot_machine.router, prefix="/api")
+app.include_router(roulette.router, prefix="/api")

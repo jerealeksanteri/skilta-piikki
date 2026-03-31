@@ -20,7 +20,7 @@ class RouletteService:
     """
     Service for simulating a European roulette machine (single zero, 0-36).
 
-    Numbers 1-36 are arranged in a 12×3 grid:
+    Numbers 1-36 are arranged in a 12x3 grid:
         col 1  col 2  col 3
     r1:   1      2      3
     r2:   4      5      6
