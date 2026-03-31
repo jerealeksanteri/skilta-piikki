@@ -94,7 +94,7 @@ export default function RoulettePage() {
   const handleSpin = async () => {
     if (spinning || bets.length === 0 || !enabled) return;
     if (!user || user.balance < -49) {
-      showToast('Blacklist limit reached (-50\u20ac)!');
+      showToast('Blacklist limit reached (-50€)!');
       return;
     }
 
@@ -150,17 +150,17 @@ export default function RoulettePage() {
   return (
     <div style={styles.container}>
       <button style={styles.backBtn} onClick={() => navigate('/')}>
-        \u2190 Back to Home
+        ← Back to Home
       </button>
 
       <div style={styles.header}>Roulette</div>
 
-      <div style={styles.balance}>Balance: {user.balance.toFixed(2)}\u20ac</div>
+      <div style={styles.balance}>Balance: {user.balance.toFixed(2)}€</div>
 
       {/* Roulette Wheel */}
       <div style={styles.wheelContainer}>
         <div style={styles.wheelOuter}>
-          <div style={styles.ballIndicator}>\u25BC</div>
+          <div style={styles.ballIndicator}>▼</div>
           <div
             ref={wheelRef}
             style={{
@@ -256,7 +256,7 @@ export default function RoulettePage() {
           </div>
           <div style={{ fontSize: '16px', fontWeight: 600, marginTop: '8px' }}>
             {result.total_win > 0 ? (
-              <span style={{ color: '#4caf50' }}>Won {result.total_win.toFixed(2)}\u20ac!</span>
+              <span style={{ color: '#4caf50' }}>Won {result.total_win.toFixed(2)}€!</span>
             ) : (
               <span style={{ color: '#f44336' }}>No win</span>
             )}
@@ -264,7 +264,7 @@ export default function RoulettePage() {
           {result.total_win > 0 && (
             <div style={{ fontSize: '12px', color: 'var(--hint)', marginTop: '4px' }}>
               {result.results.filter((r) => r.payout > 0).map((r, i) => (
-                <div key={i}>{r.bet_type} ({r.bet_value}): +{r.payout.toFixed(2)}\u20ac</div>
+                <div key={i}>{r.bet_type} ({r.bet_value}): +{r.payout.toFixed(2)}€</div>
               ))}
             </div>
           )}
@@ -299,7 +299,7 @@ export default function RoulettePage() {
               ...(selectedChip === val ? styles.chipSelected : {}),
             }}
           >
-            {val < 1 ? val.toFixed(2) : val.toFixed(0)}\u20ac
+            {val < 1 ? val.toFixed(2) : val.toFixed(0)}€
           </button>
         ))}
       </div>
@@ -389,8 +389,8 @@ export default function RoulettePage() {
         {[
           { key: 'low', type: 'Low/High', value: 'Low', label: '1-18' },
           { key: 'even', type: 'Even/Odd', value: 'Even', label: 'EVEN' },
-          { key: 'red', type: 'Red/Black', value: 'Red', label: '\u25c6', isRed: true },
-          { key: 'black', type: 'Red/Black', value: 'Black', label: '\u25c6', isBlack: true },
+          { key: 'red', type: 'Red/Black', value: 'Red', label: '◆', isRed: true },
+          { key: 'black', type: 'Red/Black', value: 'Black', label: '◆', isBlack: true },
           { key: 'odd', type: 'Even/Odd', value: 'Odd', label: 'ODD' },
           { key: 'high', type: 'Low/High', value: 'High', label: '19-36' },
         ].map((bet, i) => {
@@ -420,12 +420,12 @@ export default function RoulettePage() {
       {bets.length > 0 && (
         <div style={styles.betsCard}>
           <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>
-            Bets ({bets.length}) \u2014 Total: {totalBet.toFixed(2)}\u20ac
+            Bets ({bets.length}) — Total: {totalBet.toFixed(2)}€
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
             {bets.map((b) => (
               <span key={b.key} style={styles.betTag}>
-                {b.label}: {b.amount.toFixed(2)}\u20ac
+                {b.label}: {b.amount.toFixed(2)}€
               </span>
             ))}
           </div>
@@ -452,7 +452,7 @@ export default function RoulettePage() {
           onClick={handleSpin}
           disabled={bets.length === 0 || spinning || !enabled}
         >
-          {spinning ? 'Spinning...' : `Spin (${totalBet.toFixed(2)}\u20ac)`}
+          {spinning ? 'Spinning...' : `Spin (${totalBet.toFixed(2)}€)`}
         </button>
       </div>
 
@@ -466,7 +466,7 @@ export default function RoulettePage() {
           </div>
           <div style={styles.statRow}>
             <span style={styles.statLabel}>Biggest Win:</span>
-            <span style={styles.statValue}>{stats.biggest_win.toFixed(2)}\u20ac</span>
+            <span style={styles.statValue}>{stats.biggest_win.toFixed(2)}€</span>
           </div>
         </div>
       )}

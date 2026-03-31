@@ -224,7 +224,7 @@ export default function AdminRoulettePage() {
             <span style={styles.statLabel}>Period</span>
             <span style={styles.statValue}>
               {scope === 'fiscal_period'
-                ? `${formatDate(stats.period_start)} \u2014 ${formatDate(stats.period_end)}`
+                ? `${formatDate(stats.period_start)} — ${formatDate(stats.period_end)}`
                 : 'All time'}
             </span>
           </div>
@@ -264,11 +264,11 @@ export default function AdminRoulettePage() {
           </div>
           <div style={styles.statRow}>
             <span style={styles.statLabel}>Total Bet</span>
-            <span style={styles.statValue}>{stats.total_bet.toFixed(2)} \u20ac</span>
+            <span style={styles.statValue}>{stats.total_bet.toFixed(2)} €</span>
           </div>
           <div style={styles.statRow}>
             <span style={styles.statLabel}>Total Won</span>
-            <span style={styles.statValue}>{stats.total_won.toFixed(2)} \u20ac</span>
+            <span style={styles.statValue}>{stats.total_won.toFixed(2)} €</span>
           </div>
           <div style={styles.statRow}>
             <span style={styles.statLabel}>House Profit</span>
@@ -278,7 +278,7 @@ export default function AdminRoulettePage() {
                 color: stats.house_profit >= 0 ? '#4caf50' : 'var(--destructive)',
               }}
             >
-              {stats.house_profit >= 0 ? '+' : ''}{stats.house_profit.toFixed(2)} \u20ac
+              {stats.house_profit >= 0 ? '+' : ''}{stats.house_profit.toFixed(2)} €
             </span>
           </div>
           <div style={styles.statRow}>
@@ -305,7 +305,7 @@ export default function AdminRoulettePage() {
                   <div style={styles.info}>
                     <div style={styles.label}>{winner.user_name}</div>
                     <div style={styles.meta}>
-                      {winner.total_spins} spins &middot; Bet {winner.total_bet.toFixed(2)} \u20ac &middot; Won {winner.total_won.toFixed(2)} \u20ac
+                      {winner.total_spins} spins &middot; Bet {winner.total_bet.toFixed(2)} € &middot; Won {winner.total_won.toFixed(2)} €
                     </div>
                   </div>
                   <span
@@ -314,7 +314,7 @@ export default function AdminRoulettePage() {
                       color: winner.net_result >= 0 ? '#4caf50' : 'var(--destructive)',
                     }}
                   >
-                    {winner.net_result >= 0 ? '+' : ''}{winner.net_result.toFixed(2)} \u20ac
+                    {winner.net_result >= 0 ? '+' : ''}{winner.net_result.toFixed(2)} €
                   </span>
                 </div>
               </div>
