@@ -559,8 +559,8 @@ const styles: Record<string, React.CSSProperties> = {
     textShadow: '0 2px 4px rgba(0,0,0,0.5)',
   },
   wheel: {
-    width: '220px',
-    height: '220px',
+    width: '300px',
+    height: '300px',
     borderRadius: '50%',
     position: 'relative',
     border: '6px solid #8b6914',
