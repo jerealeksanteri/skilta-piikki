@@ -545,8 +545,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   wheelOuter: {
     position: 'relative',
-    width: '220px',
-    height: '220px',
+    width: '300px',
+    height: '300px',
   },
   ballIndicator: {
     position: 'absolute',
