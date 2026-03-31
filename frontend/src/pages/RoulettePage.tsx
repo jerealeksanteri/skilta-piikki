@@ -171,53 +171,17 @@ export default function RoulettePage() {
               transition: spinning ? 'transform 3s cubic-bezier(0.2, 0.8, 0.3, 1)' : 'none',
             }}
           >
-            {WHEEL_NUMBERS.map((num, i) => {
-              const angle = (i * 360) / 37;
-              const color = getColor(num);
-              return (
-                <div
-                  key={num}
-                  style={{
-                    position: 'absolute',
-                    width: '100%',
-                    height: '100%',
-                    transform: `rotate(${angle}deg)`,
-                  }}
-                >
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '2px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      fontSize: '9px',
-                      fontWeight: 700,
-                      color: '#fff',
-                      textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-                      width: '20px',
-                      height: '20px',
-                      lineHeight: '20px',
-                      textAlign: 'center',
-                      borderRadius: '50%',
-                      backgroundColor: COLOR_MAP[color],
-                    }}
-                  >
-                    {num}
-                  </div>
-                </div>
-              );
-            })}
-            {/* Wheel segments */}
-            <svg viewBox="0 0 200 200" style={{ position: 'absolute', width: '100%', height: '100%' }}>
+            <svg viewBox="0 0 300 300" style={{ position: 'absolute', width: '100%', height: '100%' }}>
               {WHEEL_NUMBERS.map((num, i) => {
-                const startAngle = (i * 360) / 37 - 90;
-                const endAngle = ((i + 1) * 360) / 37 - 90;
+                const segAngle = 360 / 37;
+                const startAngle = i * segAngle - 90;
+                const endAngle = (i + 1) * segAngle - 90;
                 const startRad = (startAngle * Math.PI) / 180;
                 const endRad = (endAngle * Math.PI) / 180;
-                const outerR = 100;
-                const innerR = 70;
-                const cx = 100;
-                const cy = 100;
+                const outerR = 150;
+                const innerR = 100;
+                const cx = 150;
+                const cy = 150;
                 const x1 = cx + outerR * Math.cos(startRad);
                 const y1 = cy + outerR * Math.sin(startRad);
                 const x2 = cx + outerR * Math.cos(endRad);
@@ -227,19 +191,39 @@ export default function RoulettePage() {
                 const x4 = cx + innerR * Math.cos(startRad);
                 const y4 = cy + innerR * Math.sin(startRad);
                 const color = getColor(num);
+                // Text position: middle of the segment arc, at midpoint radius
+                const midAngle = ((startAngle + endAngle) / 2) * Math.PI / 180;
+                const textR = (outerR + innerR) / 2;
+                const tx = cx + textR * Math.cos(midAngle);
+                const ty = cy + textR * Math.sin(midAngle);
+                const textRotation = (startAngle + endAngle) / 2 + 90;
                 return (
-                  <path
-                    key={num}
-                    d={`M ${x1} ${y1} A ${outerR} ${outerR} 0 0 1 ${x2} ${y2} L ${x3} ${y3} A ${innerR} ${innerR} 0 0 0 ${x4} ${y4} Z`}
-                    fill={COLOR_MAP[color]}
-                    stroke="#1a1a1a"
-                    strokeWidth="0.5"
-                  />
+                  <g key={num}>
+                    <path
+                      d={`M ${x1} ${y1} A ${outerR} ${outerR} 0 0 1 ${x2} ${y2} L ${x3} ${y3} A ${innerR} ${innerR} 0 0 0 ${x4} ${y4} Z`}
+                      fill={COLOR_MAP[color]}
+                      stroke="#1a1a1a"
+                      strokeWidth="0.5"
+                    />
+                    <text
+                      x={tx}
+                      y={ty}
+                      fill="#fff"
+                      fontSize="11"
+                      fontWeight="700"
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      transform={`rotate(${textRotation}, ${tx}, ${ty})`}
+                      style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}
+                    >
+                      {num}
+                    </text>
+                  </g>
                 );
               })}
-              <circle cx="100" cy="100" r="70" fill="#1a1a1a" />
-              <circle cx="100" cy="100" r="65" fill="#2a2a2a" />
-              <circle cx="100" cy="100" r="30" fill="#8b6914" stroke="#d4a829" strokeWidth="2" />
+              <circle cx="150" cy="150" r="100" fill="#1a1a1a" />
+              <circle cx="150" cy="150" r="94" fill="#2a2a2a" />
+              <circle cx="150" cy="150" r="40" fill="#8b6914" stroke="#d4a829" strokeWidth="2" />
             </svg>
           </div>
         </div>
