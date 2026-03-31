@@ -115,6 +115,21 @@ export default function HomePage() {
         >
           🎰 Slot Machine
         </button>
+        <button
+          onClick={() => navigate('/roulette')}
+          style={{
+            display: 'block',
+            width: '100%',
+            padding: '14px',
+            borderRadius: '12px',
+            fontSize: '15px',
+            fontWeight: 600,
+            backgroundColor: '#2e7d32',
+            color: '#fff',
+          }}
+        >
+          🎡 Roulette
+        </button>
       </div>
 
       <button style={fab} onClick={() => setShowOverlay(true)}>

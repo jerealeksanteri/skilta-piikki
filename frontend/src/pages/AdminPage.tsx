@@ -185,6 +185,12 @@ export default function AdminPage() {
         >
           🎰 Slot Machine
         </button>
+        <button
+          style={{ ...styles.paymentBtn, marginTop: '0' }}
+          onClick={() => navigate('/admin/roulette')}
+        >
+          🎡 Roulette
+        </button>
       </div>
 
       <div style={styles.section}>

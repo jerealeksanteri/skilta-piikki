@@ -82,6 +82,7 @@ export default function App() {
             <Route path="/ranking" element={<LeaderboardPage />} />
             <Route path="/payment" element={<PaymentRequestPage />} />
             <Route path="/slot-machine" element={<SlotMachinePage />} />
+            <Route path="/roulette" element={<RoulettePage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/payment" element={<AdminPaymentPage />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
@@ -90,6 +91,7 @@ export default function App() {
             <Route path="/admin/messages" element={<AdminMessagesPage />} />
             <Route path="/admin/rewards" element={<AdminRewardsPage />} />
             <Route path="/admin/slot-machine" element={<AdminSlotMachinePage />} />
+            <Route path="/admin/roulette" element={<AdminRoulettePage />} />
           </Routes>
         </Layout>
       </BrowserRouter>
