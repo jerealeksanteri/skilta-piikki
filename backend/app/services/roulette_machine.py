@@ -68,12 +68,14 @@ class RouletteService:
     # Six-line starts at 1, 4, 7, ..., 31  (two consecutive streets)
     SIX_LINE_STARTS = set(range(1, 32, 3))
 
+    # Real European roulette red numbers
+    RED_NUMBERS = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36}
+
     @staticmethod
     def get_color(number: int) -> str:
         if number == 0:
             return 'Green'
-        # Simplified layout: odd = Red, even = Black
-        return 'Red' if number % 2 != 0 else 'Black'
+        return 'Red' if number in RouletteService.RED_NUMBERS else 'Black'
 
     @staticmethod
     def spin() -> Tuple[int, str]:
