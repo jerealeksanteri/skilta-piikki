@@ -115,10 +115,12 @@ export default function RoulettePage() {
       // Calculate wheel rotation to land on the winning number
       const winIndex = WHEEL_NUMBERS.indexOf(response.number);
       const segmentAngle = 360 / 37;
-      const targetAngle = winIndex * segmentAngle;
-      // Spin multiple full rotations + land on the number
-      const fullSpins = 5 + Math.random() * 3;
-      const newRotation = wheelRotation + fullSpins * 360 + (360 - targetAngle);
+      // Target: center of winning segment at top (where ball indicator is)
+      const targetFinalAngle = (360 - (winIndex + 0.5) * segmentAngle + 360) % 360;
+      const currentAngle = wheelRotation % 360;
+      const delta = (targetFinalAngle - currentAngle + 360) % 360;
+      const fullSpins = 5 + Math.floor(Math.random() * 3);
+      const newRotation = wheelRotation + fullSpins * 360 + delta;
       setWheelRotation(newRotation);
 
       // Wait for animation
