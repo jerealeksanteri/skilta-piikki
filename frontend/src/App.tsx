@@ -18,6 +18,7 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import PaymentRequestPage from './pages/PaymentRequestPage';
 import PendingApprovalPage from './pages/PendingApprovalPage';
 import SlotMachinePage from './pages/SlotMachinePage';
+import RoulettePage from './pages/RoulettePage';
 
 interface UserContextType {
   user: User | null;
