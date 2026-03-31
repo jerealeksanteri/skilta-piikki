@@ -13,6 +13,7 @@ import AdminFiscalPage from './pages/AdminFiscalPage';
 import AdminMessagesPage from './pages/AdminMessagesPage';
 import AdminRewardsPage from './pages/AdminRewardsPage';
 import AdminSlotMachinePage from './pages/AdminSlotMachinePage';
+import AdminRoulettePage from './pages/AdminRoulettePage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import PaymentRequestPage from './pages/PaymentRequestPage';
 import PendingApprovalPage from './pages/PendingApprovalPage';
