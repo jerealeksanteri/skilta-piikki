@@ -35,6 +35,7 @@ class SlotMachineStats(BaseModel):
     total_won: float
     net_result: float
     biggest_win: float
+    theoretical_rtp: float
 
 
 class SlotMachineTopWinner(BaseModel):

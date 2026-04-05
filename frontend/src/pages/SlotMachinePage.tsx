@@ -295,6 +295,10 @@ export default function SlotMachinePage() {
               <span style={styles.statLabel}>Biggest Win:</span>
               <span style={styles.statValue}>{stats.biggest_win.toFixed(2)}€</span>
             </div>
+            <div style={styles.statRow}>
+              <span style={styles.statLabel}>Slot Machine RTP:</span>
+              <span style={styles.statValue}>{stats.theoretical_rtp.toFixed(2)}%</span>
+            </div>
           </div>
         </div>
       )}

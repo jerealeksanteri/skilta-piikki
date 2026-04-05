@@ -22,6 +22,7 @@ export interface SlotMachineStats {
   total_won: number;
   net_result: number;
   biggest_win: number;
+  theoretical_rtp: number;
 }
 
 export function spinSlotMachine(): Promise<SlotMachineSpinResponse> {

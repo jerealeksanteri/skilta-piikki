@@ -32,7 +32,7 @@ class SlotMachineService:
     PAYOUTS = {
         "cherry": 4.0,
         "lemon": 7.0,
-        "orange": 12.0,
+        "orange": 15.0,
         "plum": 22.0,
         "bell": 40.0,
         "seven": 50.0,
