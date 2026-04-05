@@ -171,6 +171,7 @@ def get_slot_machine_stats(
         total_won=total_won,
         net_result=total_won - total_bet,
         biggest_win=biggest_win,
+        theoretical_rtp=SlotMachineService.get_theoretical_rtp(),
     )
 
 
