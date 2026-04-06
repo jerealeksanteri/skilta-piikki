@@ -229,7 +229,6 @@ def get_admin_slot_machine_stats(
         .filter(*period_filter)
         .group_by(SlotMachineSpin.user_id, User.first_name)
         .order_by((func.sum(SlotMachineSpin.win_amount) - func.sum(SlotMachineSpin.bet_amount)).desc())
-        .limit(10)
         .all()
     )
 
