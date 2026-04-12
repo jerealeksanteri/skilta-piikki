@@ -95,38 +95,30 @@ class SlotMachineService:
         """
         Calculate theoretical RTP (Return to Player) percentage.
 
+        RTP is computed by direct enumeration of all possible outcomes, using
+        the same `_calculate_payout` method as real spins. This guarantees the
+        theoretical value always matches the actual payout logic: whenever the
+        payout rules or symbol weights change, this calculation stays correct
+        without manual updates to a hand-derived formula.
+
         Returns:
-            RTP as a percentage (e.g., 90.5 for 90.5%)
+            RTP as a percentage (e.g., 92.12 for 92.12%)
         """
         total_weight = sum(cls.SYMBOL_WEIGHTS)
+        probs = [w / total_weight for w in cls.SYMBOL_WEIGHTS]
 
-        # Calculate expected value for 3 matching symbols
-        ev_three_match = 0.0
-        for i, symbol in enumerate(cls.SYMBOLS):
-            prob = (cls.SYMBOL_WEIGHTS[i] / total_weight) ** 3
-            payout = cls.PAYOUTS[symbol]
-            ev_three_match += prob * payout
-
-        # Calculate expected value for 2 matching symbols (return bet)
-        ev_two_match = 0.0
-        for i, symbol in enumerate(cls.SYMBOLS):
-            p = cls.SYMBOL_WEIGHTS[i] / total_weight
-            # Probability of exactly 2 matching:
-            # - First two match, third doesn't: p^2 * (1-p)
-            # - First and third match, second doesn't: p^2 * (1-p)
-            # - Second and third match, first doesn't: p^2 * (1-p)
-            # But we need to make sure we don't double count when all 3 match
-            # For simplicity: 3 * p^2 * (1-p) gives exactly 2 matches
-            prob_exactly_two = 3 * (p ** 2) * (1 - p)
-            ev_two_match += prob_exactly_two * cls.BET_AMOUNT
-
-        # Total expected value per spin
-        total_ev = ev_three_match + ev_two_match
+        total_ev = 0.0
+        for i, sym_i in enumerate(cls.SYMBOLS):
+            for j, sym_j in enumerate(cls.SYMBOLS):
+                for k, sym_k in enumerate(cls.SYMBOLS):
+                    outcome_prob = probs[i] * probs[j] * probs[k]
+                    payout = cls._calculate_payout(
+                        [sym_i, sym_j, sym_k], cls.BET_AMOUNT
+                    )
+                    total_ev += outcome_prob * payout
 
         # RTP = (Expected return / Bet amount) * 100
-        rtp = (total_ev / cls.BET_AMOUNT) * 100
-
-        return rtp
+        return (total_ev / cls.BET_AMOUNT) * 100
 
 
 # For debugging/testing
