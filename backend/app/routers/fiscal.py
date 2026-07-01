@@ -88,8 +88,8 @@ def close_fiscal_period(
             "amount": f"{abs(user.balance):.2f}",
         }))
 
-    # Reset ALL user balances to 0
-    db.query(User).update({User.balance: 0.0})
+    # Reset only non-positive balances to 0; keep positive balances intact
+    db.query(User).filter(User.balance < 0).update({User.balance: 0.0})
 
     # Create new fiscal period
     new_period = FiscalPeriod(started_at=now)
