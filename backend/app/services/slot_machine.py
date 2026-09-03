@@ -17,13 +17,13 @@ class SlotMachineService:
     Payouts (for 1€ bet):
     - 3x Seven: 50€ (jackpot)
     - 3x Bell: 40€
-    - 3x Plum: 22€
-    - 3x Orange: 12€
+    - 3x Plum: 20€
+    - 3x Orange: 15€
     - 3x Lemon: 7€
     - 3x Cherry: 4€
     - 2x matching: 1€ (return bet)
 
-    Target RTP: 92%
+    Target RTP: ~92%
     """
 
     SYMBOLS = ["cherry", "lemon", "orange", "plum", "bell", "seven"]
