@@ -34,7 +34,7 @@ def get_me(user: User = Depends(get_current_user), db: Session = Depends(get_db)
         balance=user.balance,
         created_at=user.created_at,
         fiscal_debt_total=debt_total,
-        total_balance=user.balance - debt_total,
+        total_balance=user.balance,
     )
 
 
