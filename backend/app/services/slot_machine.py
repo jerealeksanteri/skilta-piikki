@@ -33,7 +33,7 @@ class SlotMachineService:
         "cherry": 4.0,
         "lemon": 7.0,
         "orange": 15.0,
-        "plum": 22.0,
+        "plum": 20.0,
         "bell": 40.0,
         "seven": 50.0,
     }
@@ -132,12 +132,12 @@ class SlotMachineService:
 # For debugging/testing
 if __name__ == "__main__":
     print(f"Theoretical RTP: {SlotMachineService.get_theoretical_rtp():.2f}%")
-    print("\nSimulating 100,000 spins:")
+    print("\nSimulating 1,000,000 spins:")
 
     total_bet = 0.0
     total_won = 0.0
 
-    for _ in range(100000):
+    for _ in range(1_000_000):
         symbols, win = SlotMachineService.spin()
         total_bet += SlotMachineService.BET_AMOUNT
         total_won += win
