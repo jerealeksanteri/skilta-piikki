@@ -51,7 +51,7 @@ export default function BalanceDisplay({ balance, fiscalDebtTotal, rank, totalUs
       </div>
       {fiscalDebtTotal !== undefined && fiscalDebtTotal > 0 && (
         <div style={{ ...styles.subtext, marginTop: '2px' }}>
-          Includes {fiscalDebtTotal.toFixed(2)} € from previous periods
+          Plus {fiscalDebtTotal.toFixed(2)} € owed from previous periods
         </div>
       )}
       {rank !== undefined && totalUsers !== undefined && (
