@@ -104,3 +104,52 @@ export interface RewardGrant {
   granted_at: string;
   granted_by_scheduler: boolean;
 }
+
+export type TransactionStatus = Transaction['status'];
+
+export interface ReportProductSummary {
+  product_id: number | null;
+  product_name: string | null;
+  emoji: string | null;
+  items: number;
+  amount: number;
+}
+
+export interface ReportUserSummary {
+  user_id: number;
+  user_name: string | null;
+  items: number;
+  amount: number;
+  products: ReportProductSummary[];
+}
+
+export interface PurchaseReport {
+  start: string;
+  end: string;
+  statuses: TransactionStatus[];
+  total_items: number;
+  total_amount: number;
+  user_count: number;
+  by_product: ReportProductSummary[];
+  by_user: ReportUserSummary[];
+  transaction_count: number;
+  transactions_truncated: boolean;
+  transactions: Transaction[];
+}
+
+export type NewsletterAudience = 'everyone' | 'admins';
+
+export interface Newsletter {
+  id: number;
+  audience: NewsletterAudience;
+  markup: string;
+  html: string;
+  recipient_count: number;
+  delivered_count: number;
+  failed_count: number;
+  created_by_id: number;
+  created_by_name: string | null;
+  created_at: string;
+}
+
+export type NewsletterAudienceCounts = Record<NewsletterAudience, number>;

@@ -169,6 +169,18 @@ export default function AdminPage() {
         </button>
         <button
           style={{ ...styles.paymentBtn, marginTop: '0' }}
+          onClick={() => navigate('/admin/reports')}
+        >
+          📈 Purchase Reports
+        </button>
+        <button
+          style={{ ...styles.paymentBtn, marginTop: '0' }}
+          onClick={() => navigate('/admin/newsletter')}
+        >
+          📣 Send Newsletter
+        </button>
+        <button
+          style={{ ...styles.paymentBtn, marginTop: '0' }}
           onClick={() => navigate('/admin/messages')}
         >
           💬 Message Templates

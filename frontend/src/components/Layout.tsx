@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useUser } from '../App';
+import { guardedNavigate } from '../utils/navigationGuard';
 
 const styles = {
   container: {
@@ -88,7 +89,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           return (
             <button
               key={tab.path}
-              onClick={() => navigate(tab.path)}
+              onClick={() => guardedNavigate(() => navigate(tab.path))}
               style={{
                 ...styles.tab,
                 ...(isActive ? styles.tabActive : {}),

@@ -62,6 +62,10 @@ interface Props {
   onConfirm: () => void;
   onCancel: () => void;
   loading?: boolean;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  loadingLabel?: string;
+  destructive?: boolean;
 }
 
 export default function ConfirmDialog({
@@ -71,6 +75,10 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
   loading,
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  loadingLabel = 'Logging...',
+  destructive = false,
 }: Props) {
   return (
     <div style={styles.overlay} onClick={onCancel}>
@@ -80,10 +88,17 @@ export default function ConfirmDialog({
         <div style={styles.subtitle}>{subtitle}</div>
         <div style={styles.buttons}>
           <button style={styles.cancelBtn} onClick={onCancel} disabled={loading}>
-            Cancel
+            {cancelLabel}
           </button>
-          <button style={styles.confirmBtn} onClick={onConfirm} disabled={loading}>
-            {loading ? 'Logging...' : 'Confirm'}
+          <button
+            style={{
+              ...styles.confirmBtn,
+              ...(destructive ? { backgroundColor: 'var(--destructive)', color: '#fff' } : {}),
+            }}
+            onClick={onConfirm}
+            disabled={loading}
+          >
+            {loading ? loadingLabel : confirmLabel}
           </button>
         </div>
       </div>
