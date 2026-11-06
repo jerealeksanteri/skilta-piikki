@@ -7,7 +7,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 
-def send_message(telegram_id: int, text: str) -> bool:
+def send_message(telegram_id: int, text: str, parse_mode: str | None = None) -> bool:
     if settings.DEV_MODE:
         logger.info("[DEV] Would send to %s: %s", telegram_id, text)
         return True
@@ -18,7 +18,10 @@ def send_message(telegram_id: int, text: str) -> bool:
 
     url = f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage"
     try:
-        resp = httpx.post(url, json={"chat_id": telegram_id, "text": text}, timeout=10)
+        payload: dict = {"chat_id": telegram_id, "text": text}
+        if parse_mode:
+            payload["parse_mode"] = parse_mode
+        resp = httpx.post(url, json=payload, timeout=10)
         if resp.status_code != 200:
             logger.error("Telegram API error %s: %s", resp.status_code, resp.text)
             return False
