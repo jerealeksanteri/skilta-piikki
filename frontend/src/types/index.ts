@@ -136,3 +136,20 @@ export interface PurchaseReport {
   transactions_truncated: boolean;
   transactions: Transaction[];
 }
+
+export type NewsletterAudience = 'everyone' | 'admins';
+
+export interface Newsletter {
+  id: number;
+  audience: NewsletterAudience;
+  markup: string;
+  html: string;
+  recipient_count: number;
+  delivered_count: number;
+  failed_count: number;
+  created_by_id: number;
+  created_by_name: string | null;
+  created_at: string;
+}
+
+export type NewsletterAudienceCounts = Record<NewsletterAudience, number>;
