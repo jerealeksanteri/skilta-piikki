@@ -9,6 +9,7 @@ from app.config import settings
 from app.routers import (
     fiscal,
     messages,
+    newsletters,
     products,
     reports,
     rewards,
@@ -57,3 +58,4 @@ app.include_router(messages.router, prefix="/api")
 app.include_router(rewards.router, prefix="/api")
 app.include_router(slot_machine.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
+app.include_router(newsletters.router, prefix="/api")
