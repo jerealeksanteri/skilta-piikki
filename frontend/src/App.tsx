@@ -13,6 +13,7 @@ import AdminFiscalPage from './pages/AdminFiscalPage';
 import AdminMessagesPage from './pages/AdminMessagesPage';
 import AdminRewardsPage from './pages/AdminRewardsPage';
 import AdminSlotMachinePage from './pages/AdminSlotMachinePage';
+import AdminReportsPage from './pages/AdminReportsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import PaymentRequestPage from './pages/PaymentRequestPage';
 import PendingApprovalPage from './pages/PendingApprovalPage';
@@ -88,6 +89,7 @@ export default function App() {
             <Route path="/admin/messages" element={<AdminMessagesPage />} />
             <Route path="/admin/rewards" element={<AdminRewardsPage />} />
             <Route path="/admin/slot-machine" element={<AdminSlotMachinePage />} />
+            <Route path="/admin/reports" element={<AdminReportsPage />} />
           </Routes>
         </Layout>
       </BrowserRouter>
