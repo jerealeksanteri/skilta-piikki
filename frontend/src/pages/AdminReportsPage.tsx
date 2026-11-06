@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useUser } from '../App';
 import { getPurchaseReport } from '../api/reports';
 import TransactionItem from '../components/TransactionItem';
@@ -56,11 +57,17 @@ const styles = {
     color: 'var(--hint)',
     fontWeight: 400,
   },
+  backBtn: {
+    fontSize: '14px',
+    color: 'var(--link)',
+    backgroundColor: 'transparent',
+    padding: '8px 16px',
+    marginBottom: '8px',
+  },
   windowCard: {
     backgroundColor: 'var(--bg)',
     borderRadius: '12px',
     padding: '12px 16px',
-    marginTop: '16px',
   },
   dateRow: {
     display: 'flex',
@@ -219,6 +226,7 @@ function productLabel(p: ReportProductSummary): string {
 
 export default function AdminReportsPage() {
   const { user } = useUser();
+  const navigate = useNavigate();
   const initial = presetWindow('sinceYesterdayEvening');
   const [startValue, setStartValue] = useState(toInputValue(initial.start));
   const [endValue, setEndValue] = useState(toInputValue(initial.end));
@@ -288,6 +296,9 @@ export default function AdminReportsPage() {
 
   return (
     <div>
+      <button style={styles.backBtn} onClick={() => navigate('/admin')}>
+        ← Back to Admin
+      </button>
       <div style={styles.section}>
         <div style={styles.windowCard}>
           <div style={styles.dateRow}>
