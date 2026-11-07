@@ -1,5 +1,6 @@
-from datetime import datetime
 from pydantic import BaseModel
+
+from app.schemas.common import UtcDatetime
 
 
 class SlotMachineSpinRequest(BaseModel):
@@ -22,7 +23,7 @@ class SlotMachineHistory(BaseModel):
     bet_amount: float
     win_amount: float
     symbols: list[str]
-    created_at: datetime
+    created_at: UtcDatetime
 
     class Config:
         from_attributes = True
@@ -57,8 +58,8 @@ class SlotMachineAdminStats(BaseModel):
     actual_rtp: float
     theoretical_rtp: float
     top_winners: list[SlotMachineTopWinner]
-    period_start: datetime | None
-    period_end: datetime | None
+    period_start: UtcDatetime | None
+    period_end: UtcDatetime | None
     enabled: bool
 
 

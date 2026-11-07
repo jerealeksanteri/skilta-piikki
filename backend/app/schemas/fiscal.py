@@ -1,21 +1,21 @@
-from datetime import datetime
-
 from pydantic import BaseModel
+
+from app.schemas.common import UtcDatetime
 
 
 class FiscalPeriodOut(BaseModel):
     id: int
-    started_at: datetime
-    ended_at: datetime | None
-    created_at: datetime
+    started_at: UtcDatetime
+    ended_at: UtcDatetime | None
+    created_at: UtcDatetime
 
     model_config = {"from_attributes": True}
 
 
 class FiscalPeriodStats(BaseModel):
     id: int
-    started_at: datetime
-    ended_at: datetime | None
+    started_at: UtcDatetime
+    ended_at: UtcDatetime | None
     total_purchases: int
     total_purchase_amount: float
     total_payments: int
@@ -32,10 +32,10 @@ class FiscalDebtOut(BaseModel):
     user_name: str | None = None
     amount: float
     status: str
-    paid_at: datetime | None
-    created_at: datetime
-    period_started_at: datetime | None = None
-    period_ended_at: datetime | None = None
+    paid_at: UtcDatetime | None
+    created_at: UtcDatetime
+    period_started_at: UtcDatetime | None = None
+    period_ended_at: UtcDatetime | None = None
 
     model_config = {"from_attributes": True}
 

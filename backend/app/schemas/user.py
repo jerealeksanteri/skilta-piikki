@@ -1,6 +1,6 @@
-from datetime import datetime
-
 from pydantic import BaseModel
+
+from app.schemas.common import UtcDatetime
 
 
 class UserCreate(BaseModel):
@@ -23,7 +23,7 @@ class UserOut(BaseModel):
     is_admin: bool
     is_active: bool
     balance: float
-    created_at: datetime
+    created_at: UtcDatetime
 
     model_config = {"from_attributes": True}
 

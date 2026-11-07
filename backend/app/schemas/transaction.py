@@ -1,6 +1,6 @@
-from datetime import datetime
-
 from pydantic import BaseModel
+
+from app.schemas.common import UtcDatetime
 
 
 class PurchaseRequest(BaseModel):
@@ -31,7 +31,7 @@ class TransactionOut(BaseModel):
     created_by_name: str | None = None
     quantity: int = 1
     note: str | None
-    created_at: datetime
+    created_at: UtcDatetime
     product_name: str | None = None
     user_name: str | None = None
 
