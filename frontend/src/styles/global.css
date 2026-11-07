@@ -37,3 +37,27 @@ input, select {
   font-family: inherit;
   font-size: inherit;
 }
+
+/*
+ * Date and time inputs. On iOS (Telegram uses WebKit) they are native
+ * controls whose minimum width follows the formatted value, which overrides
+ * width: 100% and pushes them past their container. Dropping the native
+ * appearance makes them size like text inputs; the value stays tappable and
+ * still opens the system picker.
+ */
+input[type='date'],
+input[type='time'],
+input[type='datetime-local'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* iOS: keep the value left-aligned, and keep the height when it's empty. */
+input::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.2em;
+}
