@@ -1,7 +1,8 @@
-from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
+
+from app.schemas.common import UtcDatetime
 
 Audience = Literal["everyone", "admins"]
 
@@ -23,7 +24,7 @@ class NewsletterOut(BaseModel):
     failed_count: int
     created_by_id: int
     created_by_name: str | None
-    created_at: datetime
+    created_at: UtcDatetime
 
 
 class AudienceCounts(BaseModel):
