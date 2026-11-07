@@ -27,7 +27,9 @@ class RewardBase(BaseModel):
 
 
 class RewardCreate(RewardBase):
-    pass
+    # Recurring only: when the first grant happens; later grants repeat from
+    # it. Omitted = one period from now. Naive values are treated as UTC.
+    start_at: UtcDatetime | None = None
 
 
 class RewardUpdate(BaseModel):

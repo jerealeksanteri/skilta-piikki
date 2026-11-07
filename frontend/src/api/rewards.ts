@@ -8,6 +8,8 @@ export interface RewardCreateInput {
   reward_type: 'one_time' | 'recurring';
   recurrence_frequency?: 'daily' | 'weekly' | 'monthly' | 'yearly';
   assigned_user_ids: number[];
+  /** Recurring only: ISO time of the first grant (default: one period from now) */
+  start_at?: string;
 }
 
 export interface RewardUpdateInput {
