@@ -261,3 +261,56 @@ def test_adjust_balance_does_not_overwrite_concurrent_change(db, make_user):
     db.commit()
 
     assert alice.balance == 15.0
+
+
+# --- Start date -----------------------------------------------------------------
+
+
+def _create_recurring(client, **extra):
+    return client.post("/api/rewards", json={
+        "name": "Bonus", "amount": 2, "reward_type": "recurring",
+        "recurrence_frequency": "monthly", "assigned_user_ids": [], **extra,
+    })
+
+
+def test_start_date_sets_first_grant_and_anchor(db, make_user, client_as, monkeypatch, run_scheduler):
+    admin = make_user("Admin", is_admin=True)
+    monkeypatch.setattr(rewards_router, "utcnow", lambda: datetime(2026, 1, 10, 12))
+
+    # 18:00 Helsinki time (UTC+2) on Jan 31 = 16:00 UTC
+    r = _create_recurring(client_as(admin), start_at="2026-01-31T18:00:00+02:00")
+
+    assert r.status_code == 200, r.text
+    assert r.json()["next_grant_date"].startswith("2026-01-31T16:00:00")
+    run_scheduler(datetime(2026, 1, 31, 17))
+    reward = db.query(Reward).one()
+    assert [g.scheduled_for for g in db.query(RewardGrant)] == [datetime(2026, 1, 31, 16)]
+    assert reward.next_grant_date == datetime(2026, 2, 28, 16)
+
+
+def test_start_date_now_is_granted_on_next_run(make_user, client_as, monkeypatch):
+    admin = make_user("Admin", is_admin=True)
+    monkeypatch.setattr(rewards_router, "utcnow", lambda: datetime(2026, 3, 1, 12, 0, 30))
+
+    r = _create_recurring(client_as(admin), start_at="2026-03-01T12:00:00Z")
+
+    assert r.status_code == 200, r.text
+    assert r.json()["next_grant_date"].startswith("2026-03-01T12:00:00")
+
+
+def test_start_date_in_the_past_is_rejected(make_user, client_as, monkeypatch):
+    admin = make_user("Admin", is_admin=True)
+    monkeypatch.setattr(rewards_router, "utcnow", lambda: datetime(2026, 3, 1, 12))
+
+    r = _create_recurring(client_as(admin), start_at="2026-02-28T12:00:00Z")
+
+    assert r.status_code == 400
+
+
+def test_start_date_not_allowed_for_one_time(make_user, client_as):
+    admin = make_user("Admin", is_admin=True)
+    r = client_as(admin).post("/api/rewards", json={
+        "name": "Once", "amount": 2, "reward_type": "one_time",
+        "assigned_user_ids": [], "start_at": "2030-01-01T00:00:00Z",
+    })
+    assert r.status_code == 400

@@ -1,4 +1,6 @@
 import json
+from datetime import timedelta
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -14,10 +16,14 @@ from app.schemas.reward import (
     RewardGrantOut,
     GrantRewardRequest,
 )
+from app.services.reports import to_naive_utc
 from app.services.reward_schedule import next_occurrence_after, utcnow
 from app.services.rewards import RewardService
 
 router = APIRouter()
+
+# A start date chosen as "now" in the UI reaches the server a moment later.
+START_AT_TOLERANCE = timedelta(minutes=5)
 
 
 def _start_schedule(reward: Reward, frequency: str) -> None:
@@ -167,6 +173,11 @@ def create_reward(
         raise HTTPException(status_code=400, detail="recurrence_frequency required for recurring rewards")
     if data.reward_type == "one_time" and data.recurrence_frequency:
         raise HTTPException(status_code=400, detail="recurrence_frequency not allowed for one-time rewards")
+    if data.reward_type == "one_time" and data.start_at:
+        raise HTTPException(status_code=400, detail="start_at is only for recurring rewards")
+    start_at = to_naive_utc(data.start_at) if data.start_at else None
+    if start_at and start_at < utcnow() - START_AT_TOLERANCE:
+        raise HTTPException(status_code=400, detail="Start date can't be in the past")
 
     # Validate user IDs exist if specific users assigned
     if data.assigned_user_ids:
@@ -183,7 +194,11 @@ def create_reward(
         assigned_user_ids=json.dumps(data.assigned_user_ids),
         created_by_id=admin.id,
     )
-    if data.reward_type == "recurring":
+    if start_at:
+        # The first grant is at start_at itself; later ones repeat from it.
+        reward.schedule_anchor = start_at
+        reward.next_grant_date = start_at
+    elif data.reward_type == "recurring":
         _start_schedule(reward, data.recurrence_frequency)
     db.add(reward)
     db.commit()
