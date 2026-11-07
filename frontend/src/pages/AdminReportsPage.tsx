@@ -71,10 +71,13 @@ const styles = {
   },
   dateRow: {
     display: 'flex',
+    flexWrap: 'wrap' as const,
     gap: '8px',
   },
+  // A date-time value needs ~240px; on phones the fields stack instead of
+  // squeezing side by side and cutting off the time.
   dateField: {
-    flex: 1,
+    flex: '1 1 240px',
     minWidth: 0,
   },
   dateLabel: {
