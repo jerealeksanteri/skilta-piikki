@@ -21,6 +21,7 @@ from app.schemas.slot_machine import (
     SlotMachineToggleRequest,
     SlotMachineTopWinner,
 )
+from app.services.balance import adjust_balance
 from app.services.slot_machine import SlotMachineService
 
 router = APIRouter()
@@ -72,14 +73,11 @@ def spin_slot_machine(
             detail=f"You have reached the blacklist limit ({BLACKLIST_LIMIT:.2f}€). Cannot gamble further!"
         )
 
-    # Deduct bet amount
-    user.balance -= bet_amount
-
     # Spin the slot machine
     symbols, win_amount = SlotMachineService.spin(bet_amount)
 
-    # Add win amount to balance
-    user.balance += win_amount
+    # Deduct the bet and add any win in one atomic update
+    adjust_balance(db, user, win_amount - bet_amount)
 
     # Record the spin
     spin_record = SlotMachineSpin(

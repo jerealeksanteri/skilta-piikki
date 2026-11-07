@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.auth.telegram import require_active_user, require_admin
 from app.config import settings
 from app.database import get_db
+from app.services.balance import adjust_balance
 from app.services.messaging import send_event_message
 from app.models.product import Product
 from app.models.transaction import Transaction
@@ -61,7 +62,7 @@ def create_purchase(
     db.add(tx)
 
     if auto_approve:
-        user.balance += tx.amount
+        adjust_balance(db, user, tx.amount)
 
     db.commit()
     db.refresh(tx)
@@ -167,7 +168,7 @@ def approve_transaction(
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    target_user.balance += tx.amount
+    adjust_balance(db, target_user, tx.amount)
 
     db.commit()
     db.refresh(tx)
