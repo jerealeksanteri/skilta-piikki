@@ -28,6 +28,8 @@ class Reward(Base):
 
     # Recurring reward settings (NULL for one-time rewards)
     recurrence_frequency: Mapped[str | None] = mapped_column(String, nullable=True)  # 'daily', 'weekly', 'monthly', 'yearly'
+    # Occurrence n is schedule_anchor + n periods (see services/reward_schedule.py)
+    schedule_anchor: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     next_grant_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # User assignment (JSON array of user IDs)

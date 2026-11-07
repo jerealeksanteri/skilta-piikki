@@ -11,9 +11,21 @@ naming_convention = {
     "pk": "pk_%(table_name)s",
 }
 
+
+
+def _connect_args(url: str) -> dict:
+    # DateTime columns hold naive UTC. Python writes timezone-aware UTC values,
+    # which PostgreSQL converts to the session time zone before dropping the
+    # offset, so pin sessions to UTC instead of relying on the server default.
+    if url.startswith("postgresql"):
+        return {"options": "-c timezone=UTC"}
+    return {}
+
+
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
+    connect_args=_connect_args(settings.DATABASE_URL),
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

@@ -25,7 +25,7 @@ export interface Transaction {
   id: number;
   user_id: number;
   product_id: number | null;
-  type: 'purchase' | 'payment';
+  type: 'purchase' | 'payment' | 'reward';
   amount: number;
   status: 'pending' | 'approved' | 'rejected';
   approved_by_id: number | null;
@@ -103,6 +103,18 @@ export interface RewardGrant {
   note: string | null;
   granted_at: string;
   granted_by_scheduler: boolean;
+  scheduled_for: string | null;
+}
+
+export interface SchedulerStatus {
+  /** ok = ran recently without errors; failing = last run had errors;
+   * stale = no run for over 2 hours; never = has not run yet */
+  state: 'ok' | 'failing' | 'stale' | 'never';
+  last_run_at: string | null;
+  next_run_at: string | null;
+  due_rewards: number;
+  occurrences_granted: number;
+  failed_reward_ids: number[];
 }
 
 export type TransactionStatus = Transaction['status'];

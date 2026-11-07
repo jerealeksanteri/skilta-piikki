@@ -1,5 +1,5 @@
 import { apiRequest } from './client';
-import type { Reward, RewardGrant } from '../types';
+import type { Reward, RewardGrant, SchedulerStatus } from '../types';
 
 export interface RewardCreateInput {
   name: string;
@@ -8,6 +8,8 @@ export interface RewardCreateInput {
   reward_type: 'one_time' | 'recurring';
   recurrence_frequency?: 'daily' | 'weekly' | 'monthly' | 'yearly';
   assigned_user_ids: number[];
+  /** Recurring only: ISO time of the first grant (default: one period from now) */
+  start_at?: string;
 }
 
 export interface RewardUpdateInput {
@@ -68,4 +70,8 @@ export function listAllGrants(limit: number = 100): Promise<RewardGrant[]> {
 
 export function listUserGrants(userId: number): Promise<RewardGrant[]> {
   return apiRequest<RewardGrant[]>(`/rewards/grants/user/${userId}`);
+}
+
+export function getSchedulerStatus(): Promise<SchedulerStatus> {
+  return apiRequest<SchedulerStatus>('/rewards/scheduler-status');
 }

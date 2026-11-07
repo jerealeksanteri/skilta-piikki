@@ -1,6 +1,6 @@
-from datetime import datetime
-
 from pydantic import BaseModel
+
+from app.schemas.common import UtcDatetime
 
 from app.schemas.transaction import TransactionOut
 
@@ -22,8 +22,8 @@ class UserSummary(BaseModel):
 
 
 class PurchaseReport(BaseModel):
-    start: datetime
-    end: datetime
+    start: UtcDatetime
+    end: UtcDatetime
     statuses: list[str]
     total_items: int
     total_amount: float
