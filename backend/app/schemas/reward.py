@@ -1,5 +1,6 @@
-from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
+
+from app.schemas.common import UtcDatetime
 
 
 class RewardBase(BaseModel):
@@ -41,10 +42,10 @@ class RewardUpdate(BaseModel):
 class RewardOut(RewardBase):
     id: int
     is_active: bool
-    next_grant_date: datetime | None
+    next_grant_date: UtcDatetime | None
     created_by_id: int
-    created_at: datetime
-    updated_at: datetime
+    created_at: UtcDatetime
+    updated_at: UtcDatetime
 
     model_config = {"from_attributes": True}
 
@@ -57,7 +58,8 @@ class RewardGrantOut(BaseModel):
     reward_name: str
     amount: float
     note: str | None
-    granted_at: datetime
+    granted_at: UtcDatetime
+    scheduled_for: UtcDatetime | None = None
     granted_by_scheduler: bool
 
     model_config = {"from_attributes": True}
