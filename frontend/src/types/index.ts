@@ -25,7 +25,7 @@ export interface Transaction {
   id: number;
   user_id: number;
   product_id: number | null;
-  type: 'purchase' | 'payment';
+  type: 'purchase' | 'payment' | 'reward';
   amount: number;
   status: 'pending' | 'approved' | 'rejected';
   approved_by_id: number | null;
@@ -103,6 +103,7 @@ export interface RewardGrant {
   note: string | null;
   granted_at: string;
   granted_by_scheduler: boolean;
+  scheduled_for: string | null;
 }
 
 export type TransactionStatus = Transaction['status'];

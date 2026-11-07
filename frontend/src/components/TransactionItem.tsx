@@ -54,6 +54,15 @@ interface Props {
 
 export default function TransactionItem({ transaction: tx, showUser }: Props) {
   const isPurchase = tx.type === 'purchase';
+  const isReward = tx.type === 'reward';
+  const icon = isPurchase ? '🍺' : isReward ? '🎁' : '💰';
+  // Reward transactions carry the reward name in the note
+  const title = isPurchase
+    ? `${tx.quantity > 1 ? `${tx.quantity}x ` : ''}${tx.product_name || 'Purchase'}`
+    : isReward
+      ? tx.note || 'Reward'
+      : 'Payment';
+  const metaNote = isReward ? null : tx.note;
   const date = new Date(tx.created_at).toLocaleDateString('fi-FI', {
     day: 'numeric',
     month: 'short',
@@ -63,17 +72,15 @@ export default function TransactionItem({ transaction: tx, showUser }: Props) {
 
   return (
     <div style={styles.item}>
-      <div style={styles.icon}>{isPurchase ? '🍺' : '💰'}</div>
+      <div style={styles.icon}>{icon}</div>
       <div style={styles.details}>
         <div style={styles.title}>
-          {isPurchase
-            ? `${tx.quantity > 1 ? `${tx.quantity}x ` : ''}${tx.product_name || 'Purchase'}`
-            : 'Payment'}
+          {title}
           {showUser && tx.user_name ? ` — ${tx.user_name}` : ''}
         </div>
         <div style={styles.meta}>
           {date}
-          {tx.note ? ` · ${tx.note}` : ''}
+          {metaNote ? ` · ${metaNote}` : ''}
         </div>
       </div>
       <div style={styles.right}>
