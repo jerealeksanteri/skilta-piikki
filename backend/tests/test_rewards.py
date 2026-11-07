@@ -314,3 +314,71 @@ def test_start_date_not_allowed_for_one_time(make_user, client_as):
         "assigned_user_ids": [], "start_at": "2030-01-01T00:00:00Z",
     })
     assert r.status_code == 400
+
+
+# --- Scheduler status -------------------------------------------------------------
+
+
+def test_scheduler_run_is_recorded(db, make_user, run_scheduler, monkeypatch):
+    alice = make_user("Alice")
+    _recurring(db, alice, frequency="daily", anchor=datetime(2026, 3, 1, 9), next_grant=datetime(2026, 3, 2, 9))
+    broken = _recurring(db, alice, anchor=datetime(2026, 3, 1), next_grant=datetime(2026, 3, 1))
+    real = scheduler._process_reward
+
+    def flaky(reward_id, now):
+        if reward_id == broken.id:
+            raise RuntimeError("boom")
+        return real(reward_id, now)
+
+    monkeypatch.setattr(scheduler, "_process_reward", flaky)
+    run_scheduler(datetime(2026, 3, 3, 10))
+
+    last = scheduler.read_last_run(db)
+    assert last == {
+        "finished_at": datetime(2026, 3, 3, 10),
+        "due_rewards": 2,
+        "occurrences_granted": 2,
+        "failed_reward_ids": [broken.id],
+    }
+
+
+def _status(client, monkeypatch, now):
+    monkeypatch.setattr(rewards_router, "utcnow", lambda: now)
+    r = client.get("/api/rewards/scheduler-status")
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
+def test_scheduler_status_states(db, make_user, client_as, run_scheduler, monkeypatch):
+    admin = make_user("Admin", is_admin=True)
+    client = client_as(admin)
+
+    assert _status(client, monkeypatch, datetime(2026, 3, 1, 10))["state"] == "never"
+
+    run_scheduler(datetime(2026, 3, 1, 10))
+    body = _status(client, monkeypatch, datetime(2026, 3, 1, 10, 30))
+    assert body["state"] == "ok"
+    assert body["last_run_at"].startswith("2026-03-01T10:00:00")
+    assert body["last_run_at"].endswith(("Z", "+00:00"))
+
+    assert _status(client, monkeypatch, datetime(2026, 3, 1, 12, 30))["state"] == "stale"
+
+
+def test_scheduler_status_reports_failures(db, make_user, client_as, run_scheduler, monkeypatch):
+    admin = make_user("Admin", is_admin=True)
+    _recurring(db, admin, anchor=datetime(2026, 3, 1), next_grant=datetime(2026, 3, 1))
+
+    def boom(*_a, **_k):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(scheduler, "_process_reward", boom)
+    run_scheduler(datetime(2026, 3, 1, 10))
+
+    body = _status(client_as(admin), monkeypatch, datetime(2026, 3, 1, 10, 5))
+    assert body["state"] == "failing"
+    assert len(body["failed_reward_ids"]) == 1
+
+
+def test_scheduler_status_is_admin_only(make_user, client_as):
+    alice = make_user("Alice")
+    assert client_as(alice).get("/api/rewards/scheduler-status").status_code == 403

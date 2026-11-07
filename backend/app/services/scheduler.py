@@ -1,9 +1,12 @@
+import json
 import logging
+from datetime import datetime, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from app.database import SessionLocal
+from app.models.app_setting import AppSetting
 from app.models.reward import Reward
 from app.services.reward_schedule import next_occurrence_after, utcnow
 from app.services.rewards import RewardService
@@ -11,6 +14,9 @@ from app.services.rewards import RewardService
 logger = logging.getLogger(__name__)
 
 scheduler = BackgroundScheduler(timezone="UTC")
+
+JOB_ID = "process_recurring_rewards"
+LAST_RUN_KEY = "reward_scheduler_last_run"
 
 
 def _due(query, now):
@@ -93,12 +99,58 @@ def process_recurring_rewards():
 
     if due_ids:
         logger.info("Processing %d due recurring rewards", len(due_ids))
+    granted = 0
+    failed: list[int] = []
     for reward_id in due_ids:
         try:
-            _process_reward(reward_id, now)
+            granted += _process_reward(reward_id, now)
         except Exception:
             # Rolled back; nothing was granted or sent. Retried on the next run.
+            failed.append(reward_id)
             logger.exception("Error processing reward %s", reward_id)
+
+    _record_run(due_rewards=len(due_ids), occurrences_granted=granted, failed_reward_ids=failed)
+
+
+def _record_run(**summary) -> None:
+    """Store a summary of this run for the admin status view.
+
+    If the database can't even be read, nothing is recorded, and the status
+    view shows the scheduler as stale.
+    """
+    db = SessionLocal()
+    try:
+        value = json.dumps({"finished_at": utcnow().isoformat(), **summary})
+        setting = db.get(AppSetting, LAST_RUN_KEY)
+        if setting is None:
+            db.add(AppSetting(key=LAST_RUN_KEY, value=value))
+        else:
+            setting.value = value
+            setting.updated_at = datetime.now(timezone.utc)
+        db.commit()
+    except Exception:
+        db.rollback()
+        logger.exception("Could not record reward scheduler run")
+    finally:
+        db.close()
+
+
+def read_last_run(db) -> dict | None:
+    """The summary stored by the most recent run, or None if it never ran."""
+    setting = db.get(AppSetting, LAST_RUN_KEY)
+    if setting is None:
+        return None
+    data = json.loads(setting.value)
+    data["finished_at"] = datetime.fromisoformat(data["finished_at"])
+    return data
+
+
+def next_run_at() -> datetime | None:
+    """When this process will next run the job (None if not scheduled here)."""
+    job = scheduler.get_job(JOB_ID) if scheduler.running else None
+    if job is None or job.next_run_time is None:
+        return None
+    return job.next_run_time.astimezone(timezone.utc).replace(tzinfo=None)
 
 
 def start_scheduler():
@@ -106,7 +158,7 @@ def start_scheduler():
     scheduler.add_job(
         process_recurring_rewards,
         CronTrigger(minute=0),  # Every hour on the hour
-        id="process_recurring_rewards",
+        id=JOB_ID,
         replace_existing=True,
         misfire_grace_time=300,  # 5 minutes grace period
         coalesce=True,

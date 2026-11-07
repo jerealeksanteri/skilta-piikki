@@ -106,6 +106,17 @@ export interface RewardGrant {
   scheduled_for: string | null;
 }
 
+export interface SchedulerStatus {
+  /** ok = ran recently without errors; failing = last run had errors;
+   * stale = no run for over 2 hours; never = has not run yet */
+  state: 'ok' | 'failing' | 'stale' | 'never';
+  last_run_at: string | null;
+  next_run_at: string | null;
+  due_rewards: number;
+  occurrences_granted: number;
+  failed_reward_ids: number[];
+}
+
 export type TransactionStatus = Transaction['status'];
 
 export interface ReportProductSummary {
