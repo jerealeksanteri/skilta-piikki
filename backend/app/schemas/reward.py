@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.common import UtcDatetime
@@ -72,3 +74,17 @@ class GrantRewardRequest(BaseModel):
     reward_id: int
     user_ids: list[int] = Field(..., min_length=1)
     note: str | None = None
+
+
+class SchedulerStatusOut(BaseModel):
+    """Health of the recurring-reward scheduler, for the admin page.
+
+    state: 'ok' (ran recently without errors), 'failing' (last run had
+    rewards that errored), 'stale' (no run for over 2 hours) or 'never'.
+    """
+    state: Literal["ok", "failing", "stale", "never"]
+    last_run_at: UtcDatetime | None
+    next_run_at: UtcDatetime | None
+    due_rewards: int = 0
+    occurrences_granted: int = 0
+    failed_reward_ids: list[int] = []

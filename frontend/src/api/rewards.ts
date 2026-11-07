@@ -1,5 +1,5 @@
 import { apiRequest } from './client';
-import type { Reward, RewardGrant } from '../types';
+import type { Reward, RewardGrant, SchedulerStatus } from '../types';
 
 export interface RewardCreateInput {
   name: string;
@@ -70,4 +70,8 @@ export function listAllGrants(limit: number = 100): Promise<RewardGrant[]> {
 
 export function listUserGrants(userId: number): Promise<RewardGrant[]> {
   return apiRequest<RewardGrant[]>(`/rewards/grants/user/${userId}`);
+}
+
+export function getSchedulerStatus(): Promise<SchedulerStatus> {
+  return apiRequest<SchedulerStatus>('/rewards/scheduler-status');
 }

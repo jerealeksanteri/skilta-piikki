@@ -15,15 +15,19 @@ from app.schemas.reward import (
     RewardOut,
     RewardGrantOut,
     GrantRewardRequest,
+    SchedulerStatusOut,
 )
 from app.services.reports import to_naive_utc
 from app.services.reward_schedule import next_occurrence_after, utcnow
 from app.services.rewards import RewardService
+from app.services.scheduler import next_run_at, read_last_run
 
 router = APIRouter()
 
 # A start date chosen as "now" in the UI reaches the server a moment later.
 START_AT_TOLERANCE = timedelta(minutes=5)
+# The job runs hourly; no run for longer than this means it has stopped.
+SCHEDULER_STALE_AFTER = timedelta(hours=2)
 
 
 def _start_schedule(reward: Reward, frequency: str) -> None:
@@ -134,6 +138,34 @@ def list_user_grants(
         .all()
     )
     return [_grant_to_out(g) for g in grants]
+
+
+# === Scheduler status ===
+
+@router.get("/rewards/scheduler-status", response_model=SchedulerStatusOut)
+def scheduler_status(
+    _admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """When the recurring-reward scheduler last ran and whether it worked"""
+    last = read_last_run(db)
+    if last is None:
+        return SchedulerStatusOut(state="never", last_run_at=None, next_run_at=next_run_at())
+
+    if utcnow() - last["finished_at"] > SCHEDULER_STALE_AFTER:
+        state = "stale"
+    elif last["failed_reward_ids"]:
+        state = "failing"
+    else:
+        state = "ok"
+    return SchedulerStatusOut(
+        state=state,
+        last_run_at=last["finished_at"],
+        next_run_at=next_run_at(),
+        due_rewards=last["due_rewards"],
+        occurrences_granted=last["occurrences_granted"],
+        failed_reward_ids=last["failed_reward_ids"],
+    )
 
 
 # === Reward CRUD Endpoints ===

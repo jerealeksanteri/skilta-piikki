@@ -9,8 +9,9 @@ import {
   deleteReward,
   grantReward,
   listAllGrants,
+  getSchedulerStatus,
 } from '../api/rewards';
-import type { User, Reward, RewardGrant } from '../types';
+import type { User, Reward, RewardGrant, SchedulerStatus } from '../types';
 
 const styles = {
   container: {
@@ -185,6 +186,53 @@ function toInputValue(d: Date): string {
   )}:${pad(d.getMinutes())}`;
 }
 
+function formatShort(iso: string): string {
+  return new Date(iso).toLocaleString('fi-FI', {
+    day: 'numeric',
+    month: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function schedulerSummary(
+  status: SchedulerStatus,
+  rewards: Reward[],
+): { icon: string; title: string; detail: string; warn: boolean } {
+  const next = status.next_run_at ? `Next run ${formatShort(status.next_run_at)}.` : '';
+  const last = status.last_run_at ? formatShort(status.last_run_at) : '';
+  switch (status.state) {
+    case 'never':
+      return { icon: '⏳', title: "Scheduler hasn't run yet", detail: next, warn: false };
+    case 'stale':
+      return {
+        icon: '⚠️',
+        title: `Scheduler hasn't run since ${last}`,
+        detail: 'It should run every hour. Check that the backend is running.',
+        warn: true,
+      };
+    case 'failing': {
+      const names = rewards
+        .filter((r) => status.failed_reward_ids.includes(r.id))
+        .map((r) => r.name);
+      const which = names.length > 0 ? names.join(', ') : `${status.failed_reward_ids.length} reward(s)`;
+      return {
+        icon: '⚠️',
+        title: `Last run ${last} failed for ${which}`,
+        detail: `Failed rewards are retried every hour; check the backend logs. ${next}`,
+        warn: true,
+      };
+    }
+    case 'ok':
+      return {
+        icon: '✅',
+        title: `Scheduler last ran ${last}`,
+        detail: `${status.occurrences_granted} reward payout(s) in that run. ${next}`,
+        warn: false,
+      };
+  }
+}
+
 function startHint(freq: Frequency, start: string): string {
   const period = PERIOD_WORD[freq];
   if (!start) return `Empty = first grant one ${period} from now`;
@@ -210,6 +258,7 @@ export default function AdminRewardsPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [grants, setGrants] = useState<RewardGrant[]>([]);
+  const [schedStatus, setSchedStatus] = useState<SchedulerStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -248,6 +297,12 @@ export default function AdminRewardsPage() {
           setGrants(g);
         } catch (e) {
           console.warn('Failed to load grants:', e);
+        }
+
+        try {
+          setSchedStatus(await getSchedulerStatus());
+        } catch (e) {
+          console.warn('Failed to load scheduler status:', e);
         }
       } catch (e) {
         console.error('Failed to load users:', e);
@@ -372,6 +427,7 @@ export default function AdminRewardsPage() {
 
   const oneTimeRewards = rewards.filter((r) => r.reward_type === 'one_time');
   const recurringRewards = rewards.filter((r) => r.reward_type === 'recurring');
+  const summary = schedStatus ? schedulerSummary(schedStatus, recurringRewards) : null;
 
   return (
     <div style={styles.container}>
@@ -514,6 +570,38 @@ export default function AdminRewardsPage() {
 
       {activeTab === 'recurring' && (
         <>
+          {summary && (
+            <div style={styles.section}>
+              <div
+                style={{
+                  ...styles.card,
+                  display: 'flex',
+                  gap: '12px',
+                  alignItems: 'flex-start',
+                  border: summary.warn ? '1px solid var(--destructive)' : '1px solid transparent',
+                }}
+              >
+                <div style={{ fontSize: '20px', lineHeight: '20px' }}>{summary.icon}</div>
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      color: summary.warn ? 'var(--destructive)' : 'var(--text)',
+                    }}
+                  >
+                    {summary.title}
+                  </div>
+                  {summary.detail && (
+                    <div style={{ fontSize: '12px', color: 'var(--hint)', marginTop: '2px' }}>
+                      {summary.detail}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div style={styles.section}>
             <div style={styles.header}>Create Recurring Reward</div>
             <div style={styles.card}>
