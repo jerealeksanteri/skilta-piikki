@@ -155,7 +155,11 @@ backend/
 frontend/
   src/
     api/           # Typed API client functions
-    components/    # Reusable UI components
+    components/    # Feature components (product grid, transaction list, ...)
     pages/         # Route pages
     types/         # TypeScript interfaces
+    ui/            # Shared building blocks: Button, TextField, Card, Section, Tabs, Toast, ...
+    utils/         # Date formatting and other helpers
 ```
+
+New screens should be built from `frontend/src/ui` (sizes in `ui/tokens.ts`, colours as CSS variables in `styles/global.css`) and show messages with `useToast()`, so the app keeps one look.

@@ -21,6 +21,7 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import PaymentRequestPage from './pages/PaymentRequestPage';
 import PendingApprovalPage from './pages/PendingApprovalPage';
 import SlotMachinePage from './pages/SlotMachinePage';
+import { ToastProvider } from './ui';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -65,28 +66,30 @@ export default function App() {
 
   return (
     <UserContext.Provider value={{ user, refreshUser }}>
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/history" element={<HistoryPage />} />
-            <Route path="/ranking" element={<LeaderboardPage />} />
-            <Route path="/payment" element={<PaymentRequestPage />} />
-            <Route path="/slot-machine" element={<SlotMachinePage />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route path="/admin/payment" element={<AdminPaymentPage />} />
-            <Route path="/admin/users" element={<AdminUsersPage />} />
-            <Route path="/admin/products" element={<AdminProductsPage />} />
-            <Route path="/admin/fiscal" element={<AdminFiscalPage />} />
-            <Route path="/admin/messages" element={<AdminMessagesPage />} />
-            <Route path="/admin/rewards" element={<AdminRewardsPage />} />
-            <Route path="/admin/slot-machine" element={<AdminSlotMachinePage />} />
-            <Route path="/admin/reports" element={<AdminReportsPage />} />
-            <Route path="/admin/newsletter" element={<AdminNewsletterPage />} />
-            <Route path="/admin/audit-log" element={<AdminAuditLogPage />} />
-          </Routes>
-        </Layout>
-      </BrowserRouter>
+      <ToastProvider>
+        <BrowserRouter>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/history" element={<HistoryPage />} />
+              <Route path="/ranking" element={<LeaderboardPage />} />
+              <Route path="/payment" element={<PaymentRequestPage />} />
+              <Route path="/slot-machine" element={<SlotMachinePage />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/admin/payment" element={<AdminPaymentPage />} />
+              <Route path="/admin/users" element={<AdminUsersPage />} />
+              <Route path="/admin/products" element={<AdminProductsPage />} />
+              <Route path="/admin/fiscal" element={<AdminFiscalPage />} />
+              <Route path="/admin/messages" element={<AdminMessagesPage />} />
+              <Route path="/admin/rewards" element={<AdminRewardsPage />} />
+              <Route path="/admin/slot-machine" element={<AdminSlotMachinePage />} />
+              <Route path="/admin/reports" element={<AdminReportsPage />} />
+              <Route path="/admin/newsletter" element={<AdminNewsletterPage />} />
+              <Route path="/admin/audit-log" element={<AdminAuditLogPage />} />
+            </Routes>
+          </Layout>
+        </BrowserRouter>
+      </ToastProvider>
     </UserContext.Provider>
   );
 }
