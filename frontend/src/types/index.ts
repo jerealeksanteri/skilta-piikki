@@ -165,3 +165,31 @@ export interface Newsletter {
 }
 
 export type NewsletterAudienceCounts = Record<NewsletterAudience, number>;
+
+export interface AuditChange {
+  from: unknown;
+  to: unknown;
+}
+
+export interface AuditEntry {
+  id: number;
+  actor_id: number | null;
+  actor_name: string;
+  action: string;
+  target_type: string | null;
+  target_id: number | null;
+  target_label: string | null;
+  changes: Record<string, AuditChange> | null;
+  note: string | null;
+  created_at: string;
+}
+
+export interface AuditLogPage {
+  entries: AuditEntry[];
+  has_more: boolean;
+}
+
+export interface AuditFilters {
+  actors: { id: number; name: string }[];
+  actions: string[];
+}
