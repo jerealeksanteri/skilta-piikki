@@ -9,6 +9,7 @@ from app.models.user import User
 from app.money import ZERO, to_cents
 from app.schemas.user import MeOut, UserBulkCreate, UserCreate, UserOut
 from app.services.audit import diff, record, snapshot
+from app.services.ledger import record_adjustment
 from app.services.messaging import send_event_message
 
 router = APIRouter()
@@ -136,7 +137,8 @@ def delete_all_non_admin_users(
     balance_total = sum((u.balance for u in users), ZERO)
     for user in users:
         user.is_active = False
-        user.balance = ZERO
+        if user.balance != 0:
+            record_adjustment(db, user, -user.balance, "Balance reset by an admin (all members reset)", admin.id)
         count += 1
     record(
         db,

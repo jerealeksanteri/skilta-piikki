@@ -131,16 +131,15 @@ def create_payment_request(
 
 @router.get("/transactions/mine", response_model=list[TransactionOut])
 def my_transactions(
+    include_games: bool = False,
     user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ):
-    txs = (
-        db.query(Transaction)
-        .filter(Transaction.user_id == user.id)
-        .order_by(Transaction.created_at.desc())
-        .limit(50)
-        .all()
-    )
+    query = db.query(Transaction).filter(Transaction.user_id == user.id)
+    if not include_games:
+        # Slot machine spins would push everything else out of the latest 50.
+        query = query.filter(Transaction.type != "game")
+    txs = query.order_by(Transaction.created_at.desc()).limit(50).all()
     return [_to_out(tx) for tx in txs]
 
 

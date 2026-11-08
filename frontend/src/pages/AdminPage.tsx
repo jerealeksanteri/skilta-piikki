@@ -8,6 +8,7 @@ import {
   rejectTransaction,
 } from '../api/transactions';
 import type { Transaction, User } from '../types';
+import LedgerStatus from '../components/LedgerStatus';
 
 const styles = {
   section: {
@@ -203,6 +204,10 @@ export default function AdminPage() {
         >
           🧾 Audit Log
         </button>
+      </div>
+
+      <div style={styles.section}>
+        <LedgerStatus />
       </div>
 
       <div style={styles.section}>

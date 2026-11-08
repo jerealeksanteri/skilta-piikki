@@ -8,6 +8,7 @@ from apscheduler.triggers.cron import CronTrigger
 from app.database import SessionLocal
 from app.models.app_setting import AppSetting
 from app.models.reward import Reward
+from app.services import ledger
 from app.services.reward_schedule import next_occurrence_after, utcnow
 from app.services.rewards import RewardService
 
@@ -17,6 +18,7 @@ scheduler = BackgroundScheduler(timezone="UTC")
 
 JOB_ID = "process_recurring_rewards"
 LAST_RUN_KEY = "reward_scheduler_last_run"
+LEDGER_JOB_ID = "check_ledger"
 
 
 def _due(query, now):
@@ -152,6 +154,18 @@ def next_run_at() -> datetime | None:
     return job.next_run_time.astimezone(UTC).replace(tzinfo=None)
 
 
+def check_ledger():
+    """Nightly job: verify every balance equals the sum of its approved transactions."""
+    db = SessionLocal()
+    try:
+        ledger.run_check(db)
+    except Exception:
+        db.rollback()
+        logger.exception("Ledger check failed")
+    finally:
+        db.close()
+
+
 def start_scheduler():
     """Start the background scheduler"""
     scheduler.add_job(
@@ -162,6 +176,15 @@ def start_scheduler():
         misfire_grace_time=300,  # 5 minutes grace period
         coalesce=True,
         max_instances=1,
+    )
+
+    scheduler.add_job(
+        check_ledger,
+        CronTrigger(hour=3, minute=0),  # 03:00 UTC, when nobody is buying
+        id=LEDGER_JOB_ID,
+        replace_existing=True,
+        misfire_grace_time=3600,
+        coalesce=True,
     )
 
     scheduler.start()

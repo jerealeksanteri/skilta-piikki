@@ -29,8 +29,9 @@ export function createPaymentRequest(
   });
 }
 
-export function getMyTransactions(): Promise<Transaction[]> {
-  return apiRequest<Transaction[]>('/transactions/mine');
+/** The latest 50; slot machine spins only when includeGames is set. */
+export function getMyTransactions(includeGames = false): Promise<Transaction[]> {
+  return apiRequest<Transaction[]>(`/transactions/mine${includeGames ? '?include_games=true' : ''}`);
 }
 
 export function getPendingTransactions(): Promise<Transaction[]> {
