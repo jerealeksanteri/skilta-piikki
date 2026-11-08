@@ -89,9 +89,11 @@ interface Props {
   onConfirm: (product: Product, quantity: number) => void;
   onClose: () => void;
   loading?: boolean;
+  favouriteIds?: number[];
+  onToggleFavourite?: (product: Product) => void;
 }
 
-export default function ProductOverlay({ products, onConfirm, onClose, loading }: Props) {
+export default function ProductOverlay({ products, onConfirm, onClose, loading, favouriteIds, onToggleFavourite }: Props) {
   const [selected, setSelected] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
 
@@ -110,7 +112,12 @@ export default function ProductOverlay({ products, onConfirm, onClose, loading }
       <div style={styles.sheet} onClick={(e) => e.stopPropagation()}>
         <div style={styles.handle} />
         {!selected ? (
-          <ProductGrid products={products} onSelect={handleSelect} />
+          <ProductGrid
+            products={products}
+            onSelect={handleSelect}
+            favouriteIds={favouriteIds}
+            onToggleFavourite={onToggleFavourite}
+          />
         ) : (
           <div style={styles.confirmSection}>
             <div style={styles.selectedEmoji}>{selected.emoji}</div>

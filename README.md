@@ -97,6 +97,9 @@ To deploy, set the new image tags in the server-config repo.
 | GET | `/api/me` | Current user info (includes fiscal debt totals) |
 | GET | `/api/products` | List active products |
 | POST | `/api/transactions/purchase` | Log a drink purchase (with quantity); the same drink again within the undo window adds to it |
+| GET | `/api/favourites` | Ids of the user's favourite products |
+| PUT | `/api/favourites/{product_id}` | Pin a product to favourites |
+| DELETE | `/api/favourites/{product_id}` | Unpin a product |
 | GET | `/api/transactions/undoable` | User's purchases still inside the undo window |
 | PUT | `/api/transactions/{id}/quantity` | Change a purchase's quantity inside the undo window |
 | POST | `/api/transactions/{id}/cancel` | Undo a purchase inside the undo window |
