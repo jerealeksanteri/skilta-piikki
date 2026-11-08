@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from app.schemas.common import UtcDatetime
+from app.schemas.common import Money, MoneyIn, UtcDatetime
 
 
 class PurchaseRequest(BaseModel):
@@ -10,12 +10,12 @@ class PurchaseRequest(BaseModel):
 
 class PaymentRequest(BaseModel):
     user_id: int
-    amount: float
+    amount: MoneyIn
     note: str | None = None
 
 
 class UserPaymentRequest(BaseModel):
-    amount: float
+    amount: MoneyIn
     note: str | None = None
 
 
@@ -24,7 +24,7 @@ class TransactionOut(BaseModel):
     user_id: int
     product_id: int | None
     type: str
-    amount: float
+    amount: Money
     status: str
     approved_by_id: int | None
     created_by_id: int | None = None

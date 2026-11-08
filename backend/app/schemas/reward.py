@@ -2,13 +2,13 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.schemas.common import UtcDatetime
+from app.schemas.common import Money, MoneyIn, UtcDatetime
 
 
 class RewardBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     description: str | None = None
-    amount: float = Field(..., gt=0)
+    amount: MoneyIn = Field(..., gt=0)
     reward_type: str  # 'one_time' or 'recurring'
     recurrence_frequency: str | None = None  # 'daily', 'weekly', 'monthly', 'yearly'
     assigned_user_ids: list[int]  # Empty list means all users
@@ -37,7 +37,7 @@ class RewardCreate(RewardBase):
 class RewardUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
-    amount: float | None = Field(None, gt=0)
+    amount: MoneyIn | None = Field(None, gt=0)
     recurrence_frequency: str | None = None
     assigned_user_ids: list[int] | None = None
     is_active: bool | None = None
@@ -60,7 +60,7 @@ class RewardGrantOut(BaseModel):
     user_id: int
     user_name: str | None
     reward_name: str
-    amount: float
+    amount: Money
     note: str | None
     granted_at: UtcDatetime
     scheduled_for: UtcDatetime | None = None

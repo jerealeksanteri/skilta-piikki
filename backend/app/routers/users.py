@@ -6,6 +6,7 @@ from app.auth.telegram import get_current_user, require_admin
 from app.database import get_db
 from app.models.fiscal_debt import FiscalDebt
 from app.models.user import User
+from app.money import ZERO, to_cents
 from app.schemas.user import MeOut, UserBulkCreate, UserCreate, UserOut
 from app.services.messaging import send_event_message
 
@@ -15,14 +16,14 @@ router = APIRouter()
 @router.get("/me", response_model=MeOut)
 def get_me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     debt_total = (
-        db.query(func.coalesce(func.sum(FiscalDebt.amount), 0.0))
+        db.query(func.coalesce(func.sum(FiscalDebt.amount), 0))
         .filter(
             FiscalDebt.user_id == user.id,
             FiscalDebt.status.in_(["unpaid", "payment_pending"]),
         )
         .scalar()
     )
-    debt_total = float(debt_total or 0)
+    debt_total = to_cents(debt_total or 0)
     return MeOut(
         id=user.id,
         telegram_id=user.telegram_id,
@@ -117,7 +118,7 @@ def delete_all_non_admin_users(
     count = 0
     for user in users:
         user.is_active = False
-        user.balance = 0.0
+        user.balance = ZERO
         count += 1
     db.commit()
     return {"deactivated": count}

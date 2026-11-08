@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from app.schemas.common import UtcDatetime
+from app.schemas.common import Money, UtcDatetime
 
 
 class SlotMachineSpinRequest(BaseModel):
@@ -13,9 +13,9 @@ class SlotMachineSpinResponse(BaseModel):
     """Response schema for a slot machine spin."""
 
     symbols: list[str]
-    win_amount: float
-    bet_amount: float
-    new_balance: float
+    win_amount: Money
+    bet_amount: Money
+    new_balance: Money
 
 
 class SlotMachineHistory(BaseModel):
@@ -23,8 +23,8 @@ class SlotMachineHistory(BaseModel):
 
     id: int
     user_id: int
-    bet_amount: float
-    win_amount: float
+    bet_amount: Money
+    win_amount: Money
     symbols: list[str]
     created_at: UtcDatetime
 
@@ -36,10 +36,10 @@ class SlotMachineStats(BaseModel):
     """Schema for slot machine statistics."""
 
     total_spins: int
-    total_bet: float
-    total_won: float
-    net_result: float
-    biggest_win: float
+    total_bet: Money
+    total_won: Money
+    net_result: Money
+    biggest_win: Money
     theoretical_rtp: float
 
 
@@ -49,18 +49,18 @@ class SlotMachineTopWinner(BaseModel):
     user_id: int
     user_name: str
     total_spins: int
-    total_bet: float
-    total_won: float
-    net_result: float
+    total_bet: Money
+    total_won: Money
+    net_result: Money
 
 
 class SlotMachineAdminStats(BaseModel):
     """Schema for admin slot machine statistics."""
 
     total_spins: int
-    total_bet: float
-    total_won: float
-    house_profit: float
+    total_bet: Money
+    total_won: Money
+    house_profit: Money
     actual_rtp: float
     theoretical_rtp: float
     top_winners: list[SlotMachineTopWinner]

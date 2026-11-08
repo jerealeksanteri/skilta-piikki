@@ -1,5 +1,7 @@
 """Seed the database with default products, admin users, fiscal period, and message templates."""
 
+from decimal import Decimal
+
 from app.config import settings
 from app.database import SessionLocal
 from app.models.fiscal_period import FiscalPeriod
@@ -8,10 +10,10 @@ from app.models.product import Product
 from app.models.user import User
 
 PRODUCTS = [
-    {"name": "Olut", "price": 1.00, "emoji": "🍺", "sort_order": 0},
-    {"name": "Siideri", "price": 2.00, "emoji": "🍏", "sort_order": 1},
-    {"name": "Limsa", "price": 1.00, "emoji": "🥤", "sort_order": 2},
-    {"name": "Lonkero", "price": 2.00, "emoji": "🍋", "sort_order": 3},
+    {"name": "Olut", "price": Decimal("1.00"), "emoji": "🍺", "sort_order": 0},
+    {"name": "Siideri", "price": Decimal("2.00"), "emoji": "🍏", "sort_order": 1},
+    {"name": "Limsa", "price": Decimal("1.00"), "emoji": "🥤", "sort_order": 2},
+    {"name": "Lonkero", "price": Decimal("2.00"), "emoji": "🍋", "sort_order": 3},
 ]
 
 MESSAGE_TEMPLATES = [

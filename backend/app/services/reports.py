@@ -7,6 +7,7 @@ interpolated into SQL text.
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from decimal import Decimal
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
@@ -14,6 +15,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models.product import Product
 from app.models.transaction import Transaction
 from app.models.user import User
+from app.money import ZERO, to_cents
 
 TRANSACTION_LIST_LIMIT = 500
 
@@ -31,7 +33,7 @@ class _ProductRow:
     product_name: str | None
     emoji: str | None
     items: int = 0
-    amount: float = 0.0
+    amount: Decimal = ZERO
 
 
 @dataclass
@@ -39,14 +41,14 @@ class _UserRow:
     user_id: int
     user_name: str | None
     items: int = 0
-    amount: float = 0.0
+    amount: Decimal = ZERO
     products: list[_ProductRow] = field(default_factory=list)
 
 
 @dataclass
 class PurchaseReportData:
     total_items: int
-    total_amount: float
+    total_amount: Decimal
     by_product: list[_ProductRow]
     by_user: list[_UserRow]
     transaction_count: int
@@ -70,7 +72,7 @@ class ReportService:
 
         # Purchases are stored as negative amounts; report euros spent as positive.
         items_col = func.coalesce(func.sum(Transaction.quantity), 0)
-        amount_col = func.coalesce(-func.sum(Transaction.amount), 0.0)
+        amount_col = func.coalesce(-func.sum(Transaction.amount), 0)
 
         grouped = db.execute(
             select(
@@ -97,7 +99,7 @@ class ReportService:
         products: dict[int | None, _ProductRow] = {}
         users: dict[int, _UserRow] = {}
         for user_id, user_name, product_id, product_name, emoji, items, amount in grouped:
-            items, amount = int(items), float(amount)
+            items, amount = int(items), to_cents(amount)
 
             prod = products.setdefault(product_id, _ProductRow(product_id, product_name, emoji))
             prod.items += items
@@ -131,7 +133,7 @@ class ReportService:
 
         return PurchaseReportData(
             total_items=sum(p.items for p in by_product),
-            total_amount=sum(p.amount for p in by_product),
+            total_amount=sum((p.amount for p in by_product), ZERO),
             by_product=by_product,
             by_user=by_user,
             transaction_count=transaction_count,

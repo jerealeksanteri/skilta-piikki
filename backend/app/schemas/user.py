@@ -1,6 +1,8 @@
+from decimal import Decimal
+
 from pydantic import BaseModel
 
-from app.schemas.common import UtcDatetime
+from app.schemas.common import Money, UtcDatetime
 
 
 class UserCreate(BaseModel):
@@ -22,12 +24,12 @@ class UserOut(BaseModel):
     username: str | None
     is_admin: bool
     is_active: bool
-    balance: float
+    balance: Money
     created_at: UtcDatetime
 
     model_config = {"from_attributes": True}
 
 
 class MeOut(UserOut):
-    fiscal_debt_total: float = 0.0
-    total_balance: float = 0.0
+    fiscal_debt_total: Money = Decimal("0.00")
+    total_balance: Money = Decimal("0.00")

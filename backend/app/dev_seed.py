@@ -11,6 +11,7 @@ DEV_MODE is on, so it can't touch a real database.
 import json
 import sys
 from datetime import timedelta
+from decimal import Decimal
 
 from app.config import settings
 from app.database import SessionLocal
@@ -86,7 +87,7 @@ def main() -> None:
             Transaction(
                 user_id=members[1].id,
                 type="payment",
-                amount=5.0,
+                amount=Decimal("5.00"),
                 status="pending",
                 created_by_id=members[1].id,
                 note="MobilePay",
@@ -98,7 +99,7 @@ def main() -> None:
             Reward(
                 name="Board member bonus",
                 description="Thanks for running the guild",
-                amount=5.0,
+                amount=Decimal("5.00"),
                 reward_type="recurring",
                 recurrence_frequency="monthly",
                 schedule_anchor=now,

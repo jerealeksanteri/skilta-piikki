@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from app.schemas.common import UtcDatetime
+from app.schemas.common import Money, UtcDatetime
 
 
 class FiscalPeriodOut(BaseModel):
@@ -17,12 +17,12 @@ class FiscalPeriodStats(BaseModel):
     started_at: UtcDatetime
     ended_at: UtcDatetime | None
     total_purchases: int
-    total_purchase_amount: float
+    total_purchase_amount: Money
     total_payments: int
-    total_payment_amount: float
-    total_debt: float
-    debt_collected: float
-    debt_outstanding: float
+    total_payment_amount: Money
+    total_debt: Money
+    debt_collected: Money
+    debt_outstanding: Money
 
 
 class FiscalDebtOut(BaseModel):
@@ -30,7 +30,7 @@ class FiscalDebtOut(BaseModel):
     fiscal_period_id: int
     user_id: int
     user_name: str | None = None
-    amount: float
+    amount: Money
     status: str
     paid_at: UtcDatetime | None
     created_at: UtcDatetime
