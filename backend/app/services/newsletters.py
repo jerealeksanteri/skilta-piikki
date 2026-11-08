@@ -39,16 +39,12 @@ class NewsletterService:
         return {"everyone": count("everyone"), "admins": count("admins")}
 
     @classmethod
-    def send(
-        cls, db: Session, sender: User, audience: str, markup: str, html: str
-    ) -> Newsletter:
+    def send(cls, db: Session, sender: User, audience: str, markup: str, html: str) -> Newsletter:
         clean_html = sanitize_telegram_html(html)
         if not visible_text(clean_html).strip():
             raise NewsletterError("Message is empty")
         if visible_length(clean_html) > TELEGRAM_MESSAGE_LIMIT:
-            raise NewsletterError(
-                f"Message is longer than Telegram's {TELEGRAM_MESSAGE_LIMIT} character limit"
-            )
+            raise NewsletterError(f"Message is longer than Telegram's {TELEGRAM_MESSAGE_LIMIT} character limit")
 
         recipients = list(db.scalars(cls._recipients_query(audience).order_by(User.id)))
 

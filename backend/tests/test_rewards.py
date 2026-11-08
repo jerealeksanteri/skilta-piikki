@@ -12,7 +12,6 @@ from app.services import scheduler
 from app.services.balance import adjust_balance
 from app.services.reward_schedule import next_occurrence_after, occurrence
 
-
 # --- Schedule maths ---------------------------------------------------------
 
 
@@ -137,9 +136,16 @@ def test_scheduler_is_idempotent(db, make_user, run_scheduler):
 def test_scheduler_skips_users_already_granted_for_that_occurrence(db, make_user, run_scheduler):
     alice, bob = make_user("Alice"), make_user("Bob")
     reward = _recurring(db, alice, anchor=datetime(2026, 1, 1), next_grant=datetime(2026, 3, 1))
-    db.add(RewardGrant(reward_id=reward.id, user_id=alice.id, reward_name=reward.name,
-                       amount=reward.amount, scheduled_for=datetime(2026, 3, 1),
-                       granted_by_scheduler=True))
+    db.add(
+        RewardGrant(
+            reward_id=reward.id,
+            user_id=alice.id,
+            reward_name=reward.name,
+            amount=reward.amount,
+            scheduled_for=datetime(2026, 3, 1),
+            granted_by_scheduler=True,
+        )
+    )
     db.commit()
 
     sent = run_scheduler(datetime(2026, 3, 1, 1))
@@ -151,8 +157,9 @@ def test_scheduler_skips_users_already_granted_for_that_occurrence(db, make_user
 
 def test_scheduler_catches_up_missed_occurrences(db, make_user, run_scheduler):
     alice = make_user("Alice")
-    reward = _recurring(db, alice, frequency="daily", anchor=datetime(2026, 3, 1, 9),
-                        next_grant=datetime(2026, 3, 2, 9))
+    reward = _recurring(
+        db, alice, frequency="daily", anchor=datetime(2026, 3, 1, 9), next_grant=datetime(2026, 3, 2, 9)
+    )
 
     run_scheduler(datetime(2026, 3, 4, 10))  # server was down for 3 occurrences
 
@@ -165,8 +172,9 @@ def test_scheduler_catches_up_missed_occurrences(db, make_user, run_scheduler):
 def test_scheduler_only_grants_assigned_active_users(db, make_user, run_scheduler):
     alice, bob = make_user("Alice"), make_user("Bob")
     carol = make_user("Carol", is_active=False)
-    _recurring(db, alice, anchor=datetime(2026, 1, 1), next_grant=datetime(2026, 3, 1),
-               users=json.dumps([bob.id, carol.id]))
+    _recurring(
+        db, alice, anchor=datetime(2026, 1, 1), next_grant=datetime(2026, 3, 1), users=json.dumps([bob.id, carol.id])
+    )
 
     run_scheduler(datetime(2026, 3, 1, 1))
 
@@ -180,10 +188,16 @@ def test_create_monthly_reward_on_31st(make_user, client_as, monkeypatch):
     admin = make_user("Admin", is_admin=True)
     monkeypatch.setattr(rewards_router, "utcnow", lambda: datetime(2026, 1, 31, 12))
 
-    r = client_as(admin).post("/api/rewards", json={
-        "name": "Bonus", "amount": 2, "reward_type": "recurring",
-        "recurrence_frequency": "monthly", "assigned_user_ids": [],
-    })
+    r = client_as(admin).post(
+        "/api/rewards",
+        json={
+            "name": "Bonus",
+            "amount": 2,
+            "reward_type": "recurring",
+            "recurrence_frequency": "monthly",
+            "assigned_user_ids": [],
+        },
+    )
 
     assert r.status_code == 200, r.text
     assert r.json()["next_grant_date"].startswith("2026-02-28T12:00:00")
@@ -192,10 +206,16 @@ def test_create_monthly_reward_on_31st(make_user, client_as, monkeypatch):
 def test_api_datetimes_are_utc_marked(make_user, client_as, monkeypatch):
     admin = make_user("Admin", is_admin=True)
     monkeypatch.setattr(rewards_router, "utcnow", lambda: datetime(2026, 3, 1, 12))
-    r = client_as(admin).post("/api/rewards", json={
-        "name": "Bonus", "amount": 2, "reward_type": "recurring",
-        "recurrence_frequency": "daily", "assigned_user_ids": [],
-    })
+    r = client_as(admin).post(
+        "/api/rewards",
+        json={
+            "name": "Bonus",
+            "amount": 2,
+            "reward_type": "recurring",
+            "recurrence_frequency": "daily",
+            "assigned_user_ids": [],
+        },
+    )
     body = r.json()
     for field in ("next_grant_date", "created_at", "updated_at"):
         assert body[field].endswith(("Z", "+00:00")), (field, body[field])
@@ -203,13 +223,11 @@ def test_api_datetimes_are_utc_marked(make_user, client_as, monkeypatch):
 
 def test_list_grants_route_is_reachable(db, make_user, client_as):
     admin = make_user("Admin", is_admin=True)
-    reward = Reward(name="One-off", amount=3, reward_type="one_time",
-                    assigned_user_ids="[]", created_by_id=admin.id)
+    reward = Reward(name="One-off", amount=3, reward_type="one_time", assigned_user_ids="[]", created_by_id=admin.id)
     db.add(reward)
     db.commit()
     client = client_as(admin)
-    assert client.post("/api/rewards/grant",
-                       json={"reward_id": reward.id, "user_ids": [admin.id]}).status_code == 200
+    assert client.post("/api/rewards/grant", json={"reward_id": reward.id, "user_ids": [admin.id]}).status_code == 200
 
     r = client.get("/api/rewards/grants?limit=50")
 
@@ -222,8 +240,7 @@ def test_list_grants_route_is_reachable(db, make_user, client_as):
 def test_manual_grant_shows_in_users_transactions(db, make_user, client_as):
     admin = make_user("Admin", is_admin=True)
     alice = make_user("Alice")
-    reward = Reward(name="Helper", amount=4, reward_type="one_time",
-                    assigned_user_ids="[]", created_by_id=admin.id)
+    reward = Reward(name="Helper", amount=4, reward_type="one_time", assigned_user_ids="[]", created_by_id=admin.id)
     db.add(reward)
     db.commit()
     client_as(admin).post("/api/rewards/grant", json={"reward_id": reward.id, "user_ids": [alice.id]})
@@ -267,10 +284,17 @@ def test_adjust_balance_does_not_overwrite_concurrent_change(db, make_user):
 
 
 def _create_recurring(client, **extra):
-    return client.post("/api/rewards", json={
-        "name": "Bonus", "amount": 2, "reward_type": "recurring",
-        "recurrence_frequency": "monthly", "assigned_user_ids": [], **extra,
-    })
+    return client.post(
+        "/api/rewards",
+        json={
+            "name": "Bonus",
+            "amount": 2,
+            "reward_type": "recurring",
+            "recurrence_frequency": "monthly",
+            "assigned_user_ids": [],
+            **extra,
+        },
+    )
 
 
 def test_start_date_sets_first_grant_and_anchor(db, make_user, client_as, monkeypatch, run_scheduler):
@@ -309,10 +333,16 @@ def test_start_date_in_the_past_is_rejected(make_user, client_as, monkeypatch):
 
 def test_start_date_not_allowed_for_one_time(make_user, client_as):
     admin = make_user("Admin", is_admin=True)
-    r = client_as(admin).post("/api/rewards", json={
-        "name": "Once", "amount": 2, "reward_type": "one_time",
-        "assigned_user_ids": [], "start_at": "2030-01-01T00:00:00Z",
-    })
+    r = client_as(admin).post(
+        "/api/rewards",
+        json={
+            "name": "Once",
+            "amount": 2,
+            "reward_type": "one_time",
+            "assigned_user_ids": [],
+            "start_at": "2030-01-01T00:00:00Z",
+        },
+    )
     assert r.status_code == 400
 
 

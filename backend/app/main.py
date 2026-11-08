@@ -1,10 +1,10 @@
 from contextlib import asynccontextmanager
 
-from alembic import command
 from alembic.config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from alembic import command
 from app.config import settings
 from app.routers import (
     fiscal,
@@ -28,10 +28,12 @@ def run_migrations():
 async def lifespan(app: FastAPI):
     run_migrations()
     from app.seed import seed
+
     seed()
 
     # Start scheduler
     from app.services.scheduler import start_scheduler, stop_scheduler
+
     start_scheduler()
 
     yield

@@ -51,5 +51,5 @@ def send_newsletter(
     try:
         newsletter = NewsletterService.send(db, admin, data.audience, data.markup, data.html)
     except NewsletterError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     return _to_out(newsletter)

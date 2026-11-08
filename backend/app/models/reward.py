@@ -1,6 +1,8 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
+
 from app.database import Base
 
 
@@ -27,7 +29,9 @@ class Reward(Base):
     reward_type: Mapped[str] = mapped_column(String, nullable=False)  # 'one_time' or 'recurring'
 
     # Recurring reward settings (NULL for one-time rewards)
-    recurrence_frequency: Mapped[str | None] = mapped_column(String, nullable=True)  # 'daily', 'weekly', 'monthly', 'yearly'
+    recurrence_frequency: Mapped[str | None] = mapped_column(
+        String, nullable=True
+    )  # 'daily', 'weekly', 'monthly', 'yearly'
     # Occurrence n is schedule_anchor + n periods (see services/reward_schedule.py)
     schedule_anchor: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     next_grant_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -40,12 +44,10 @@ class Reward(Base):
 
     # Audit fields
     created_by_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=lambda: datetime.now(UTC))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )

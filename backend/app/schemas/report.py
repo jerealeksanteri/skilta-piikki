@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 
 from app.schemas.common import UtcDatetime
-
 from app.schemas.transaction import TransactionOut
 
 

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
@@ -36,11 +36,7 @@ def list_fiscal_periods(
     _admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    return (
-        db.query(FiscalPeriod)
-        .order_by(FiscalPeriod.started_at.desc())
-        .all()
-    )
+    return db.query(FiscalPeriod).order_by(FiscalPeriod.started_at.desc()).all()
 
 
 @router.get("/fiscal-periods/current", response_model=FiscalPeriodOut)
@@ -63,7 +59,7 @@ def close_fiscal_period(
     if not current:
         raise HTTPException(status_code=400, detail="No active fiscal period to close")
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     current.ended_at = now
 
     # Create debts for users with negative balance
@@ -83,10 +79,15 @@ def close_fiscal_period(
         )
         db.add(debt)
         debts_created += 1
-        users_and_vars.append((user, {
-            "user": user.first_name,
-            "amount": f"{abs(user.balance):.2f}",
-        }))
+        users_and_vars.append(
+            (
+                user,
+                {
+                    "user": user.first_name,
+                    "amount": f"{abs(user.balance):.2f}",
+                },
+            )
+        )
 
     # Reset only non-positive balances to 0; keep positive balances intact
     db.query(User).filter(User.balance < 0).update({User.balance: 0.0})
@@ -118,7 +119,7 @@ def get_period_stats(
     if not period:
         raise HTTPException(status_code=404, detail="Period not found")
 
-    end = period.ended_at or datetime.now(timezone.utc)
+    end = period.ended_at or datetime.now(UTC)
 
     # Purchase stats
     purchase_stats = (
@@ -183,10 +184,7 @@ def get_period_debts(
     db: Session = Depends(get_db),
 ):
     debts = (
-        db.query(FiscalDebt)
-        .filter(FiscalDebt.fiscal_period_id == period_id)
-        .order_by(FiscalDebt.amount.desc())
-        .all()
+        db.query(FiscalDebt).filter(FiscalDebt.fiscal_period_id == period_id).order_by(FiscalDebt.amount.desc()).all()
     )
     return [_debt_to_out(d) for d in debts]
 
@@ -198,10 +196,7 @@ def get_all_pending_debts(
 ):
     """Get all pending debt payments across all fiscal periods."""
     debts = (
-        db.query(FiscalDebt)
-        .filter(FiscalDebt.status == "payment_pending")
-        .order_by(FiscalDebt.created_at.desc())
-        .all()
+        db.query(FiscalDebt).filter(FiscalDebt.status == "payment_pending").order_by(FiscalDebt.created_at.desc()).all()
     )
     return [_debt_to_out(d) for d in debts]
 
@@ -256,15 +251,21 @@ def approve_debt_payment(
         raise HTTPException(status_code=400, detail="Debt payment is not pending")
 
     debt.status = "paid"
-    debt.paid_at = datetime.now(timezone.utc)
+    debt.paid_at = datetime.now(UTC)
     db.commit()
     db.refresh(debt)
 
     from app.services.messaging import send_event_message
-    send_event_message(db, "debt_payment_approved", debt.user, {
-        "user": debt.user.first_name,
-        "amount": f"{debt.amount:.2f}",
-    })
+
+    send_event_message(
+        db,
+        "debt_payment_approved",
+        debt.user,
+        {
+            "user": debt.user.first_name,
+            "amount": f"{debt.amount:.2f}",
+        },
+    )
 
     return _debt_to_out(debt)
 
@@ -286,10 +287,16 @@ def reject_debt_payment(
     db.refresh(debt)
 
     from app.services.messaging import send_event_message
-    send_event_message(db, "debt_payment_rejected", debt.user, {
-        "user": debt.user.first_name,
-        "amount": f"{debt.amount:.2f}",
-    })
+
+    send_event_message(
+        db,
+        "debt_payment_rejected",
+        debt.user,
+        {
+            "user": debt.user.first_name,
+            "amount": f"{debt.amount:.2f}",
+        },
+    )
 
     return _debt_to_out(debt)
 
@@ -307,14 +314,20 @@ def mark_debt_paid(
         raise HTTPException(status_code=400, detail="Debt is already paid")
 
     debt.status = "paid"
-    debt.paid_at = datetime.now(timezone.utc)
+    debt.paid_at = datetime.now(UTC)
     db.commit()
     db.refresh(debt)
 
     from app.services.messaging import send_event_message
-    send_event_message(db, "debt_payment_approved", debt.user, {
-        "user": debt.user.first_name,
-        "amount": f"{debt.amount:.2f}",
-    })
+
+    send_event_message(
+        db,
+        "debt_payment_approved",
+        debt.user,
+        {
+            "user": debt.user.first_name,
+            "amount": f"{debt.amount:.2f}",
+        },
+    )
 
     return _debt_to_out(debt)

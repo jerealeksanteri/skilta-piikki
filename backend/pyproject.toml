@@ -20,8 +20,27 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest==9.2.0",
+    "ruff==0.17.2",
 ]
 
 [tool.uv]
 # An application, not a library: install dependencies only.
 package = false
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+extend-exclude = ["venv"]
+
+[tool.ruff.lint]
+# pycodestyle, pyflakes, import sorting, pyupgrade, bugbear
+select = ["E", "W", "F", "I", "UP", "B"]
+ignore = [
+    "E501",  # line length is left to the formatter
+    "E712",  # `== True` is the SQLAlchemy idiom in filters
+    "B008",  # FastAPI declares dependencies as defaults: Depends(...)
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Alembic migrations are generated and kept as written.
+"alembic/versions/*" = ["E", "W", "UP", "I"]

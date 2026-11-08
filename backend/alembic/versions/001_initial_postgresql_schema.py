@@ -5,6 +5,7 @@ Revises:
 Create Date: 2026-02-10 00:00:00.000000
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -47,9 +48,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.text("now()")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_users")),
-        sa.ForeignKeyConstraint(
-            ["added_by_id"], ["users.id"], name=op.f("fk_users_added_by_id_users")
-        ),
+        sa.ForeignKeyConstraint(["added_by_id"], ["users.id"], name=op.f("fk_users_added_by_id_users")),
     )
     op.create_index(op.f("ix_users_telegram_id"), "users", ["telegram_id"], unique=True)
 
@@ -69,24 +68,12 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.text("now()")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_transactions")),
-        sa.ForeignKeyConstraint(
-            ["user_id"], ["users.id"], name=op.f("fk_transactions_user_id_users")
-        ),
-        sa.ForeignKeyConstraint(
-            ["product_id"], ["products.id"], name=op.f("fk_transactions_product_id_products")
-        ),
-        sa.ForeignKeyConstraint(
-            ["approved_by_id"], ["users.id"], name=op.f("fk_transactions_approved_by_id_users")
-        ),
-        sa.ForeignKeyConstraint(
-            ["created_by_id"], ["users.id"], name=op.f("fk_transactions_created_by_id_users")
-        ),
-        sa.CheckConstraint(
-            "type IN ('purchase', 'payment')", name="ck_transaction_type"
-        ),
-        sa.CheckConstraint(
-            "status IN ('pending', 'approved', 'rejected')", name="ck_transaction_status"
-        ),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], name=op.f("fk_transactions_user_id_users")),
+        sa.ForeignKeyConstraint(["product_id"], ["products.id"], name=op.f("fk_transactions_product_id_products")),
+        sa.ForeignKeyConstraint(["approved_by_id"], ["users.id"], name=op.f("fk_transactions_approved_by_id_users")),
+        sa.ForeignKeyConstraint(["created_by_id"], ["users.id"], name=op.f("fk_transactions_created_by_id_users")),
+        sa.CheckConstraint("type IN ('purchase', 'payment')", name="ck_transaction_type"),
+        sa.CheckConstraint("status IN ('pending', 'approved', 'rejected')", name="ck_transaction_status"),
     )
 
     # --- Fiscal Periods ---
@@ -115,9 +102,7 @@ def upgrade() -> None:
             ["fiscal_periods.id"],
             name=op.f("fk_fiscal_debts_fiscal_period_id_fiscal_periods"),
         ),
-        sa.ForeignKeyConstraint(
-            ["user_id"], ["users.id"], name=op.f("fk_fiscal_debts_user_id_users")
-        ),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], name=op.f("fk_fiscal_debts_user_id_users")),
         sa.CheckConstraint(
             "status IN ('unpaid', 'payment_pending', 'paid')",
             name="ck_fiscal_debt_status",

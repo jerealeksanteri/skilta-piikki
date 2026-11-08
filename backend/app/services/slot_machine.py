@@ -1,5 +1,4 @@
 import random
-from typing import Tuple, List
 
 
 class SlotMachineService:
@@ -41,7 +40,7 @@ class SlotMachineService:
     BET_AMOUNT = 1.0
 
     @classmethod
-    def spin(cls, bet_amount: float = BET_AMOUNT) -> Tuple[List[str], float]:
+    def spin(cls, bet_amount: float = BET_AMOUNT) -> tuple[list[str], float]:
         """
         Spin the slot machine.
 
@@ -54,11 +53,7 @@ class SlotMachineService:
             - win_amount: Amount won (0 if no win)
         """
         # Generate 3 random symbols using weighted selection
-        symbols = random.choices(
-            cls.SYMBOLS,
-            weights=cls.SYMBOL_WEIGHTS,
-            k=3
-        )
+        symbols = random.choices(cls.SYMBOLS, weights=cls.SYMBOL_WEIGHTS, k=3)
 
         # Calculate payout
         win_amount = cls._calculate_payout(symbols, bet_amount)
@@ -66,7 +61,7 @@ class SlotMachineService:
         return symbols, win_amount
 
     @classmethod
-    def _calculate_payout(cls, symbols: List[str], bet_amount: float) -> float:
+    def _calculate_payout(cls, symbols: list[str], bet_amount: float) -> float:
         """
         Calculate payout based on symbols.
 
@@ -109,7 +104,7 @@ class SlotMachineService:
 
         # Calculate expected value for 2 matching symbols (return bet)
         ev_two_match = 0.0
-        for i, symbol in enumerate(cls.SYMBOLS):
+        for i, _symbol in enumerate(cls.SYMBOLS):
             p = cls.SYMBOL_WEIGHTS[i] / total_weight
             # Probability of exactly 2 matching:
             # - First two match, third doesn't: p^2 * (1-p)
@@ -117,7 +112,7 @@ class SlotMachineService:
             # - Second and third match, first doesn't: p^2 * (1-p)
             # But we need to make sure we don't double count when all 3 match
             # For simplicity: 3 * p^2 * (1-p) gives exactly 2 matches
-            prob_exactly_two = 3 * (p ** 2) * (1 - p)
+            prob_exactly_two = 3 * (p**2) * (1 - p)
             ev_two_match += prob_exactly_two * cls.BET_AMOUNT
 
         # Total expected value per spin

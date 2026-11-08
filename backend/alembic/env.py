@@ -1,18 +1,16 @@
 from logging.config import fileConfig
 
-from sqlalchemy import pool
 from alembic import context
-
 from app.config import settings
-from app.database import engine, Base
+from app.database import Base, engine
+from app.models.fiscal_debt import FiscalDebt  # noqa: F401
+from app.models.fiscal_period import FiscalPeriod  # noqa: F401
+from app.models.message_template import MessageTemplate  # noqa: F401
+from app.models.product import Product  # noqa: F401
+from app.models.transaction import Transaction  # noqa: F401
 
 # Import all models so Base.metadata is populated
 from app.models.user import User  # noqa: F401
-from app.models.product import Product  # noqa: F401
-from app.models.transaction import Transaction  # noqa: F401
-from app.models.fiscal_period import FiscalPeriod  # noqa: F401
-from app.models.fiscal_debt import FiscalDebt  # noqa: F401
-from app.models.message_template import MessageTemplate  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)

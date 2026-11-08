@@ -7,6 +7,7 @@ pending payment request, and a monthly recurring reward. Safe to run again:
 it does nothing once the sample members exist. Refuses to run unless
 DEV_MODE is on, so it can't touch a real database.
 """
+
 import json
 import sys
 from datetime import timedelta
@@ -67,30 +68,48 @@ def main() -> None:
         for index, product_name, quantity, days_ago in PURCHASES:
             user, product = members[index], products[product_name]
             amount = -product.price * quantity
-            db.add(Transaction(
-                user_id=user.id, product_id=product.id, type="purchase", amount=amount,
-                quantity=quantity, status="approved", created_by_id=user.id,
-                created_at=now - timedelta(days=days_ago, hours=index),
-            ))
+            db.add(
+                Transaction(
+                    user_id=user.id,
+                    product_id=product.id,
+                    type="purchase",
+                    amount=amount,
+                    quantity=quantity,
+                    status="approved",
+                    created_by_id=user.id,
+                    created_at=now - timedelta(days=days_ago, hours=index),
+                )
+            )
             adjust_balance(db, user, amount)
 
-        db.add(Transaction(
-            user_id=members[1].id, type="payment", amount=5.0, status="pending",
-            created_by_id=members[1].id, note="MobilePay",
-        ))
+        db.add(
+            Transaction(
+                user_id=members[1].id,
+                type="payment",
+                amount=5.0,
+                status="pending",
+                created_by_id=members[1].id,
+                note="MobilePay",
+            )
+        )
 
         admin = db.query(User).filter(User.is_admin == True).first()  # noqa: E712
-        db.add(Reward(
-            name="Board member bonus", description="Thanks for running the guild",
-            amount=5.0, reward_type="recurring", recurrence_frequency="monthly",
-            schedule_anchor=now, next_grant_date=next_occurrence_after(now, "monthly", now),
-            assigned_user_ids=json.dumps([members[0].id]),
-            created_by_id=admin.id if admin else members[0].id,
-        ))
+        db.add(
+            Reward(
+                name="Board member bonus",
+                description="Thanks for running the guild",
+                amount=5.0,
+                reward_type="recurring",
+                recurrence_frequency="monthly",
+                schedule_anchor=now,
+                next_grant_date=next_occurrence_after(now, "monthly", now),
+                assigned_user_ids=json.dumps([members[0].id]),
+                created_by_id=admin.id if admin else members[0].id,
+            )
+        )
 
         db.commit()
-        print(f"Added {len(MEMBERS)} members, {len(PURCHASES)} purchases, "
-              "1 pending payment and 1 recurring reward.")
+        print(f"Added {len(MEMBERS)} members, {len(PURCHASES)} purchases, 1 pending payment and 1 recurring reward.")
     finally:
         db.close()
 

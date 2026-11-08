@@ -5,6 +5,7 @@ Revises: 001_initial_pg
 Create Date: 2026-03-01 12:00:00.000000
 
 """
+
 from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa

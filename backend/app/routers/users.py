@@ -216,11 +216,11 @@ def deny_user(
         raise HTTPException(status_code=400, detail="Cannot deny an active user")
     if user.id == admin.id:
         raise HTTPException(status_code=400, detail="Cannot deny yourself")
-    
+
     user_name = user.first_name
-    
+
     # Delete the user from the database
     db.delete(user)
     db.commit()
-    
+
     return {"message": f"User {user_name} has been denied and removed"}
