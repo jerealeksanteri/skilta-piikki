@@ -1,38 +1,19 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import {
   getSlotMachineAdminStats,
   toggleSlotMachine,
 } from '../api/slot-machine';
 import type { SlotMachineAdminStats } from '../api/slot-machine';
+import { BackButton, Button, Card, Divider, EmptyState, Loading, Section, useToast } from '../ui';
+import { formatDate } from '../utils/date';
 
 const styles = {
-  section: {
-    padding: '0 16px 16px',
-  },
-  header: {
-    fontSize: '13px',
-    fontWeight: 600,
-    color: 'var(--section-header)',
-    textTransform: 'uppercase' as const,
-    padding: '16px 0 8px',
-  },
-  card: {
-    backgroundColor: 'var(--bg)',
-    borderRadius: '12px',
-    overflow: 'hidden',
-  },
   row: {
     display: 'flex',
     alignItems: 'center' as const,
     padding: '12px 16px',
     gap: '12px',
-  },
-  separator: {
-    height: '1px',
-    backgroundColor: 'var(--secondary-bg)',
-    marginLeft: '16px',
   },
   info: {
     flex: 1,
@@ -59,47 +40,11 @@ const styles = {
   statValue: {
     fontWeight: 600,
   },
-  backBtn: {
-    fontSize: '14px',
-    color: 'var(--link)',
-    backgroundColor: 'transparent',
-    padding: '8px 16px',
-    marginBottom: '8px',
-  },
-  toggleBtn: {
-    display: 'block',
-    width: '100%',
-    padding: '14px',
-    borderRadius: '12px',
-    fontSize: '15px',
-    fontWeight: 600,
-    color: '#fff',
-  },
   empty: {
     textAlign: 'center' as const,
     padding: '20px',
     color: 'var(--hint)',
     fontSize: '14px',
-  },
-  loading: {
-    textAlign: 'center' as const,
-    padding: '32px',
-    color: 'var(--hint)',
-    fontSize: '14px',
-  },
-  toast: {
-    position: 'fixed' as const,
-    bottom: '104px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    backgroundColor: 'var(--text)',
-    color: 'var(--bg)',
-    padding: '10px 20px',
-    borderRadius: '20px',
-    fontSize: '14px',
-    fontWeight: 500,
-    zIndex: 300,
-    whiteSpace: 'nowrap' as const,
   },
   amount: {
     fontSize: '14px',
@@ -128,21 +73,15 @@ const styles = {
   },
 };
 
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return 'ongoing';
-  return new Date(dateStr).toLocaleDateString('fi-FI', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
+function periodDate(dateStr: string | null): string {
+  return dateStr ? formatDate(dateStr) : 'ongoing';
 }
 
 export default function AdminSlotMachinePage() {
   const { user } = useUser();
-  const navigate = useNavigate();
   const [stats, setStats] = useState<SlotMachineAdminStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<string | null>(null);
+  const showToast = useToast();
   const [toggling, setToggling] = useState(false);
   const [scope, setScope] = useState<'fiscal_period' | 'all_time'>('fiscal_period');
 
@@ -162,10 +101,6 @@ export default function AdminSlotMachinePage() {
     fetchData();
   }, [scope]);
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
 
   const handleToggle = async () => {
     if (!stats || toggling) return;
@@ -186,11 +121,11 @@ export default function AdminSlotMachinePage() {
   };
 
   if (!user?.is_admin) {
-    return <div style={styles.empty}>Admin access required.</div>;
+    return <EmptyState>Admin access required.</EmptyState>;
   }
 
   if (loading) {
-    return <div style={styles.loading}>Loading...</div>;
+    return <Loading />;
   }
 
   if (!stats) {
@@ -199,46 +134,37 @@ export default function AdminSlotMachinePage() {
 
   return (
     <div>
-      <button style={styles.backBtn} onClick={() => navigate('/admin')}>
-        ← Back to Admin
-      </button>
+      <BackButton />
 
       {/* Enable/Disable toggle */}
-      <div style={styles.section}>
-        <div style={styles.header}>Status</div>
-        <button
-          style={{
-            ...styles.toggleBtn,
-            backgroundColor: stats.enabled ? 'var(--destructive)' : '#4caf50',
-            opacity: toggling ? 0.5 : 1,
-          }}
+      <Section title="Status">
+        <Button
+          size="lg"
+          block
+          tone={stats.enabled ? 'destructive' : 'positive'}
           onClick={handleToggle}
           disabled={toggling}
         >
           {stats.enabled ? 'Disable Slot Machine' : 'Enable Slot Machine'}
-        </button>
-      </div>
+        </Button>
+      </Section>
 
       {/* Period info */}
-      <div style={styles.section}>
-        <div style={styles.header}>
-          {scope === 'fiscal_period' ? 'Current fiscal period' : 'All Time Period'}
-        </div>
-        <div style={styles.card}>
+      <Section title={scope === 'fiscal_period' ? 'Current fiscal period' : 'All Time Period'}>
+        <Card>
           <div style={styles.statRow}>
             <span style={styles.statLabel}>Period</span>
             <span style={styles.statValue}>
               {scope === 'fiscal_period'
-                ? `${formatDate(stats.period_start)} — ${formatDate(stats.period_end)}`
+                ? `${periodDate(stats.period_start)} — ${periodDate(stats.period_end)}`
                 : 'All time'}
             </span>
           </div>
-        </div>
-      </div>
+        </Card>
+      </Section>
 
       {/* Scope Toggle */}
-      <div style={styles.section}>
-        <div style={styles.header}>View Statistics</div>
+      <Section title="View Statistics">
         <div style={styles.scopeToggle}>
           <button
             style={{
@@ -259,12 +185,11 @@ export default function AdminSlotMachinePage() {
             All Time
           </button>
         </div>
-      </div>
+      </Section>
 
       {/* Statistics */}
-      <div style={styles.section}>
-        <div style={styles.header}>Statistics</div>
-        <div style={styles.card}>
+      <Section title="Statistics">
+        <Card>
           <div style={styles.statRow}>
             <span style={styles.statLabel}>Total Spins</span>
             <span style={styles.statValue}>{stats.total_spins}</span>
@@ -282,7 +207,7 @@ export default function AdminSlotMachinePage() {
             <span
               style={{
                 ...styles.statValue,
-                color: stats.house_profit >= 0 ? '#4caf50' : 'var(--destructive)',
+                color: stats.house_profit >= 0 ? 'var(--positive)' : 'var(--destructive)',
               }}
             >
               {stats.house_profit >= 0 ? '+' : ''}{stats.house_profit.toFixed(2)} €
@@ -296,19 +221,20 @@ export default function AdminSlotMachinePage() {
             <span style={styles.statLabel}>Theoretical RTP</span>
             <span style={styles.statValue}>{stats.theoretical_rtp.toFixed(2)}%</span>
           </div>
-        </div>
-      </div>
+        </Card>
+      </Section>
 
       {/* Top Winners */}
-      <div style={styles.section}>
-        <div style={styles.header}>Top Winners ({stats.top_winners.length})</div>
+      <Section title={`Top Winners (${stats.top_winners.length})`}>
         {stats.top_winners.length === 0 ? (
-          <div style={{ ...styles.card, ...styles.empty }}>No spins yet</div>
+          <Card>
+            <EmptyState>No spins yet</EmptyState>
+          </Card>
         ) : (
-          <div style={styles.card}>
+          <Card>
             {stats.top_winners.map((winner, i) => (
               <div key={winner.user_id}>
-                {i > 0 && <div style={styles.separator} />}
+                {i > 0 && <Divider />}
                 <div style={styles.row}>
                   <div style={styles.info}>
                     <div style={styles.label}>{winner.user_name}</div>
@@ -319,7 +245,7 @@ export default function AdminSlotMachinePage() {
                   <span
                     style={{
                       ...styles.amount,
-                      color: winner.net_result >= 0 ? '#4caf50' : 'var(--destructive)',
+                      color: winner.net_result >= 0 ? 'var(--positive)' : 'var(--destructive)',
                     }}
                   >
                     {winner.net_result >= 0 ? '+' : ''}{winner.net_result.toFixed(2)} €
@@ -327,11 +253,9 @@ export default function AdminSlotMachinePage() {
                 </div>
               </div>
             ))}
-          </div>
+          </Card>
         )}
-      </div>
-
-      {toast && <div style={styles.toast}>{toast}</div>}
+      </Section>
     </div>
   );
 }

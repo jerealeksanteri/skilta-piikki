@@ -1,26 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { getPurchaseReport } from '../api/reports';
 import TransactionItem from '../components/TransactionItem';
 import type { PurchaseReport, ReportProductSummary, TransactionStatus } from '../types';
+import { BackButton, Card, Chip, DateTimeField, Divider, EmptyState, Section } from '../ui';
+import { fromInputValue, toInputValue } from '../utils/date';
 
 const styles = {
-  section: {
-    padding: '0 16px 16px',
-  },
-  header: {
-    fontSize: '13px',
-    fontWeight: 600,
-    color: 'var(--section-header)',
-    textTransform: 'uppercase' as const,
-    padding: '16px 0 8px',
-  },
-  card: {
-    backgroundColor: 'var(--bg)',
-    borderRadius: '12px',
-    overflow: 'hidden',
-  },
   row: {
     display: 'flex',
     alignItems: 'center' as const,
@@ -34,11 +20,6 @@ const styles = {
     gap: '12px',
     fontSize: '13px',
     color: 'var(--hint)',
-  },
-  separator: {
-    height: '1px',
-    backgroundColor: 'var(--secondary-bg)',
-    marginLeft: '16px',
   },
   label: {
     flex: 1,
@@ -57,13 +38,6 @@ const styles = {
     color: 'var(--hint)',
     fontWeight: 400,
   },
-  backBtn: {
-    fontSize: '14px',
-    color: 'var(--link)',
-    backgroundColor: 'transparent',
-    padding: '8px 16px',
-    marginBottom: '8px',
-  },
   windowCard: {
     backgroundColor: 'var(--bg)',
     borderRadius: '12px',
@@ -74,8 +48,6 @@ const styles = {
     flexWrap: 'wrap' as const,
     gap: '8px',
   },
-  // A date-time value needs ~240px; on phones the fields stack instead of
-  // squeezing side by side and cutting off the time.
   dateField: {
     flex: '1 1 240px',
     minWidth: 0,
@@ -86,13 +58,8 @@ const styles = {
     marginBottom: '4px',
   },
   dateInput: {
-    width: '100%',
-    boxSizing: 'border-box' as const,
-    padding: '8px',
     borderRadius: '8px',
     border: 'none',
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--text)',
     fontSize: '14px',
   },
   chips: {
@@ -100,18 +67,6 @@ const styles = {
     flexWrap: 'wrap' as const,
     gap: '6px',
     marginTop: '10px',
-  },
-  chip: {
-    padding: '6px 10px',
-    borderRadius: '14px',
-    fontSize: '13px',
-    fontWeight: 500,
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--text)',
-  },
-  chipOn: {
-    backgroundColor: 'var(--btn)',
-    color: 'var(--btn-text)',
   },
   totals: {
     display: 'flex',
@@ -136,18 +91,6 @@ const styles = {
     width: '12px',
     color: 'var(--hint)',
     fontSize: '12px',
-  },
-  empty: {
-    textAlign: 'center' as const,
-    padding: '20px',
-    color: 'var(--hint)',
-    fontSize: '14px',
-  },
-  error: {
-    textAlign: 'center' as const,
-    padding: '20px',
-    color: 'var(--destructive)',
-    fontSize: '14px',
   },
   note: {
     fontSize: '12px',
@@ -205,19 +148,7 @@ function presetWindow(key: PresetKey): { start: Date; end: Date } {
   return { start, end };
 }
 
-/** Format a Date as the local-time value a datetime-local input expects. */
-function toInputValue(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours(),
-  )}:${pad(d.getMinutes())}`;
-}
 
-function fromInputValue(value: string): Date | null {
-  if (!value) return null;
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
 
 function euros(amount: number): string {
   return `${amount.toFixed(2).replace('.', ',')} €`;
@@ -229,7 +160,6 @@ function productLabel(p: ReportProductSummary): string {
 
 export default function AdminReportsPage() {
   const { user } = useUser();
-  const navigate = useNavigate();
   const initial = presetWindow('sinceYesterdayEvening');
   const [startValue, setStartValue] = useState(toInputValue(initial.start));
   const [endValue, setEndValue] = useState(toInputValue(initial.end));
@@ -272,7 +202,7 @@ export default function AdminReportsPage() {
   }, [user?.is_admin, startValue, endValue, statuses, validationError]);
 
   if (!user?.is_admin) {
-    return <div style={styles.empty}>Admin access required.</div>;
+    return <EmptyState>Admin access required.</EmptyState>;
   }
 
   const applyPreset = (key: PresetKey) => {
@@ -299,16 +229,14 @@ export default function AdminReportsPage() {
 
   return (
     <div>
-      <button style={styles.backBtn} onClick={() => navigate('/admin')}>
-        ← Back to Admin
-      </button>
-      <div style={styles.section}>
+      <BackButton />
+      <Section>
         <div style={styles.windowCard}>
           <div style={styles.dateRow}>
             <label style={styles.dateField}>
               <div style={styles.dateLabel}>From</div>
-              <input
-                type="datetime-local"
+              <DateTimeField
+                size="sm"
                 style={styles.dateInput}
                 value={startValue}
                 onChange={(e) => {
@@ -319,8 +247,8 @@ export default function AdminReportsPage() {
             </label>
             <label style={styles.dateField}>
               <div style={styles.dateLabel}>To</div>
-              <input
-                type="datetime-local"
+              <DateTimeField
+                size="sm"
                 style={styles.dateInput}
                 value={endValue}
                 onChange={(e) => {
@@ -332,42 +260,38 @@ export default function AdminReportsPage() {
           </div>
           <div style={styles.chips}>
             {PRESETS.map((p) => (
-              <button
-                key={p.key}
-                style={{ ...styles.chip, ...(activePreset === p.key ? styles.chipOn : {}) }}
-                onClick={() => applyPreset(p.key)}
-              >
+              <Chip key={p.key} selected={activePreset === p.key} onClick={() => applyPreset(p.key)}>
                 {p.label}
-              </button>
+              </Chip>
             ))}
           </div>
           <div style={styles.chips}>
             {STATUSES.map((s) => (
-              <button
-                key={s}
-                style={{ ...styles.chip, ...(statuses.includes(s) ? styles.chipOn : {}) }}
-                onClick={() => toggleStatus(s)}
-              >
+              <Chip key={s} selected={statuses.includes(s)} onClick={() => toggleStatus(s)}>
                 {s.charAt(0).toUpperCase() + s.slice(1)}
-              </button>
+              </Chip>
             ))}
           </div>
         </div>
-      </div>
+      </Section>
 
       {validationError ? (
-        <div style={styles.section}>
-          <div style={{ ...styles.card, ...styles.empty }}>{validationError}</div>
-        </div>
+        <Section>
+          <Card>
+            <EmptyState>{validationError}</EmptyState>
+          </Card>
+        </Section>
       ) : error ? (
-        <div style={styles.section}>
-          <div style={{ ...styles.card, ...styles.error }}>{error}</div>
-        </div>
+        <Section>
+          <Card>
+            <EmptyState style={{ color: 'var(--destructive)' }}>{error}</EmptyState>
+          </Card>
+        </Section>
       ) : !report ? (
-        <div style={styles.empty}>Loading...</div>
+        <EmptyState>Loading...</EmptyState>
       ) : (
         <div style={{ opacity: loading ? 0.6 : 1 }}>
-          <div style={styles.section}>
+          <Section>
             <div style={styles.totals}>
               <div style={styles.totalCell}>
                 <div style={styles.totalValue}>{report.total_items}</div>
@@ -382,17 +306,18 @@ export default function AdminReportsPage() {
                 <div style={styles.totalLabel}>people</div>
               </div>
             </div>
-          </div>
+          </Section>
 
-          <div style={styles.section}>
-            <div style={styles.header}>By product</div>
+          <Section title="By product">
             {report.by_product.length === 0 ? (
-              <div style={{ ...styles.card, ...styles.empty }}>No purchases in this window</div>
+              <Card>
+                <EmptyState>No purchases in this window</EmptyState>
+              </Card>
             ) : (
-              <div style={styles.card}>
+              <Card>
                 {report.by_product.map((p, i) => (
                   <div key={p.product_id ?? `none-${i}`}>
-                    {i > 0 && <div style={styles.separator} />}
+                    {i > 0 && <Divider />}
                     <div style={styles.row}>
                       <div style={styles.label}>{productLabel(p)}</div>
                       <div style={styles.value}>
@@ -401,19 +326,18 @@ export default function AdminReportsPage() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </Card>
             )}
-          </div>
+          </Section>
 
           {report.by_user.length > 0 && (
-            <div style={styles.section}>
-              <div style={styles.header}>By user</div>
-              <div style={styles.card}>
+            <Section title="By user">
+              <Card>
                 {report.by_user.map((u, i) => {
                   const open = expanded.has(u.user_id);
                   return (
                     <div key={u.user_id}>
-                      {i > 0 && <div style={styles.separator} />}
+                      {i > 0 && <Divider />}
                       <div
                         style={{ ...styles.row, cursor: 'pointer' }}
                         onClick={() => toggleUser(u.user_id)}
@@ -436,28 +360,27 @@ export default function AdminReportsPage() {
                     </div>
                   );
                 })}
-              </div>
-            </div>
+              </Card>
+            </Section>
           )}
 
           {report.transactions.length > 0 && (
-            <div style={styles.section}>
-              <div style={styles.header}>Transactions ({report.transaction_count})</div>
-              <div style={styles.card}>
+            <Section title={`Transactions (${report.transaction_count})`}>
+              <Card>
                 {report.transactions.map((tx, i) => (
                   <div key={tx.id}>
-                    {i > 0 && <div style={styles.separator} />}
+                    {i > 0 && <Divider />}
                     <TransactionItem transaction={tx} showUser />
                   </div>
                 ))}
-              </div>
+              </Card>
               {report.transactions_truncated && (
                 <div style={styles.note}>
                   Showing the newest {report.transactions.length} of {report.transaction_count}.
                   Totals above include all of them.
                 </div>
               )}
-            </div>
+            </Section>
           )}
         </div>
       )}

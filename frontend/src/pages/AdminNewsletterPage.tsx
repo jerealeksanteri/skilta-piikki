@@ -10,32 +10,12 @@ import {
   markupToTelegramHtml,
   visibleLength,
 } from '../utils/telegramMarkup';
+import { BackButton, Button, Card, Divider, EmptyState, Section, useToast } from '../ui';
+import { formatDateTime as formatDate } from '../utils/date';
 
 const DRAFT_KEY = 'admin-newsletter-draft';
 
 const styles = {
-  section: {
-    padding: '0 16px 16px',
-  },
-  header: {
-    fontSize: '13px',
-    fontWeight: 600,
-    color: 'var(--section-header)',
-    textTransform: 'uppercase' as const,
-    padding: '16px 0 8px',
-  },
-  card: {
-    backgroundColor: 'var(--bg)',
-    borderRadius: '12px',
-    overflow: 'hidden',
-  },
-  backBtn: {
-    fontSize: '14px',
-    color: 'var(--link)',
-    backgroundColor: 'transparent',
-    padding: '8px 16px',
-    marginBottom: '8px',
-  },
   segmented: {
     display: 'flex',
     backgroundColor: 'var(--secondary-bg)',
@@ -127,38 +107,12 @@ const styles = {
     display: 'flex',
     gap: '8px',
   },
-  cancelBtn: {
-    flex: 1,
-    padding: '14px',
-    borderRadius: '12px',
-    fontSize: '15px',
-    fontWeight: 600,
-    backgroundColor: 'var(--bg)',
-    color: 'var(--text)',
-  },
-  sendBtn: {
-    flex: 2,
-    padding: '14px',
-    borderRadius: '12px',
-    fontSize: '15px',
-    fontWeight: 600,
-    backgroundColor: 'var(--btn)',
-    color: 'var(--btn-text)',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
   row: {
     display: 'flex',
     alignItems: 'center' as const,
     padding: '12px 16px',
     gap: '12px',
     cursor: 'pointer',
-  },
-  separator: {
-    height: '1px',
-    backgroundColor: 'var(--secondary-bg)',
-    marginLeft: '16px',
   },
   logInfo: {
     flex: 1,
@@ -184,30 +138,10 @@ const styles = {
   logBody: {
     padding: '0 16px 12px',
   },
-  empty: {
-    textAlign: 'center' as const,
-    padding: '20px',
-    color: 'var(--hint)',
-    fontSize: '14px',
-  },
   error: {
     color: 'var(--destructive)',
     fontSize: '14px',
     padding: '8px 4px 0',
-  },
-  toast: {
-    position: 'fixed' as const,
-    bottom: '104px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    backgroundColor: 'var(--text)',
-    color: 'var(--bg)',
-    padding: '10px 20px',
-    borderRadius: '20px',
-    fontSize: '14px',
-    fontWeight: 500,
-    zIndex: 300,
-    whiteSpace: 'nowrap' as const,
   },
 };
 
@@ -253,15 +187,6 @@ function saveDraft(draft: Draft) {
   }
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString('fi-FI', {
-    day: 'numeric',
-    month: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 function firstLine(html: string): string {
   const text = new DOMParser().parseFromString(html, 'text/html').body.textContent ?? '';
@@ -282,7 +207,7 @@ export default function AdminNewsletterPage() {
   const [sending, setSending] = useState(false);
   const [pendingDiscard, setPendingDiscard] = useState<(() => void) | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const showToast = useToast();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const html = useMemo(() => markupToTelegramHtml(markup), [markup]);
@@ -327,14 +252,8 @@ export default function AdminNewsletterPage() {
     refreshLog();
   }, [user?.is_admin]);
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(t);
-  }, [toast]);
-
   if (!user?.is_admin) {
-    return <div style={styles.empty}>Admin access required.</div>;
+    return <EmptyState>Admin access required.</EmptyState>;
   }
 
   const applyEdit = (next: string, selStart: number, selEnd: number) => {
@@ -409,7 +328,7 @@ export default function AdminNewsletterPage() {
       const result = await sendNewsletter(audience, markup, html);
       setConfirmSend(false);
       discardDraft();
-      setToast(`Sent to ${result.delivered_count} of ${result.recipient_count}`);
+      showToast(`Sent to ${result.delivered_count} of ${result.recipient_count}`, 3000);
       refreshLog();
     } catch (e) {
       setConfirmSend(false);
@@ -422,14 +341,9 @@ export default function AdminNewsletterPage() {
   return (
     <div>
       <style>{bubbleCss}</style>
-      <button
-        style={styles.backBtn}
-        onClick={() => askDiscard(() => navigate('/admin'))}
-      >
-        ← Back to Admin
-      </button>
+      <BackButton onClick={() => askDiscard(() => navigate('/admin'))} />
 
-      <div style={styles.section}>
+      <Section>
         <div style={styles.segmented}>
           {(['everyone', 'admins'] as NewsletterAudience[]).map((a) => (
             <button
@@ -444,10 +358,10 @@ export default function AdminNewsletterPage() {
             </button>
           ))}
         </div>
-      </div>
+      </Section>
 
-      <div style={styles.section}>
-        <div style={styles.card}>
+      <Section>
+        <Card>
           <div style={styles.toolbar}>
             {tools.map((t) => (
               <button
@@ -472,15 +386,14 @@ export default function AdminNewsletterPage() {
           <div style={{ ...styles.counter, ...(overLimit ? { color: 'var(--destructive)' } : {}) }}>
             {length} / {TELEGRAM_MESSAGE_LIMIT}
           </div>
-        </div>
+        </Card>
         <div style={styles.hint}>
           **bold** · __italic__ · ++underline++ · ~~strike~~ · ||spoiler|| · `code` ·
           [text](https://…) · "&gt; " at line start for a quote
         </div>
-      </div>
+      </Section>
 
-      <div style={styles.section}>
-        <div style={styles.header}>Preview</div>
+      <Section title="Preview">
         <div style={styles.chat}>
           {isEmpty ? (
             <div style={{ ...styles.bubble, ...styles.bubbleEmpty }}>Your message will appear here</div>
@@ -494,40 +407,39 @@ export default function AdminNewsletterPage() {
           )}
         </div>
         {error && <div style={styles.error}>{error}</div>}
-      </div>
+      </Section>
 
-      <div style={styles.section}>
+      <Section>
         <div style={styles.buttons}>
-          <button
-            style={{ ...styles.cancelBtn, ...(!isDirty ? styles.disabled : {}) }}
+          <Button
+            size="lg"
+            variant="secondary"
+            style={{ flex: 1, backgroundColor: 'var(--bg)' }}
             disabled={!isDirty}
             onClick={() => askDiscard(() => {})}
           >
             Cancel
-          </button>
-          <button
-            style={{ ...styles.sendBtn, ...(!canSend ? styles.disabled : {}) }}
-            disabled={!canSend}
-            onClick={() => setConfirmSend(true)}
-          >
+          </Button>
+          <Button size="lg" style={{ flex: 2 }} disabled={!canSend} onClick={() => setConfirmSend(true)}>
             Send to {recipientCount} {recipientCount === 1 ? 'person' : 'people'}
-          </button>
+          </Button>
         </div>
-      </div>
+      </Section>
 
-      <div style={styles.section}>
-        <div style={styles.header}>Sent messages</div>
+      <Section title="Sent messages">
         {!logLoaded ? (
-          <div style={styles.empty}>Loading...</div>
+          <EmptyState>Loading...</EmptyState>
         ) : log.length === 0 ? (
-          <div style={{ ...styles.card, ...styles.empty }}>No messages sent yet</div>
+          <Card>
+            <EmptyState>No messages sent yet</EmptyState>
+          </Card>
         ) : (
-          <div style={styles.card}>
+          <Card>
             {log.map((n, i) => {
               const open = expandedLog === n.id;
               return (
                 <div key={n.id}>
-                  {i > 0 && <div style={styles.separator} />}
+                  {i > 0 && <Divider />}
                   <div style={styles.row} onClick={() => setExpandedLog(open ? null : n.id)}>
                     <div style={styles.logInfo}>
                       <div style={styles.logTitle}>{firstLine(n.html)}</div>
@@ -539,7 +451,7 @@ export default function AdminNewsletterPage() {
                     <div
                       style={{
                         ...styles.logStat,
-                        color: n.failed_count > 0 ? 'var(--destructive)' : '#4caf50',
+                        color: n.failed_count > 0 ? 'var(--destructive)' : 'var(--positive)',
                       }}
                     >
                       {n.delivered_count}/{n.recipient_count}
@@ -560,9 +472,9 @@ export default function AdminNewsletterPage() {
                 </div>
               );
             })}
-          </div>
+          </Card>
         )}
-      </div>
+      </Section>
 
       {confirmSend && (
         <ConfirmDialog
@@ -597,8 +509,6 @@ export default function AdminNewsletterPage() {
           onCancel={() => setPendingDiscard(null)}
         />
       )}
-
-      {toast && <div style={styles.toast}>{toast}</div>}
     </div>
   );
 }
