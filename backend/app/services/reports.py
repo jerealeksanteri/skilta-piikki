@@ -6,7 +6,7 @@ interpolated into SQL text.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
@@ -22,7 +22,7 @@ def to_naive_utc(value: datetime) -> datetime:
     """Timestamps are stored as naive UTC; naive input is treated as UTC."""
     if value.tzinfo is None:
         return value
-    return value.astimezone(timezone.utc).replace(tzinfo=None)
+    return value.astimezone(UTC).replace(tzinfo=None)
 
 
 @dataclass
@@ -64,9 +64,7 @@ class ReportService:
         )
 
     @classmethod
-    def purchase_report(
-        cls, db: Session, start: datetime, end: datetime, statuses: list[str]
-    ) -> PurchaseReportData:
+    def purchase_report(cls, db: Session, start: datetime, end: datetime, statuses: list[str]) -> PurchaseReportData:
         start, end = to_naive_utc(start), to_naive_utc(end)
         filters = cls._filters(start, end, statuses)
 
@@ -101,9 +99,7 @@ class ReportService:
         for user_id, user_name, product_id, product_name, emoji, items, amount in grouped:
             items, amount = int(items), float(amount)
 
-            prod = products.setdefault(
-                product_id, _ProductRow(product_id, product_name, emoji)
-            )
+            prod = products.setdefault(product_id, _ProductRow(product_id, product_name, emoji))
             prod.items += items
             prod.amount += amount
 
@@ -112,16 +108,12 @@ class ReportService:
             usr.amount += amount
             usr.products.append(_ProductRow(product_id, product_name, emoji, items, amount))
 
-        by_product = sorted(
-            products.values(), key=lambda p: (-p.items, p.product_name or "")
-        )
+        by_product = sorted(products.values(), key=lambda p: (-p.items, p.product_name or ""))
         by_user = sorted(users.values(), key=lambda u: (-u.amount, u.user_name or ""))
         for usr in by_user:
             usr.products.sort(key=lambda p: (-p.items, p.product_name or ""))
 
-        transaction_count = db.scalar(
-            select(func.count(Transaction.id)).where(*filters)
-        ) or 0
+        transaction_count = db.scalar(select(func.count(Transaction.id)).where(*filters)) or 0
 
         transactions = list(
             db.scalars(

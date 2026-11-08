@@ -108,11 +108,7 @@ def test_status_filter_can_select_rejected_only(setup, client_as):
     p(s["matti"], s["beer"], 1, datetime(2026, 11, 5, 20, 0), status="approved")
     p(s["matti"], s["beer"], 4, datetime(2026, 11, 5, 20, 10), status="rejected")
 
-    body = (
-        client_as(s["admin"])
-        .get(URL, params={**WINDOW, "status": ["rejected"]})
-        .json()
-    )
+    body = client_as(s["admin"]).get(URL, params={**WINDOW, "status": ["rejected"]}).json()
     assert body["total_items"] == 4
 
 

@@ -32,8 +32,11 @@ def test_every_schema_datetime_is_utc_marked():
 
 def test_transaction_times_are_sent_as_utc(db, make_user, client_as):
     alice = make_user("Alice")
-    db.add(Transaction(user_id=alice.id, type="payment", amount=5, status="approved",
-                       created_at=dt.datetime(2026, 11, 8, 10, 0)))
+    db.add(
+        Transaction(
+            user_id=alice.id, type="payment", amount=5, status="approved", created_at=dt.datetime(2026, 11, 8, 10, 0)
+        )
+    )
     db.commit()
 
     body = client_as(alice).get("/api/transactions/mine").json()

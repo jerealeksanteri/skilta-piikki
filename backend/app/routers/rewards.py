@@ -10,11 +10,11 @@ from app.models.reward import Reward
 from app.models.reward_grant import RewardGrant
 from app.models.user import User
 from app.schemas.reward import (
-    RewardCreate,
-    RewardUpdate,
-    RewardOut,
-    RewardGrantOut,
     GrantRewardRequest,
+    RewardCreate,
+    RewardGrantOut,
+    RewardOut,
+    RewardUpdate,
     SchedulerStatusOut,
 )
 from app.services.reports import to_naive_utc
@@ -75,6 +75,7 @@ def _grant_to_out(grant: RewardGrant) -> RewardGrantOut:
 # === Grant Endpoints ===
 # Declared before /rewards/{reward_id} so "grants" is not parsed as a reward id.
 
+
 @router.post("/rewards/grant", response_model=list[RewardGrantOut])
 def grant_reward_manually(
     data: GrantRewardRequest,
@@ -115,12 +116,7 @@ def list_all_grants(
     limit: int = 100,
 ):
     """List recent reward grants (admin view)"""
-    grants = (
-        db.query(RewardGrant)
-        .order_by(RewardGrant.granted_at.desc())
-        .limit(limit)
-        .all()
-    )
+    grants = db.query(RewardGrant).order_by(RewardGrant.granted_at.desc()).limit(limit).all()
     return [_grant_to_out(g) for g in grants]
 
 
@@ -131,16 +127,12 @@ def list_user_grants(
     db: Session = Depends(get_db),
 ):
     """List all grants for a specific user"""
-    grants = (
-        db.query(RewardGrant)
-        .filter(RewardGrant.user_id == user_id)
-        .order_by(RewardGrant.granted_at.desc())
-        .all()
-    )
+    grants = db.query(RewardGrant).filter(RewardGrant.user_id == user_id).order_by(RewardGrant.granted_at.desc()).all()
     return [_grant_to_out(g) for g in grants]
 
 
 # === Scheduler status ===
+
 
 @router.get("/rewards/scheduler-status", response_model=SchedulerStatusOut)
 def scheduler_status(
@@ -169,6 +161,7 @@ def scheduler_status(
 
 
 # === Reward CRUD Endpoints ===
+
 
 @router.get("/rewards", response_model=list[RewardOut])
 def list_rewards(
@@ -266,10 +259,7 @@ def update_reward(
     if data.assigned_user_ids is not None:
         reward.assigned_user_ids = json.dumps(data.assigned_user_ids)
 
-    if (
-        data.recurrence_frequency is not None
-        and data.recurrence_frequency != reward.recurrence_frequency
-    ):
+    if data.recurrence_frequency is not None and data.recurrence_frequency != reward.recurrence_frequency:
         reward.recurrence_frequency = data.recurrence_frequency
         _start_schedule(reward, data.recurrence_frequency)
 

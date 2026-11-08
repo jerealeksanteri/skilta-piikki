@@ -8,15 +8,16 @@ and returns to the 31st afterwards.
 
 All datetimes are naive UTC, matching how the ``DateTime`` columns store them.
 """
+
 import calendar
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 FREQUENCIES = ("daily", "weekly", "monthly", "yearly")
 
 
 def utcnow() -> datetime:
     """Current UTC time as a naive datetime (the format the DB columns use)."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def _add_months(anchor: datetime, months: int) -> datetime:

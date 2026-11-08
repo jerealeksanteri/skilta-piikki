@@ -13,6 +13,7 @@ Revises: 005_add_newsletters
 Create Date: 2026-11-08 00:00:00.000000
 
 """
+
 from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
@@ -44,7 +45,10 @@ def upgrade() -> None:
     op.add_column("reward_grants", sa.Column("transaction_id", sa.Integer(), nullable=True))
     op.create_foreign_key(
         op.f("fk_reward_grants_transaction_id_transactions"),
-        "reward_grants", "transactions", ["transaction_id"], ["id"],
+        "reward_grants",
+        "transactions",
+        ["transaction_id"],
+        ["id"],
     )
     op.create_unique_constraint(
         "uq_reward_grants_occurrence",
@@ -78,9 +82,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_constraint("uq_reward_grants_occurrence", "reward_grants", type_="unique")
-    op.drop_constraint(
-        op.f("fk_reward_grants_transaction_id_transactions"), "reward_grants", type_="foreignkey"
-    )
+    op.drop_constraint(op.f("fk_reward_grants_transaction_id_transactions"), "reward_grants", type_="foreignkey")
     op.drop_column("reward_grants", "transaction_id")
     op.drop_column("reward_grants", "scheduled_for")
     op.drop_column("rewards", "schedule_anchor")

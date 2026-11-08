@@ -4,8 +4,6 @@ from sqlalchemy.orm import Session
 from app.auth.telegram import require_active_user, require_admin
 from app.config import settings
 from app.database import get_db
-from app.services.balance import adjust_balance
-from app.services.messaging import send_event_message
 from app.models.product import Product
 from app.models.transaction import Transaction
 from app.models.user import User
@@ -15,6 +13,8 @@ from app.schemas.transaction import (
     TransactionOut,
     UserPaymentRequest,
 )
+from app.services.balance import adjust_balance
+from app.services.messaging import send_event_message
 
 router = APIRouter()
 
@@ -139,12 +139,7 @@ def pending_transactions(
     _admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    txs = (
-        db.query(Transaction)
-        .filter(Transaction.status == "pending")
-        .order_by(Transaction.created_at.desc())
-        .all()
-    )
+    txs = db.query(Transaction).filter(Transaction.status == "pending").order_by(Transaction.created_at.desc()).all()
     return [_to_out(tx) for tx in txs]
 
 
@@ -164,20 +159,25 @@ def approve_transaction(
     tx.approved_by_id = admin.id
 
     target_user = db.query(User).filter(User.id == tx.user_id).first()
-    
+
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     adjust_balance(db, target_user, tx.amount)
 
     db.commit()
     db.refresh(tx)
 
     if tx.type == "payment":
-        send_event_message(db, "payment_approved", target_user, {
-            "user": target_user.first_name,
-            "amount": f"{tx.amount:.2f}",
-        })
+        send_event_message(
+            db,
+            "payment_approved",
+            target_user,
+            {
+                "user": target_user.first_name,
+                "amount": f"{tx.amount:.2f}",
+            },
+        )
 
     return _to_out(tx)
 
@@ -203,9 +203,14 @@ def reject_transaction(
     if tx.type == "payment":
         target_user = db.query(User).filter(User.id == tx.user_id).first()
         if target_user:
-            send_event_message(db, "payment_rejected", target_user, {
-                "user": target_user.first_name,
-                "amount": f"{tx.amount:.2f}",
-            })
+            send_event_message(
+                db,
+                "payment_rejected",
+                target_user,
+                {
+                    "user": target_user.first_name,
+                    "amount": f"{tx.amount:.2f}",
+                },
+            )
 
     return _to_out(tx)

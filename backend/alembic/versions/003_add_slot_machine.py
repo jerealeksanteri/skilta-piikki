@@ -5,6 +5,7 @@ Revises: 002_add_rewards
 Create Date: 2026-03-14 00:00:00.000000
 
 """
+
 from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa

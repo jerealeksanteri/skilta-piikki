@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -40,10 +40,7 @@ def _process_reward(reward_id: int, now) -> int:
     try:
         while True:
             reward = (
-                _due(db.query(Reward), now)
-                .filter(Reward.id == reward_id)
-                .with_for_update(skip_locked=True)
-                .first()
+                _due(db.query(Reward), now).filter(Reward.id == reward_id).with_for_update(skip_locked=True).first()
             )
             if reward is None:
                 return processed
@@ -59,14 +56,16 @@ def _process_reward(reward_id: int, now) -> int:
                 scheduled_for=scheduled_for,
             )
             reward.schedule_anchor = anchor
-            reward.next_grant_date = next_occurrence_after(
-                anchor, reward.recurrence_frequency, scheduled_for
-            )
+            reward.next_grant_date = next_occurrence_after(anchor, reward.recurrence_frequency, scheduled_for)
             db.commit()
             processed += 1
             logger.info(
                 "Granted reward %s (%s) for %s to %d users; next %s",
-                reward_id, reward.name, scheduled_for, len(grants), reward.next_grant_date,
+                reward_id,
+                reward.name,
+                scheduled_for,
+                len(grants),
+                reward.next_grant_date,
             )
 
             try:
@@ -126,7 +125,7 @@ def _record_run(**summary) -> None:
             db.add(AppSetting(key=LAST_RUN_KEY, value=value))
         else:
             setting.value = value
-            setting.updated_at = datetime.now(timezone.utc)
+            setting.updated_at = datetime.now(UTC)
         db.commit()
     except Exception:
         db.rollback()
@@ -150,7 +149,7 @@ def next_run_at() -> datetime | None:
     job = scheduler.get_job(JOB_ID) if scheduler.running else None
     if job is None or job.next_run_time is None:
         return None
-    return job.next_run_time.astimezone(timezone.utc).replace(tzinfo=None)
+    return job.next_run_time.astimezone(UTC).replace(tzinfo=None)
 
 
 def start_scheduler():

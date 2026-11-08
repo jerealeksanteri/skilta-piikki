@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../App';
+import { useUser } from '../context/UserContext';
 import { getPurchaseReport } from '../api/reports';
 import TransactionItem from '../components/TransactionItem';
 import type { PurchaseReport, ReportProductSummary, TransactionStatus } from '../types';

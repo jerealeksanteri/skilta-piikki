@@ -9,9 +9,7 @@ from app.services.telegram_bot import send_message
 logger = logging.getLogger(__name__)
 
 
-def send_event_message(
-    db: Session, event_type: str, user: User, variables: dict
-) -> bool:
+def send_event_message(db: Session, event_type: str, user: User, variables: dict) -> bool:
     template = (
         db.query(MessageTemplate)
         .filter(MessageTemplate.event_type == event_type, MessageTemplate.is_active == True)  # noqa: E712
@@ -29,9 +27,7 @@ def send_event_message(
     return send_message(user.telegram_id, text)
 
 
-def send_bulk_event_message(
-    db: Session, event_type: str, users_and_vars: list[tuple[User, dict]]
-) -> int:
+def send_bulk_event_message(db: Session, event_type: str, users_and_vars: list[tuple[User, dict]]) -> int:
     template = (
         db.query(MessageTemplate)
         .filter(MessageTemplate.event_type == event_type, MessageTemplate.is_active == True)  # noqa: E712

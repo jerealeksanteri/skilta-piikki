@@ -1,0 +1,129 @@
+name: CI
+
+# Runs on every PR to main, and from the Release workflow before images are
+# built. Third-party actions are pinned to commit SHAs (tag in the comment).
+on:
+  pull_request:
+    branches: [main]
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (ruff, pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
+        with:
+          version: "0.10.9"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Lint
+        run: uv run ruff check --output-format=github
+
+      - name: Check formatting
+        run: uv run ruff format --check
+
+      - name: Tests
+        run: uv run pytest
+
+  frontend:
+    name: Frontend (tsc, eslint, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc -b
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  trivy:
+    name: Trivy (dependencies, secrets, images)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+        with:
+          version: v0.76.1
+          cache: true
+
+      - name: Build images (not pushed)
+        run: |
+          docker build -t piikki-backend:ci backend
+          docker build -t piikki-frontend:ci frontend
+
+      # Everything HIGH or CRITICAL is reported to the Security tab
+      # (Code scanning), whether or not it blocks the PR.
+      - name: Scan for the Security tab
+        run: |
+          trivy fs --scanners vuln,secret --severity HIGH,CRITICAL --format sarif -o repo.sarif .
+          trivy image --scanners vuln --severity HIGH,CRITICAL --format sarif -o backend.sarif piikki-backend:ci
+          trivy image --scanners vuln --severity HIGH,CRITICAL --format sarif -o frontend.sarif piikki-frontend:ci
+
+      - name: Upload repo findings
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: repo.sarif
+          category: trivy-repo
+
+      - name: Upload backend image findings
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: backend.sarif
+          category: trivy-backend-image
+
+      - name: Upload frontend image findings
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: frontend.sarif
+          category: trivy-frontend-image
+
+      # The gate: any leaked secret, or a CRITICAL vulnerability that has a fix.
+      - name: Fail on secrets or fixable CRITICAL vulnerabilities
+        run: |
+          trivy fs --scanners secret --exit-code 1 .
+          trivy fs --scanners vuln --severity CRITICAL --ignore-unfixed --exit-code 1 .
+          trivy image --scanners vuln --severity CRITICAL --ignore-unfixed --exit-code 1 piikki-backend:ci
+          trivy image --scanners vuln --severity CRITICAL --ignore-unfixed --exit-code 1 piikki-frontend:ci

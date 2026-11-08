@@ -5,11 +5,13 @@ from app.schemas.common import UtcDatetime
 
 class SlotMachineSpinRequest(BaseModel):
     """Request schema for spinning the slot machine."""
+
     pass  # No input needed, always 1€ bet
 
 
 class SlotMachineSpinResponse(BaseModel):
     """Response schema for a slot machine spin."""
+
     symbols: list[str]
     win_amount: float
     bet_amount: float
@@ -18,6 +20,7 @@ class SlotMachineSpinResponse(BaseModel):
 
 class SlotMachineHistory(BaseModel):
     """Schema for slot machine history."""
+
     id: int
     user_id: int
     bet_amount: float
@@ -31,6 +34,7 @@ class SlotMachineHistory(BaseModel):
 
 class SlotMachineStats(BaseModel):
     """Schema for slot machine statistics."""
+
     total_spins: int
     total_bet: float
     total_won: float
@@ -41,6 +45,7 @@ class SlotMachineStats(BaseModel):
 
 class SlotMachineTopWinner(BaseModel):
     """Schema for a top winner entry."""
+
     user_id: int
     user_name: str
     total_spins: int
@@ -51,6 +56,7 @@ class SlotMachineTopWinner(BaseModel):
 
 class SlotMachineAdminStats(BaseModel):
     """Schema for admin slot machine statistics."""
+
     total_spins: int
     total_bet: float
     total_won: float
@@ -65,9 +71,11 @@ class SlotMachineAdminStats(BaseModel):
 
 class SlotMachineStatusResponse(BaseModel):
     """Schema for slot machine status."""
+
     enabled: bool
 
 
 class SlotMachineToggleRequest(BaseModel):
     """Schema for toggling slot machine."""
+
     enabled: bool

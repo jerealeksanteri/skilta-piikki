@@ -5,6 +5,7 @@ Revises: 004_add_app_settings
 Create Date: 2026-11-06 00:00:00.000000
 
 """
+
 from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
@@ -27,9 +28,7 @@ def upgrade() -> None:
         sa.Column("delivered_count", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("failed_count", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("now()")),
-        sa.CheckConstraint(
-            "audience IN ('everyone', 'admins')", name="ck_newsletter_audience"
-        ),
+        sa.CheckConstraint("audience IN ('everyone', 'admins')", name="ck_newsletter_audience"),
         sa.ForeignKeyConstraint(
             ["created_by_id"],
             ["users.id"],
@@ -37,9 +36,7 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_newsletters")),
     )
-    op.create_index(
-        op.f("ix_newsletters_created_at"), "newsletters", ["created_at"], unique=False
-    )
+    op.create_index(op.f("ix_newsletters_created_at"), "newsletters", ["created_at"], unique=False)
 
 
 def downgrade() -> None:

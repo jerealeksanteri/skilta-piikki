@@ -12,7 +12,6 @@ naming_convention = {
 }
 
 
-
 def _connect_args(url: str) -> dict:
     # DateTime columns hold naive UTC. Python writes timezone-aware UTC values,
     # which PostgreSQL converts to the session time zone before dropping the

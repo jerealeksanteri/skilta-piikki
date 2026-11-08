@@ -1,7 +1,8 @@
-import { useEffect, useState, createContext, useContext } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { getMe } from './api/users';
 import type { User } from './types';
+import { UserContext } from './context/UserContext';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import HistoryPage from './pages/HistoryPage';
@@ -20,20 +21,6 @@ import PaymentRequestPage from './pages/PaymentRequestPage';
 import PendingApprovalPage from './pages/PendingApprovalPage';
 import SlotMachinePage from './pages/SlotMachinePage';
 
-interface UserContextType {
-  user: User | null;
-  refreshUser: () => Promise<void>;
-}
-
-export const UserContext = createContext<UserContextType>({
-  user: null,
-  refreshUser: async () => {},
-});
-
-export function useUser() {
-  return useContext(UserContext);
-}
-
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,7 +36,10 @@ export default function App() {
   };
 
   useEffect(() => {
-    refreshUser().finally(() => setLoading(false));
+    getMe()
+      .then(setUser)
+      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load user'))
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) {

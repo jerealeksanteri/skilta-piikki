@@ -71,6 +71,7 @@ class RewardGrantOut(BaseModel):
 
 class GrantRewardRequest(BaseModel):
     """Manual grant request for one-time reward"""
+
     reward_id: int
     user_ids: list[int] = Field(..., min_length=1)
     note: str | None = None
@@ -82,6 +83,7 @@ class SchedulerStatusOut(BaseModel):
     state: 'ok' (ran recently without errors), 'failing' (last run had
     rewards that errored), 'stale' (no run for over 2 hours) or 'never'.
     """
+
     state: Literal["ok", "failing", "stale", "never"]
     last_run_at: UtcDatetime | None
     next_run_at: UtcDatetime | None

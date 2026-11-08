@@ -1,6 +1,6 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, Float, Integer, ForeignKey, String
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -15,8 +15,6 @@ class SlotMachineSpin(Base):
     bet_amount: Mapped[float] = mapped_column(Float, nullable=False)
     win_amount: Mapped[float] = mapped_column(Float, nullable=False)
     symbols: Mapped[str] = mapped_column(String, nullable=False)  # JSON string of symbols
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=lambda: datetime.now(UTC))
 
     user: Mapped[User] = relationship(foreign_keys=[user_id])

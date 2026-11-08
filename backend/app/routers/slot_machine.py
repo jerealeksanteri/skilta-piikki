@@ -1,9 +1,9 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
 
 from app.auth.telegram import require_active_user, require_admin
 from app.database import get_db
@@ -58,10 +58,7 @@ def spin_slot_machine(
     """
     # Check if slot machine is enabled
     if not _is_slot_machine_enabled(db):
-        raise HTTPException(
-            status_code=403,
-            detail="Slot machine is currently disabled."
-        )
+        raise HTTPException(status_code=403, detail="Slot machine is currently disabled.")
 
     bet_amount = SlotMachineService.BET_AMOUNT
     BLACKLIST_LIMIT = -50.0
@@ -70,7 +67,7 @@ def spin_slot_machine(
     if user.balance < -49:
         raise HTTPException(
             status_code=400,
-            detail=f"You have reached the blacklist limit ({BLACKLIST_LIMIT:.2f}€). Cannot gamble further!"
+            detail=f"You have reached the blacklist limit ({BLACKLIST_LIMIT:.2f}€). Cannot gamble further!",
         )
 
     # Spin the slot machine
@@ -181,7 +178,7 @@ def get_admin_slot_machine_stats(
 ):
     """
     Get global slot machine statistics.
-    
+
     Args:
         scope: "fiscal_period" (default) or "all_time"
     """
@@ -274,7 +271,7 @@ def toggle_slot_machine(
         db.add(setting)
     else:
         setting.value = "true" if data.enabled else "false"
-        setting.updated_at = datetime.now(timezone.utc)
+        setting.updated_at = datetime.now(UTC)
 
     db.commit()
     return SlotMachineStatusResponse(enabled=data.enabled)

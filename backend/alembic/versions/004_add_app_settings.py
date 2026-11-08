@@ -5,6 +5,7 @@ Revises: 003_add_slot_machine
 Create Date: 2026-03-29 00:00:00.000000
 
 """
+
 from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
@@ -25,9 +26,7 @@ def upgrade() -> None:
     )
 
     # Seed default: slot machine enabled
-    op.execute(
-        "INSERT INTO app_settings (key, value, updated_at) VALUES ('slot_machine_enabled', 'true', now())"
-    )
+    op.execute("INSERT INTO app_settings (key, value, updated_at) VALUES ('slot_machine_enabled', 'true', now())")
 
 
 def downgrade() -> None:

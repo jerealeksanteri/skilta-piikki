@@ -35,9 +35,7 @@ def validate_init_data(init_data_raw: str, bot_token: str) -> dict:
 
     # Compute HMAC-SHA256
     secret_key = hmac.new(b"WebAppData", bot_token.encode(), hashlib.sha256).digest()
-    computed_hash = hmac.new(
-        secret_key, data_check_string.encode(), hashlib.sha256
-    ).hexdigest()
+    computed_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
 
     if not hmac.compare_digest(computed_hash, received_hash):
         raise ValueError("Invalid hash")
@@ -97,7 +95,7 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e),
-        )
+        ) from e
 
     telegram_id = tg_user["id"]
 

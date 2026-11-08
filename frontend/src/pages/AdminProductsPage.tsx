@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useUser } from '../App';
+import { useUser } from '../context/UserContext';
 import {
   listAllProducts,
   createProduct,

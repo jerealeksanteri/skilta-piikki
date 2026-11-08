@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../App';
+import { useUser } from '../context/UserContext';
 import { listProducts } from '../api/products';
 import { getLeaderboard } from '../api/users';
 import { getMyDebts } from '../api/fiscal';
