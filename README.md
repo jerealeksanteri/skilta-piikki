@@ -24,44 +24,29 @@ A Telegram Mini App for managing beverage tabs in a student organization. Member
 - **Backend**: Python, FastAPI, SQLAlchemy, PostgreSQL 17, Alembic
 - **Frontend**: React, TypeScript, Vite
 - **Auth**: Telegram Mini App init data (HMAC-SHA256)
-- **Infra**: Docker, Caddy (auto-HTTPS), GitHub Actions, GHCR
+- **Infra**: Docker, GitHub Actions, GHCR; production on k3s with Argo CD
 
-## Quick Start (Development)
+## Running locally
+
+Needs Docker. Everything runs in containers with hot reload:
 
 ```bash
-cp .env.example .env
-# Edit .env — set BOT_TOKEN, ADMIN_TELEGRAM_IDS, DEV_MODE=true
-
+cp .env.example .env          # optional: BOT_TOKEN, ADMIN_TELEGRAM_IDS
 docker compose up --build
+docker compose exec backend python -m app.dev_seed   # optional sample data
 ```
 
-The app is available at `http://localhost:80`. With `DEV_MODE=true`, auth is bypassed with a fake dev user.
+- **App:** http://localhost:5173. Login is skipped: you're "Dev User", an admin. Bot messages are logged, not sent.
+- **API docs:** http://localhost:8000/docs
+- **Database:** `localhost:5432`, user `piikki`, password `piikki`, database `piikki`
 
-PostgreSQL data is persisted in a Docker volume (`pg-data`). The dev database is accessible at `localhost:5432` (user: `piikki`, password: `piikki`).
+Edits under `backend/` and `frontend/` reload automatically. Database migrations run when the backend starts. To start from an empty database, run `docker compose down -v`.
 
-## Production Deployment
+**Tests:** `cd backend && pip install -r requirements-dev.txt && pytest`
 
-Requires a server with Docker and a domain pointing to it.
+## Deployment
 
-```bash
-cp .env.example .env
-# Edit .env — set BOT_TOKEN, ADMIN_TELEGRAM_IDS, DOMAIN,
-#              POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
-
-# Set up PostgreSQL IP whitelisting
-cp pg_hba.conf.example pg_hba.conf
-# Edit pg_hba.conf — add your IP address for remote DB access (optional)
-
-docker compose -f docker-compose.prod.yml up -d
-```
-
-Caddy handles TLS automatically. Images are pulled from GHCR.
-
-The database is **not exposed** outside the Docker network. Only containers on the internal network can reach it. To access the database from your machine, add your IP to `pg_hba.conf` and expose the port, or use:
-
-```bash
-docker exec -it <db_container> psql -U <POSTGRES_USER> -d <POSTGRES_DB>
-```
+Production runs on a single-node k3s cluster managed by Argo CD from the `server-config` repo (`manifests/skilta-piikki`). After a release (see below), set the new image tags in `manifests/skilta-piikki/backend/deployment.yaml` and `frontend/deployment.yaml` and push; Argo CD rolls them out.
 
 ## Development flow
 
@@ -99,11 +84,7 @@ To deploy, set the new image tags in the server-config repo.
 | `ADMIN_TELEGRAM_IDS` | Comma-separated Telegram IDs to bootstrap as admins | `""` |
 | `AUTO_APPROVE_PURCHASES` | Auto-approve drink purchases | `true` |
 | `CORS_ORIGINS` | Allowed CORS origins | `*` |
-| `DEV_MODE` | Bypass Telegram auth for local dev | `false` |
-| `DOMAIN` | Domain for Caddy TLS (production only) | (required in prod) |
-| `POSTGRES_USER` | PostgreSQL user (production) | (required in prod) |
-| `POSTGRES_PASSWORD` | PostgreSQL password (production) | (required in prod) |
-| `POSTGRES_DB` | PostgreSQL database name | `piikki` |
+| `DEV_MODE` | Skip Telegram login and only log bot messages (local dev) | `false` |
 
 ## API Endpoints
 
