@@ -12,6 +12,7 @@ import {
 } from '../api/fiscal';
 import type { FiscalPeriod, FiscalPeriodStats, FiscalDebt } from '../types';
 import { formatDate } from '../utils/date';
+import ExportButtons from '../components/ExportButtons';
 import { BackButton, Button, Card, Divider, EmptyState, Loading, Section, SectionHeader, useToast } from '../ui';
 
 const styles = {
@@ -181,6 +182,7 @@ export default function AdminFiscalPage() {
 
   const currentPeriod = periods.find((p) => !p.ended_at);
   const closedPeriods = periods.filter((p) => p.ended_at);
+  const expandedPeriod = closedPeriods.find((p) => p.id === expandedId);
 
   return (
     <div>
@@ -360,6 +362,28 @@ Mark Paid
               </div>
             );
           })
+        )}
+      </Section>
+
+      <Section title="Export">
+        <ExportButtons
+          options={[
+            { label: 'All periods', request: { kind: 'fiscal_periods' } },
+            ...(expandedPeriod
+              ? [
+                  {
+                    // The open period, shown above.
+                    label: 'Its debts',
+                    request: { kind: 'fiscal_debts' as const, period_id: expandedPeriod.id },
+                  },
+                ]
+              : []),
+          ]}
+        />
+        {!expandedPeriod && closedPeriods.length > 0 && (
+          <div style={{ fontSize: '12px', color: 'var(--hint)', padding: '6px 4px 0' }}>
+            Open a closed period above to also export its debts.
+          </div>
         )}
       </Section>
     </div>

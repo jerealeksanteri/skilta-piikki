@@ -78,6 +78,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   message_template: 'Message templates',
   newsletter: 'Newsletters',
   slot_machine: 'Slot machine',
+  report: 'Exports',
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -95,6 +96,7 @@ const ACTION_LABELS: Record<string, string> = {
   'transaction.undo_decision': 'Undid approve/reject',
   'product.create': 'Added product',
   'product.update': 'Edited product',
+  'report.export': 'Downloaded CSV',
   'product.deactivate': 'Removed product',
   'reward.create': 'Created reward',
   'reward.update': 'Edited reward',
