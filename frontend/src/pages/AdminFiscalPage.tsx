@@ -234,8 +234,8 @@ export default function AdminFiscalPage() {
       <Section title={`Closed periods (${closedPeriods.length})`}>
         {closedPeriods.length === 0 ? (
           <Card>
-<EmptyState>No closed periods yet</EmptyState>
-</Card>
+            <EmptyState>No closed periods yet</EmptyState>
+          </Card>
         ) : (
           closedPeriods.map((period) => {
             const isExpanded = expandedId === period.id;

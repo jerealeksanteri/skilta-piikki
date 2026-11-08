@@ -7,15 +7,17 @@ interface Props {
   children?: ReactNode;
   /** No side padding, for pages whose content already has its own. */
   flush?: boolean;
+  /** Replaces the navigation, e.g. to ask before leaving unsaved changes. */
+  onClick?: () => void;
   style?: CSSProperties;
 }
 
-export function BackButton({ to = '/admin', children = '← Back to Admin', flush = false, style }: Props) {
+export function BackButton({ to = '/admin', children = '← Back to Admin', flush = false, onClick, style }: Props) {
   const navigate = useNavigate();
   return (
     <button
       type="button"
-      onClick={() => navigate(to)}
+      onClick={onClick ?? (() => navigate(to))}
       style={{
         fontSize: fontSize.base,
         color: 'var(--link)',

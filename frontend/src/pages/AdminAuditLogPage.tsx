@@ -1,28 +1,14 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getAuditFilters, getAuditLog } from '../api/audit';
 import type { AuditQuery } from '../api/audit';
 import { useUser } from '../context/UserContext';
 import type { AuditEntry, AuditFilters } from '../types';
+import { BackButton, Card, EmptyState, Section, SectionHeader } from '../ui';
+import { formatDateTime } from '../utils/date';
+
+const LIST_MESSAGE = { padding: '24px' };
 
 const styles = {
-  section: {
-    padding: '0 16px 16px',
-  },
-  header: {
-    fontSize: '13px',
-    fontWeight: 600,
-    color: 'var(--section-header)',
-    textTransform: 'uppercase' as const,
-    padding: '16px 0 8px',
-  },
-  backBtn: {
-    fontSize: '14px',
-    color: 'var(--link)',
-    backgroundColor: 'transparent',
-    padding: '8px 16px',
-    marginBottom: '8px',
-  },
   filters: {
     display: 'flex',
     flexWrap: 'wrap' as const,
@@ -37,11 +23,6 @@ const styles = {
     backgroundColor: 'var(--bg)',
     color: 'var(--text)',
     fontSize: '14px',
-  },
-  card: {
-    backgroundColor: 'var(--bg)',
-    borderRadius: '12px',
-    overflow: 'hidden',
   },
   entry: {
     padding: '12px 16px',
@@ -74,12 +55,6 @@ const styles = {
   note: {
     fontSize: '13px',
     marginTop: '6px',
-  },
-  empty: {
-    textAlign: 'center' as const,
-    padding: '24px',
-    color: 'var(--hint)',
-    fontSize: '14px',
   },
   moreBtn: {
     width: '100%',
@@ -163,20 +138,11 @@ function formatValue(field: string, value: unknown): string {
   if (value === null || value === undefined || value === '') return '—';
   if (typeof value === 'boolean') return value ? 'yes' : 'no';
   if (MONEY_FIELDS.has(field)) return `${String(value).replace('.', ',')} €`;
-  if (field === 'next_grant_date' && typeof value === 'string') return formatTime(`${value}Z`);
+  if (field === 'next_grant_date' && typeof value === 'string') return formatDateTime(`${value}Z`);
   const text = String(value);
   return text.length > 80 ? `${text.slice(0, 80)}…` : text;
 }
 
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleString('fi-FI', {
-    day: 'numeric',
-    month: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 function EntryRow({ entry }: { entry: AuditEntry }) {
   const changes = Object.entries(entry.changes ?? {});
@@ -190,7 +156,7 @@ function EntryRow({ entry }: { entry: AuditEntry }) {
         )}
       </div>
       <div style={styles.meta}>
-        {entry.actor_name} · {formatTime(entry.created_at)}
+        {entry.actor_name} · {formatDateTime(entry.created_at)}
       </div>
       {changes.length > 0 && (
         <div style={styles.changes}>
@@ -214,7 +180,6 @@ function EntryRow({ entry }: { entry: AuditEntry }) {
 
 export default function AdminAuditLogPage() {
   const { user } = useUser();
-  const navigate = useNavigate();
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [filters, setFilters] = useState<AuditFilters>({ actors: [], actions: [] });
@@ -269,7 +234,7 @@ export default function AdminAuditLogPage() {
   };
 
   if (!user?.is_admin) {
-    return <div style={styles.empty}>Admin access required.</div>;
+    return <EmptyState>Admin access required.</EmptyState>;
   }
 
   // Group the known actions under their category for the filter menu.
@@ -277,11 +242,9 @@ export default function AdminAuditLogPage() {
 
   return (
     <div>
-      <button style={styles.backBtn} onClick={() => navigate('/admin')}>
-        ← Back to Admin
-      </button>
+      <BackButton />
 
-      <div style={styles.section}>
+      <Section>
         <div style={styles.filters}>
           <select
             style={styles.select}
@@ -318,24 +281,24 @@ export default function AdminAuditLogPage() {
           </select>
         </div>
 
-        <div style={styles.header}>Audit log</div>
-        <div style={styles.card}>
+        <SectionHeader>Audit log</SectionHeader>
+        <Card>
           {entries.map((entry) => (
             <EntryRow key={entry.id} entry={entry} />
           ))}
           {!loading && !error && entries.length === 0 && (
-            <div style={styles.empty}>No admin actions recorded yet.</div>
+            <EmptyState style={LIST_MESSAGE}>No admin actions recorded yet.</EmptyState>
           )}
-          {loading && entries.length === 0 && <div style={styles.empty}>Loading...</div>}
-          {error && <div style={{ ...styles.empty, color: 'var(--destructive)' }}>{error}</div>}
-        </div>
+          {loading && entries.length === 0 && <EmptyState style={LIST_MESSAGE}>Loading...</EmptyState>}
+          {error && <EmptyState style={{ ...LIST_MESSAGE, color: 'var(--destructive)' }}>{error}</EmptyState>}
+        </Card>
 
         {hasMore && (
           <button style={styles.moreBtn} onClick={loadMore} disabled={loading}>
             {loading ? 'Loading...' : 'Load more'}
           </button>
         )}
-      </div>
+      </Section>
     </div>
   );
 }

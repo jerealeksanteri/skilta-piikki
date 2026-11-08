@@ -135,8 +135,8 @@ export default function AdminPage() {
         </div>
         {pending.length === 0 ? (
           <Card>
-<EmptyState>No pending transactions</EmptyState>
-</Card>
+            <EmptyState>No pending transactions</EmptyState>
+          </Card>
         ) : (
           <Card>
             {pending.map((tx, i) => (

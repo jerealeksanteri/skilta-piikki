@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { listUsers } from '../api/users';
 import {
@@ -12,100 +11,20 @@ import {
   getSchedulerStatus,
 } from '../api/rewards';
 import type { User, Reward, RewardGrant, SchedulerStatus } from '../types';
+import { BackButton, Button, Card, DateTimeField, EmptyState, Loading, SectionHeader, Select, Tabs, TextField, useToast } from '../ui';
+import { formatDateTime, formatShortDateTime, toInputValue } from '../utils/date';
 
 const styles = {
   container: {
     padding: '16px',
   },
-  backBtn: {
-    fontSize: '14px',
-    color: 'var(--link)',
-    backgroundColor: 'transparent',
-    padding: '8px 0',
-    marginBottom: '8px',
-  },
   section: {
     marginBottom: '24px',
-  },
-  header: {
-    fontSize: '13px',
-    fontWeight: 600,
-    color: 'var(--section-header)',
-    textTransform: 'uppercase' as const,
-    marginBottom: '12px',
-  },
-  card: {
-    backgroundColor: 'var(--bg)',
-    borderRadius: '12px',
-    padding: '16px',
-  },
-  tabs: {
-    display: 'flex',
-    gap: '8px',
-    marginBottom: '16px',
-    borderBottom: '1px solid var(--secondary-bg)',
-  },
-  tab: {
-    padding: '8px 16px',
-    fontSize: '14px',
-    fontWeight: 500,
-    backgroundColor: 'transparent',
-    color: 'var(--hint)',
-    borderBottom: '2px solid transparent',
-    cursor: 'pointer',
-  },
-  activeTab: {
-    color: 'var(--text)',
-    borderBottomColor: 'var(--btn)',
   },
   form: {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '12px',
-  },
-  label: {
-    fontSize: '13px',
-    color: 'var(--hint)',
-    marginBottom: '4px',
-  },
-  input: {
-    width: '100%',
-    padding: '12px',
-    borderRadius: '10px',
-    border: '1px solid var(--secondary-bg)',
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--text)',
-    fontSize: '15px',
-  },
-  select: {
-    width: '100%',
-    padding: '12px',
-    borderRadius: '10px',
-    border: '1px solid var(--secondary-bg)',
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--text)',
-    fontSize: '15px',
-    appearance: 'none' as const,
-  },
-  multiSelect: {
-    width: '100%',
-    minHeight: '120px',
-    padding: '8px',
-    borderRadius: '10px',
-    border: '1px solid var(--secondary-bg)',
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--text)',
-    fontSize: '14px',
-  },
-  submitBtn: {
-    width: '100%',
-    padding: '14px',
-    borderRadius: '12px',
-    fontSize: '15px',
-    fontWeight: 600,
-    backgroundColor: 'var(--btn)',
-    color: 'var(--btn-text)',
-    marginTop: '8px',
   },
   rewardRow: {
     display: 'flex',
@@ -126,27 +45,6 @@ const styles = {
     color: 'var(--hint)',
     marginTop: '4px',
   },
-  actionBtn: {
-    padding: '6px 12px',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: 600,
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--text)',
-  },
-  toast: {
-    position: 'fixed' as const,
-    bottom: '104px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    backgroundColor: 'var(--text)',
-    color: 'var(--bg)',
-    padding: '10px 20px',
-    borderRadius: '20px',
-    fontSize: '14px',
-    fontWeight: 500,
-    zIndex: 300,
-  },
   badge: {
     display: 'inline-block',
     padding: '4px 8px',
@@ -156,19 +54,19 @@ const styles = {
     backgroundColor: 'var(--secondary-bg)',
     color: 'var(--text)',
   },
-  empty: {
-    textAlign: 'center' as const,
-    padding: '32px',
-    color: 'var(--hint)',
-  },
-  loading: {
-    textAlign: 'center' as const,
-    padding: '32px',
-    color: 'var(--hint)',
-  },
 };
 
 type TabType = 'one_time' | 'recurring' | 'history';
+
+const TABS: { value: TabType; label: string }[] = [
+  { value: 'one_time', label: 'One-Time Rewards' },
+  { value: 'recurring', label: 'Recurring Rewards' },
+  { value: 'history', label: 'Grant History' },
+];
+
+/** Headers here sit inside the page padding, so they only need space below. */
+const HEADER = { padding: 0, marginBottom: '12px' };
+const MULTI_SELECT = { minHeight: '120px', padding: '8px', fontSize: '14px' };
 type Frequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 const PERIOD_WORD: Record<Frequency, string> = {
@@ -178,29 +76,14 @@ const PERIOD_WORD: Record<Frequency, string> = {
   yearly: 'year',
 };
 
-/** Format a Date as the local-time value a datetime-local input expects. */
-function toInputValue(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours(),
-  )}:${pad(d.getMinutes())}`;
-}
 
-function formatShort(iso: string): string {
-  return new Date(iso).toLocaleString('fi-FI', {
-    day: 'numeric',
-    month: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 function schedulerSummary(
   status: SchedulerStatus,
   rewards: Reward[],
 ): { icon: string; title: string; detail: string; warn: boolean } {
-  const next = status.next_run_at ? `Next run ${formatShort(status.next_run_at)}.` : '';
-  const last = status.last_run_at ? formatShort(status.last_run_at) : '';
+  const next = status.next_run_at ? `Next run ${formatShortDateTime(status.next_run_at)}.` : '';
+  const last = status.last_run_at ? formatShortDateTime(status.last_run_at) : '';
   switch (status.state) {
     case 'never':
       return { icon: '⏳', title: "Scheduler hasn't run yet", detail: next, warn: false };
@@ -238,13 +121,7 @@ function startHint(freq: Frequency, start: string): string {
   if (!start) return `Empty = first grant one ${period} from now`;
   const d = new Date(start);
   if (Number.isNaN(d.getTime())) return '';
-  let hint = `First grant ${d.toLocaleString('fi-FI', {
-    day: 'numeric',
-    month: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })}, then every ${period}`;
+  let hint = `First grant ${formatDateTime(d)}, then every ${period}`;
   if (freq === 'monthly' && d.getDate() > 28) hint += ' (last day of shorter months)';
   if (freq === 'yearly' && d.getMonth() === 1 && d.getDate() === 29) hint += ' (Feb 28 in non-leap years)';
   return hint;
@@ -252,7 +129,6 @@ function startHint(freq: Frequency, start: string): string {
 
 export default function AdminRewardsPage() {
   const { user } = useUser();
-  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<TabType>('one_time');
   const [users, setUsers] = useState<User[]>([]);
@@ -260,7 +136,7 @@ export default function AdminRewardsPage() {
   const [grants, setGrants] = useState<RewardGrant[]>([]);
   const [schedStatus, setSchedStatus] = useState<SchedulerStatus | null>(null);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<string | null>(null);
+  const showToast = useToast();
 
   // Form state for creating one-time reward
   const [oneTimeName, setOneTimeName] = useState('');
@@ -314,10 +190,6 @@ export default function AdminRewardsPage() {
     fetchData();
   }, []);
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
 
   const refreshRewards = async () => {
     const r = await listRewards();
@@ -418,11 +290,11 @@ export default function AdminRewardsPage() {
   };
 
   if (!user?.is_admin) {
-    return <div style={styles.empty}>Admin access required.</div>;
+    return <EmptyState style={{ padding: '32px' }}>Admin access required.</EmptyState>;
   }
 
   if (loading) {
-    return <div style={styles.loading}>Loading...</div>;
+    return <Loading />;
   }
 
   const oneTimeRewards = rewards.filter((r) => r.reward_type === 'one_time');
@@ -431,109 +303,74 @@ export default function AdminRewardsPage() {
 
   return (
     <div style={styles.container}>
-      <button style={styles.backBtn} onClick={() => navigate('/admin')}>
-        ← Back to Admin
-      </button>
+      <BackButton flush />
 
-      <div style={styles.tabs}>
-        <button
-          style={{ ...styles.tab, ...(activeTab === 'one_time' ? styles.activeTab : {}) }}
-          onClick={() => setActiveTab('one_time')}
-        >
-          One-Time Rewards
-        </button>
-        <button
-          style={{ ...styles.tab, ...(activeTab === 'recurring' ? styles.activeTab : {}) }}
-          onClick={() => setActiveTab('recurring')}
-        >
-          Recurring Rewards
-        </button>
-        <button
-          style={{ ...styles.tab, ...(activeTab === 'history' ? styles.activeTab : {}) }}
-          onClick={() => setActiveTab('history')}
-        >
-          Grant History
-        </button>
-      </div>
+      <Tabs tabs={TABS} value={activeTab} onChange={setActiveTab} />
 
       {activeTab === 'one_time' && (
         <>
           <div style={styles.section}>
-            <div style={styles.header}>Give One-Time Reward</div>
-            <div style={styles.card}>
+            <SectionHeader style={HEADER}>Give One-Time Reward</SectionHeader>
+            <Card padded>
               <form style={styles.form} onSubmit={handleCreateOneTime}>
-                <div>
-                  <div style={styles.label}>Reward Name *</div>
-                  <input
-                    style={styles.input}
-                    type="text"
-                    placeholder="Holiday Bonus"
-                    value={oneTimeName}
-                    onChange={(e) => setOneTimeName(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <div style={styles.label}>Description (optional)</div>
-                  <input
-                    style={styles.input}
-                    type="text"
-                    placeholder="End of year bonus"
-                    value={oneTimeDesc}
-                    onChange={(e) => setOneTimeDesc(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <div style={styles.label}>Amount (€) *</div>
-                  <input
-                    style={styles.input}
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    placeholder="10.00"
-                    value={oneTimeAmount}
-                    onChange={(e) => setOneTimeAmount(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <div style={styles.label}>Select Users * (hold Ctrl/Cmd for multiple)</div>
-                  <select
-                    style={styles.multiSelect}
-                    multiple
-                    value={oneTimeUsers.map(String)}
-                    onChange={(e) => {
-                      const selected = Array.from(e.target.selectedOptions, (opt) => parseInt(opt.value));
-                      setOneTimeUsers(selected);
-                    }}
-                  >
-                    {users
-                      .filter((u) => u.is_active)
-                      .map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.first_name} {u.username ? `(@${u.username})` : ''} — {u.balance.toFixed(2)} €
-                        </option>
-                      ))}
-                  </select>
-                </div>
-                <div>
-                  <div style={styles.label}>Note (optional)</div>
-                  <input
-                    style={styles.input}
-                    type="text"
-                    placeholder="Special occasion"
-                    value={oneTimeNote}
-                    onChange={(e) => setOneTimeNote(e.target.value)}
-                  />
-                </div>
-                <button type="submit" style={styles.submitBtn}>
+                <TextField
+                  label="Reward Name *"
+                  type="text"
+                  placeholder="Holiday Bonus"
+                  value={oneTimeName}
+                  onChange={(e) => setOneTimeName(e.target.value)}
+                />
+                <TextField
+                  label="Description (optional)"
+                  type="text"
+                  placeholder="End of year bonus"
+                  value={oneTimeDesc}
+                  onChange={(e) => setOneTimeDesc(e.target.value)}
+                />
+                <TextField
+                  label="Amount (€) *"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="10.00"
+                  value={oneTimeAmount}
+                  onChange={(e) => setOneTimeAmount(e.target.value)}
+                />
+                <Select
+                  label="Select Users * (hold Ctrl/Cmd for multiple)"
+                  multiple
+                  value={oneTimeUsers.map(String)}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, (opt) => parseInt(opt.value));
+                    setOneTimeUsers(selected);
+                  }}
+                  style={MULTI_SELECT}
+                >
+                  {users
+                    .filter((u) => u.is_active)
+                    .map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.first_name} {u.username ? `(@${u.username})` : ''} — {u.balance.toFixed(2)} €
+                      </option>
+                    ))}
+                </Select>
+                <TextField
+                  label="Note (optional)"
+                  type="text"
+                  placeholder="Special occasion"
+                  value={oneTimeNote}
+                  onChange={(e) => setOneTimeNote(e.target.value)}
+                />
+                <Button type="submit" size="lg" block style={{ marginTop: '8px' }}>
                   Give Reward to {oneTimeUsers.length} User{oneTimeUsers.length !== 1 ? 's' : ''}
-                </button>
+                </Button>
               </form>
-            </div>
+            </Card>
           </div>
 
           <div style={styles.section}>
-            <div style={styles.header}>One-Time Rewards ({oneTimeRewards.length})</div>
-            <div style={styles.card}>
+            <SectionHeader style={HEADER}>One-Time Rewards ({oneTimeRewards.length})</SectionHeader>
+            <Card padded>
               {oneTimeRewards.map((r) => (
                 <div key={r.id} style={styles.rewardRow}>
                   <div style={styles.rewardInfo}>
@@ -548,22 +385,22 @@ export default function AdminRewardsPage() {
                     </div>
                   </div>
                   {r.is_active ? (
-                    <button style={styles.actionBtn} onClick={() => handleDeactivate(r.id)}>
+                    <Button size="sm" variant="secondary" onClick={() => handleDeactivate(r.id)}>
                       Deactivate
-                    </button>
+                    </Button>
                   ) : (
-                    <button style={styles.actionBtn} onClick={() => handleReactivate(r.id)}>
+                    <Button size="sm" variant="secondary" onClick={() => handleReactivate(r.id)}>
                       Reactivate
-                    </button>
+                    </Button>
                   )}
                 </div>
               ))}
               {oneTimeRewards.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '20px', color: 'var(--hint)' }}>
+                <EmptyState>
                   No one-time rewards yet
-                </div>
+                </EmptyState>
               )}
-            </div>
+            </Card>
           </div>
         </>
       )}
@@ -572,9 +409,9 @@ export default function AdminRewardsPage() {
         <>
           {summary && (
             <div style={styles.section}>
-              <div
+              <Card
+                padded
                 style={{
-                  ...styles.card,
                   display: 'flex',
                   gap: '12px',
                   alignItems: 'flex-start',
@@ -598,106 +435,84 @@ export default function AdminRewardsPage() {
                     </div>
                   )}
                 </div>
-              </div>
+              </Card>
             </div>
           )}
 
           <div style={styles.section}>
-            <div style={styles.header}>Create Recurring Reward</div>
-            <div style={styles.card}>
+            <SectionHeader style={HEADER}>Create Recurring Reward</SectionHeader>
+            <Card padded>
               <form style={styles.form} onSubmit={handleCreateRecurring}>
-                <div>
-                  <div style={styles.label}>Reward Name *</div>
-                  <input
-                    style={styles.input}
-                    type="text"
-                    placeholder="Weekly Allowance"
-                    value={recurName}
-                    onChange={(e) => setRecurName(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <div style={styles.label}>Description (optional)</div>
-                  <input
-                    style={styles.input}
-                    type="text"
-                    placeholder="Automatic weekly credit"
-                    value={recurDesc}
-                    onChange={(e) => setRecurDesc(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <div style={styles.label}>Amount (€) *</div>
-                  <input
-                    style={styles.input}
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    placeholder="5.00"
-                    value={recurAmount}
-                    onChange={(e) => setRecurAmount(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <div style={styles.label}>Frequency *</div>
-                  <select style={styles.select} value={recurFreq} onChange={(e) => setRecurFreq(e.target.value as Frequency)}>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
-                  </select>
-                </div>
-                <div>
-                  <div style={styles.label}>First grant (optional)</div>
-                  <input
-                    style={styles.input}
-                    type="datetime-local"
-                    min={toInputValue(new Date())}
-                    value={recurStart}
-                    onChange={(e) => setRecurStart(e.target.value)}
-                  />
-                  <div style={{ fontSize: '12px', color: 'var(--hint)', marginTop: '4px' }}>
-                    {startHint(recurFreq, recurStart)}
-                  </div>
-                </div>
-                <div>
-                  <div style={styles.label}>Assign to Users (hold Ctrl/Cmd for multiple, empty = all users)</div>
-                  <select
-                    style={styles.multiSelect}
-                    multiple
-                    value={recurUsers.map(String)}
-                    onChange={(e) => {
-                      const selected = Array.from(e.target.selectedOptions, (opt) => parseInt(opt.value));
-                      setRecurUsers(selected);
-                    }}
-                  >
-                    {users
-                      .filter((u) => u.is_active)
-                      .map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.first_name} {u.username ? `(@${u.username})` : ''}
-                        </option>
-                      ))}
-                  </select>
-                  <div style={{ fontSize: '12px', color: 'var(--hint)', marginTop: '4px' }}>
-                    {recurUsers.length === 0 ? 'Will apply to all active users' : `Selected ${recurUsers.length} user(s)`}
-                  </div>
-                </div>
-                <button type="submit" style={styles.submitBtn}>
+                <TextField
+                  label="Reward Name *"
+                  type="text"
+                  placeholder="Weekly Allowance"
+                  value={recurName}
+                  onChange={(e) => setRecurName(e.target.value)}
+                />
+                <TextField
+                  label="Description (optional)"
+                  type="text"
+                  placeholder="Automatic weekly credit"
+                  value={recurDesc}
+                  onChange={(e) => setRecurDesc(e.target.value)}
+                />
+                <TextField
+                  label="Amount (€) *"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="5.00"
+                  value={recurAmount}
+                  onChange={(e) => setRecurAmount(e.target.value)}
+                />
+                <Select label="Frequency *" value={recurFreq} onChange={(e) => setRecurFreq(e.target.value as Frequency)}>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </Select>
+                <DateTimeField
+                  label="First grant (optional)"
+                  min={toInputValue(new Date())}
+                  value={recurStart}
+                  onChange={(e) => setRecurStart(e.target.value)}
+                  hint={startHint(recurFreq, recurStart)}
+                />
+                <Select
+                  label="Assign to Users (hold Ctrl/Cmd for multiple, empty = all users)"
+                  multiple
+                  value={recurUsers.map(String)}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, (opt) => parseInt(opt.value));
+                    setRecurUsers(selected);
+                  }}
+                  style={MULTI_SELECT}
+                  hint={recurUsers.length === 0 ? 'Will apply to all active users' : `Selected ${recurUsers.length} user(s)`}
+                >
+                  {users
+                    .filter((u) => u.is_active)
+                    .map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.first_name} {u.username ? `(@${u.username})` : ''}
+                      </option>
+                    ))}
+                </Select>
+                <Button type="submit" size="lg" block style={{ marginTop: '8px' }}>
                   Create Recurring Reward
-                </button>
+                </Button>
               </form>
-            </div>
+            </Card>
           </div>
 
           <div style={styles.section}>
-            <div style={styles.header}>Active Recurring Rewards ({recurringRewards.filter((r) => r.is_active).length})</div>
-            <div style={styles.card}>
+            <SectionHeader style={HEADER}>Active Recurring Rewards ({recurringRewards.filter((r) => r.is_active).length})</SectionHeader>
+            <Card padded>
               {recurringRewards
                 .filter((r) => r.is_active)
                 .map((r) => {
                   const assignedCount = r.assigned_user_ids.length;
-                  const nextGrant = r.next_grant_date ? new Date(r.next_grant_date).toLocaleString() : 'N/A';
+                  const nextGrant = r.next_grant_date ? formatDateTime(r.next_grant_date) : 'N/A';
 
                   return (
                     <div key={r.id} style={styles.rewardRow}>
@@ -711,24 +526,24 @@ export default function AdminRewardsPage() {
                         </div>
                         <div style={styles.rewardMeta}>Next grant: {nextGrant}</div>
                       </div>
-                      <button style={styles.actionBtn} onClick={() => handleDeactivate(r.id)}>
+                      <Button size="sm" variant="secondary" onClick={() => handleDeactivate(r.id)}>
                         Deactivate
-                      </button>
+                      </Button>
                     </div>
                   );
                 })}
               {recurringRewards.filter((r) => r.is_active).length === 0 && (
-                <div style={{ textAlign: 'center', padding: '20px', color: 'var(--hint)' }}>
+                <EmptyState>
                   No active recurring rewards
-                </div>
+                </EmptyState>
               )}
-            </div>
+            </Card>
           </div>
 
           {recurringRewards.filter((r) => !r.is_active).length > 0 && (
             <div style={styles.section}>
-              <div style={styles.header}>Inactive Recurring Rewards</div>
-              <div style={styles.card}>
+              <SectionHeader style={HEADER}>Inactive Recurring Rewards</SectionHeader>
+              <Card padded>
                 {recurringRewards
                   .filter((r) => !r.is_active)
                   .map((r) => (
@@ -742,12 +557,12 @@ export default function AdminRewardsPage() {
                           {r.amount.toFixed(2)} € • {r.recurrence_frequency}
                         </div>
                       </div>
-                      <button style={styles.actionBtn} onClick={() => handleReactivate(r.id)}>
+                      <Button size="sm" variant="secondary" onClick={() => handleReactivate(r.id)}>
                         Reactivate
-                      </button>
+                      </Button>
                     </div>
                   ))}
-              </div>
+              </Card>
             </div>
           )}
         </>
@@ -755,17 +570,17 @@ export default function AdminRewardsPage() {
 
       {activeTab === 'history' && (
         <div style={styles.section}>
-          <div style={styles.header}>Recent Grants ({grants.length})</div>
-          <div style={styles.card}>
+          <SectionHeader style={HEADER}>Recent Grants ({grants.length})</SectionHeader>
+          <Card padded>
             {grants.map((g) => {
-              const grantDate = new Date(g.granted_at).toLocaleString();
+              const grantDate = formatDateTime(g.granted_at);
               return (
                 <div key={g.id} style={styles.rewardRow}>
                   <div style={styles.rewardInfo}>
                     <div style={styles.rewardName}>
                       {g.reward_name} → {g.user_name}
                       {g.granted_by_scheduler && (
-                        <span style={{ ...styles.badge, marginLeft: '8px', backgroundColor: '#4caf50', color: '#fff' }}>
+                        <span style={{ ...styles.badge, marginLeft: '8px', backgroundColor: 'var(--positive)', color: '#fff' }}>
                           Auto
                         </span>
                       )}
@@ -779,13 +594,11 @@ export default function AdminRewardsPage() {
               );
             })}
             {grants.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '20px', color: 'var(--hint)' }}>No grants yet</div>
+              <EmptyState>No grants yet</EmptyState>
             )}
-          </div>
+          </Card>
         </div>
       )}
-
-      {toast && <div style={styles.toast}>{toast}</div>}
     </div>
   );
 }
