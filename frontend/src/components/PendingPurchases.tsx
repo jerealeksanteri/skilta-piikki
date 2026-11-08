@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { cancelPurchase, setPurchaseQuantity } from '../api/transactions';
+import { cancelPurchase, setPurchaseQuantity, settlePurchase } from '../api/transactions';
 import type { Transaction } from '../types';
 import type { PendingPurchase } from '../utils/pendingPurchases';
 import { Button, Card, Divider, Section, useToast } from '../ui';
@@ -122,6 +122,19 @@ function PendingRow({ item, onUpdate, onRemove }: RowProps) {
       : run(() => setPurchaseQuantity(tx.id, tx.quantity - 1), false);
   const increase = () => run(() => setPurchaseQuantity(tx.id, tx.quantity + 1), false);
 
+  // Skip the rest of the wait: the purchase is right as it is.
+  const settle = async () => {
+    setBusy(true);
+    try {
+      await settlePurchase(tx.id);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Could not finish the purchase', 3000);
+    } finally {
+      setBusy(false);
+      setLeaving(true);
+    }
+  };
+
   return (
     <div
       className={leaving ? 'undo-leaving' : undefined}
@@ -162,6 +175,16 @@ function PendingRow({ item, onUpdate, onRemove }: RowProps) {
         >
           +
         </Button>
+        <Button
+          size="sm"
+          tone="positive"
+          style={{ ...styles.stepBtn, marginLeft: '4px' }}
+          disabled={busy}
+          onClick={settle}
+          aria-label={`Done with ${tx.product_name}`}
+        >
+          ✓
+        </Button>
       </div>
       <div style={styles.track} aria-hidden="true">
         <div
@@ -196,7 +219,7 @@ export default function PendingPurchases({ items, onUpdate, onRemove }: Props) {
         ))}
       </Card>
       <div style={{ fontSize: '12px', color: 'var(--hint)', padding: '6px 4px 0' }}>
-        Tap − or + to fix it within a minute.
+        − or + to fix it, ✓ to finish now.
       </div>
     </Section>
   );

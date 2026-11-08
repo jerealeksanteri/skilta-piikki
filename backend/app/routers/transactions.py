@@ -102,6 +102,20 @@ def cancel_purchase(
     return _to_out(tx)
 
 
+@router.post("/transactions/{tx_id}/settle", response_model=TransactionOut)
+def settle_purchase(
+    tx_id: int,
+    user: User = Depends(require_active_user),
+    db: Session = Depends(get_db),
+):
+    """Close the undo window now instead of waiting it out."""
+    tx = PurchaseService.open_for_change(db, user, tx_id)
+    PurchaseService.settle(tx)
+    db.commit()
+    db.refresh(tx)
+    return _to_out(tx)
+
+
 @router.post("/transactions/payment", response_model=TransactionOut)
 def create_payment(
     data: PaymentRequest,

@@ -100,6 +100,7 @@ To deploy, set the new image tags in the server-config repo.
 | GET | `/api/transactions/undoable` | User's purchases still inside the undo window |
 | PUT | `/api/transactions/{id}/quantity` | Change a purchase's quantity inside the undo window |
 | POST | `/api/transactions/{id}/cancel` | Undo a purchase inside the undo window |
+| POST | `/api/transactions/{id}/settle` | Close a purchase's undo window early |
 | POST | `/api/transactions/payment-request` | Request a payment (pending) |
 | GET | `/api/transactions/mine` | User's transaction history |
 | GET | `/api/leaderboard` | Active users ranked by balance |

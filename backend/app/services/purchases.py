@@ -2,8 +2,9 @@
 
 A tapped drink is recorded (and, with auto-approve, charged) at once, so it
 survives the member closing the app. For UNDO_WINDOW_SECONDS afterwards the
-member can change its quantity or cancel it; tapping the same drink again
-inside the window adds to that purchase and restarts the window. The server's
+member can change its quantity or cancel it, or settle it to close the window
+early; tapping the same drink again inside the window adds to that purchase
+and restarts the window. The server's
 clock decides, with a few seconds' grace for slow networks. A cancelled
 purchase gets status 'cancelled' and its balance change is reversed, so it
 counts nowhere: ledger, reports and fiscal summaries all read approved rows.
@@ -125,6 +126,11 @@ class PurchaseService:
         if tx.status == "approved":
             adjust_balance(db, tx.user, -tx.amount)
         tx.status = "cancelled"
+        tx.undo_until = None
+
+    @staticmethod
+    def settle(tx: Transaction) -> None:
+        """Close the window early: the member is happy with the purchase as it is."""
         tx.undo_until = None
 
     @staticmethod
