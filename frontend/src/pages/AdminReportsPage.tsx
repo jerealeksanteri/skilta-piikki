@@ -150,6 +150,15 @@ function presetWindow(key: PresetKey): { start: Date; end: Date } {
 
 
 
+/** "profit 4.50 € · 60 %", or "cost missing" when no purchase had a cost price. */
+function profitText(p: ReportProductSummary): string {
+  if (p.profit == null) return 'cost missing';
+  const parts = [`profit ${euros(p.profit)}`];
+  if (p.margin_pct != null) parts.push(`${p.margin_pct} %`);
+  if (p.cost_missing_items) parts.push(`${p.cost_missing_items} without cost`);
+  return parts.join(' · ');
+}
+
 function euros(amount: number): string {
   return `${amount.toFixed(2).replace('.', ',')} €`;
 }
@@ -308,6 +317,24 @@ export default function AdminReportsPage() {
             </div>
           </Section>
 
+          <Section title="Profit">
+            <Card>
+              <div style={styles.row}>
+                <div style={styles.label}>Profit</div>
+                <div style={styles.value}>
+                  {report.total_profit != null ? euros(report.total_profit) : 'cost missing'}
+                  {report.margin_pct != null && <span style={styles.valueMeta}> · {report.margin_pct} % margin</span>}
+                </div>
+              </div>
+            </Card>
+            {!!report.cost_missing_items && (
+              <div style={styles.note}>
+                {report.cost_missing_items} item{report.cost_missing_items === 1 ? '' : 's'} without a cost price, left
+                out of profit. Set cost prices in Admin → Products.
+              </div>
+            )}
+          </Section>
+
           <Section title="By product">
             {report.by_product.length === 0 ? (
               <Card>
@@ -319,7 +346,10 @@ export default function AdminReportsPage() {
                   <div key={p.product_id ?? `none-${i}`}>
                     {i > 0 && <Divider />}
                     <div style={styles.row}>
-                      <div style={styles.label}>{productLabel(p)}</div>
+                      <div style={styles.label}>
+                        {productLabel(p)}
+                        <div style={styles.valueMeta}>{profitText(p)}</div>
+                      </div>
                       <div style={styles.value}>
                         {p.items} <span style={styles.valueMeta}>· {euros(p.amount)}</span>
                       </div>

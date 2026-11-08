@@ -10,6 +10,11 @@ class ProductSummary(BaseModel):
     emoji: str | None
     items: int
     amount: Money
+    # Profit on the purchases with a known cost price; None when none had one.
+    cost: Money | None = None
+    profit: Money | None = None
+    margin_pct: float | None = None
+    cost_missing_items: int = 0
 
 
 class UserSummary(BaseModel):
@@ -26,6 +31,10 @@ class PurchaseReport(BaseModel):
     statuses: list[str]
     total_items: int
     total_amount: Money
+    total_cost: Money | None = None
+    total_profit: Money | None = None
+    margin_pct: float | None = None
+    cost_missing_items: int = 0
     user_count: int
     by_product: list[ProductSummary]
     by_user: list[UserSummary]

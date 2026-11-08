@@ -12,6 +12,7 @@ export function listAllProducts(): Promise<Product[]> {
 export function createProduct(data: {
   name: string;
   price: number;
+  cost_price?: number | null;
   emoji?: string;
   sort_order?: number;
 }): Promise<Product> {
@@ -23,7 +24,14 @@ export function createProduct(data: {
 
 export function updateProduct(
   productId: number,
-  data: Partial<{ name: string; price: number; emoji: string; is_active: boolean; sort_order: number }>,
+  data: Partial<{
+    name: string;
+    price: number;
+    cost_price: number | null;
+    emoji: string;
+    is_active: boolean;
+    sort_order: number;
+  }>,
 ): Promise<Product> {
   return apiRequest<Product>(`/products/${productId}`, {
     method: 'PUT',
