@@ -1,3 +1,7 @@
+import { Button, tokens } from '../ui';
+
+const DIALOG_BUTTON = { flex: 1, borderRadius: tokens.radius.lg };
+
 const styles = {
   overlay: {
     position: 'fixed' as const,
@@ -35,24 +39,6 @@ const styles = {
     display: 'flex',
     gap: '8px',
   },
-  cancelBtn: {
-    flex: 1,
-    padding: '12px',
-    borderRadius: '12px',
-    fontSize: '15px',
-    fontWeight: 600,
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--text)',
-  },
-  confirmBtn: {
-    flex: 1,
-    padding: '12px',
-    borderRadius: '12px',
-    fontSize: '15px',
-    fontWeight: 600,
-    backgroundColor: 'var(--btn)',
-    color: 'var(--btn-text)',
-  },
 };
 
 interface Props {
@@ -87,19 +73,17 @@ export default function ConfirmDialog({
         <div style={styles.title}>{title}</div>
         <div style={styles.subtitle}>{subtitle}</div>
         <div style={styles.buttons}>
-          <button style={styles.cancelBtn} onClick={onCancel} disabled={loading}>
+          <Button variant="secondary" style={DIALOG_BUTTON} onClick={onCancel} disabled={loading}>
             {cancelLabel}
-          </button>
-          <button
-            style={{
-              ...styles.confirmBtn,
-              ...(destructive ? { backgroundColor: 'var(--destructive)', color: '#fff' } : {}),
-            }}
+          </Button>
+          <Button
+            tone={destructive ? 'destructive' : 'default'}
+            style={DIALOG_BUTTON}
             onClick={onConfirm}
             disabled={loading}
           >
             {loading ? loadingLabel : confirmLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

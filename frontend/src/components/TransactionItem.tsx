@@ -1,8 +1,9 @@
 import type { Transaction } from '../types';
+import { formatDayTime } from '../utils/date';
 
 const statusColors: Record<string, string> = {
-  approved: '#4caf50',
-  pending: '#ff9800',
+  approved: 'var(--positive)',
+  pending: 'var(--warning)',
   rejected: 'var(--destructive)',
 };
 
@@ -87,12 +88,7 @@ interface Props {
 
 export default function TransactionItem({ transaction: tx, showUser }: Props) {
   const { icon, title, metaNote } = describe(tx);
-  const date = new Date(tx.created_at).toLocaleDateString('fi-FI', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const date = formatDayTime(tx.created_at);
 
   return (
     <div style={styles.item}>
@@ -111,7 +107,7 @@ export default function TransactionItem({ transaction: tx, showUser }: Props) {
         <div
           style={{
             ...styles.amount,
-            color: tx.amount < 0 ? 'var(--destructive)' : '#4caf50',
+            color: tx.amount < 0 ? 'var(--destructive)' : 'var(--positive)',
           }}
         >
           {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)} €
