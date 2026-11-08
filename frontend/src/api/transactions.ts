@@ -33,6 +33,11 @@ export function undoDecision(txId: number): Promise<Transaction> {
   return apiRequest<Transaction>(`/transactions/${txId}/undo-decision`, { method: 'PUT' });
 }
 
+/** Close a purchase's undo window now instead of waiting it out. */
+export function settlePurchase(txId: number): Promise<Transaction> {
+  return apiRequest<Transaction>(`/transactions/${txId}/settle`, { method: 'POST' });
+}
+
 export function createPayment(
   userId: number,
   amount: number,
