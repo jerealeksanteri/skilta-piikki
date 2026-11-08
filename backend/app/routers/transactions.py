@@ -10,12 +10,14 @@ from app.models.user import User
 from app.schemas.transaction import (
     PaymentRequest,
     PurchaseRequest,
+    QuantityUpdate,
     TransactionOut,
     UserPaymentRequest,
 )
 from app.services.audit import diff, record, snapshot
 from app.services.balance import adjust_balance
 from app.services.messaging import send_event_message
+from app.services.purchases import PurchaseService, remaining_ms
 
 router = APIRouter()
 
@@ -36,7 +38,16 @@ def _to_out(tx: Transaction) -> TransactionOut:
         created_at=tx.created_at,
         product_name=tx.product.name if tx.product else None,
         user_name=tx.user.first_name if tx.user else None,
+        product_emoji=tx.product.emoji if tx.product else None,
+        **_undo_fields(tx),
     )
+
+
+def _undo_fields(tx: Transaction) -> dict:
+    left = remaining_ms(tx)
+    if left is None:
+        return {}
+    return {"undo_remaining_ms": left, "undo_window_ms": settings.UNDO_WINDOW_SECONDS * 1000}
 
 
 @router.post("/transactions/purchase", response_model=TransactionOut)
@@ -49,22 +60,43 @@ def create_purchase(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    quantity = max(1, data.quantity)
-    auto_approve = settings.AUTO_APPROVE_PURCHASES
-    tx = Transaction(
-        user_id=user.id,
-        product_id=product.id,
-        type="purchase",
-        amount=-(product.price * quantity),
-        quantity=quantity,
-        status="approved" if auto_approve else "pending",
-        created_by_id=user.id,
-    )
-    db.add(tx)
+    tx = PurchaseService.create(db, user, product, max(1, data.quantity))
+    db.commit()
+    db.refresh(tx)
+    return _to_out(tx)
 
-    if auto_approve:
-        adjust_balance(db, user, tx.amount)
 
+@router.get("/transactions/undoable", response_model=list[TransactionOut])
+def undoable_purchases(
+    user: User = Depends(require_active_user),
+    db: Session = Depends(get_db),
+):
+    """The member's purchases that can still be changed or cancelled, newest first."""
+    return [_to_out(tx) for tx in PurchaseService.undoable(db, user)]
+
+
+@router.put("/transactions/{tx_id}/quantity", response_model=TransactionOut)
+def change_purchase_quantity(
+    tx_id: int,
+    data: QuantityUpdate,
+    user: User = Depends(require_active_user),
+    db: Session = Depends(get_db),
+):
+    tx = PurchaseService.open_for_change(db, user, tx_id)
+    PurchaseService.set_quantity(db, tx, data.quantity)
+    db.commit()
+    db.refresh(tx)
+    return _to_out(tx)
+
+
+@router.post("/transactions/{tx_id}/cancel", response_model=TransactionOut)
+def cancel_purchase(
+    tx_id: int,
+    user: User = Depends(require_active_user),
+    db: Session = Depends(get_db),
+):
+    tx = PurchaseService.open_for_change(db, user, tx_id)
+    PurchaseService.cancel(db, tx)
     db.commit()
     db.refresh(tx)
     return _to_out(tx)
@@ -135,7 +167,7 @@ def my_transactions(
     user: User = Depends(require_active_user),
     db: Session = Depends(get_db),
 ):
-    query = db.query(Transaction).filter(Transaction.user_id == user.id)
+    query = db.query(Transaction).filter(Transaction.user_id == user.id, Transaction.status != "cancelled")
     if not include_games:
         # Slot machine spins would push everything else out of the latest 50.
         query = query.filter(Transaction.type != "game")

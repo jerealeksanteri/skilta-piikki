@@ -8,6 +8,22 @@ export function createPurchase(productId: number, quantity = 1): Promise<Transac
   });
 }
 
+/** The member's purchases that can still be changed or cancelled. */
+export function getUndoablePurchases(): Promise<Transaction[]> {
+  return apiRequest<Transaction[]>('/transactions/undoable');
+}
+
+export function setPurchaseQuantity(txId: number, quantity: number): Promise<Transaction> {
+  return apiRequest<Transaction>(`/transactions/${txId}/quantity`, {
+    method: 'PUT',
+    body: JSON.stringify({ quantity }),
+  });
+}
+
+export function cancelPurchase(txId: number): Promise<Transaction> {
+  return apiRequest<Transaction>(`/transactions/${txId}/cancel`, { method: 'POST' });
+}
+
 export function createPayment(
   userId: number,
   amount: number,

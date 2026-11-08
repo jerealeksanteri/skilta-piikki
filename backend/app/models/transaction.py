@@ -14,7 +14,7 @@ class Transaction(Base):
     __table_args__ = (
         CheckConstraint("type IN ('purchase', 'payment', 'reward', 'game', 'adjustment')", name="ck_transaction_type"),
         CheckConstraint(
-            "status IN ('pending', 'approved', 'rejected')",
+            "status IN ('pending', 'approved', 'rejected', 'cancelled')",
             name="ck_transaction_status",
         ),
     )
@@ -29,6 +29,8 @@ class Transaction(Base):
     created_by_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     note: Mapped[str | None] = mapped_column(String, nullable=True)
+    # Purchases only: until when the member may still change or cancel it (naive UTC).
+    undo_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=lambda: datetime.now(UTC))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,

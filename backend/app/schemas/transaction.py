@@ -8,6 +8,10 @@ class PurchaseRequest(BaseModel):
     quantity: int = 1
 
 
+class QuantityUpdate(BaseModel):
+    quantity: int
+
+
 class PaymentRequest(BaseModel):
     user_id: int
     amount: MoneyIn
@@ -34,5 +38,10 @@ class TransactionOut(BaseModel):
     created_at: UtcDatetime
     product_name: str | None = None
     user_name: str | None = None
+    # Purchases only: how long the member can still change or cancel it. Sent as
+    # a duration rather than a deadline, so a phone with a wrong clock still counts right.
+    undo_remaining_ms: int | None = None
+    undo_window_ms: int | None = None
+    product_emoji: str | None = None
 
     model_config = {"from_attributes": True}

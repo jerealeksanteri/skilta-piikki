@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://piikki:piikki@db:5432/piikki"
     ADMIN_TELEGRAM_IDS: str = ""
     AUTO_APPROVE_PURCHASES: bool = True
+    # How long a member can change or cancel a purchase after tapping it.
+    UNDO_WINDOW_SECONDS: int = 60
     CORS_ORIGINS: str = "*"
     DEV_MODE: bool = False
 

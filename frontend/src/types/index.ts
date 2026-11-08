@@ -27,7 +27,7 @@ export interface Transaction {
   product_id: number | null;
   type: 'purchase' | 'payment' | 'reward' | 'game' | 'adjustment';
   amount: number;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
   approved_by_id: number | null;
   created_by_id: number | null;
   created_by_name: string | null;
@@ -36,6 +36,10 @@ export interface Transaction {
   created_at: string;
   product_name: string | null;
   user_name: string | null;
+  product_emoji?: string | null;
+  /** Purchases only: time left to change or cancel it, and the window's full length. */
+  undo_remaining_ms?: number | null;
+  undo_window_ms?: number | null;
 }
 
 export interface FiscalPeriod {
