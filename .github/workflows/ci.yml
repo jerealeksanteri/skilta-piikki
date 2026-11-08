@@ -94,13 +94,14 @@ jobs:
           docker build -t piikki-backend:ci backend
           docker build -t piikki-frontend:ci frontend
 
-      # Everything HIGH or CRITICAL is reported to the Security tab
-      # (Code scanning), whether or not it blocks the PR.
+      # HIGH and CRITICAL findings go to the Security tab (Code scanning),
+      # whether or not they block the PR. Image scans skip OS packages with
+      # no fix yet, which can't be acted on.
       - name: Scan for the Security tab
         run: |
           trivy fs --scanners vuln,secret --severity HIGH,CRITICAL --format sarif -o repo.sarif .
-          trivy image --scanners vuln --severity HIGH,CRITICAL --format sarif -o backend.sarif piikki-backend:ci
-          trivy image --scanners vuln --severity HIGH,CRITICAL --format sarif -o frontend.sarif piikki-frontend:ci
+          trivy image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --format sarif -o backend.sarif piikki-backend:ci
+          trivy image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --format sarif -o frontend.sarif piikki-frontend:ci
 
       - name: Upload repo findings
         uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
