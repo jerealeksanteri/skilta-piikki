@@ -12,7 +12,7 @@ from app.models.user import User
 class Transaction(Base):
     __tablename__ = "transactions"
     __table_args__ = (
-        CheckConstraint("type IN ('purchase', 'payment', 'reward')", name="ck_transaction_type"),
+        CheckConstraint("type IN ('purchase', 'payment', 'reward', 'game', 'adjustment')", name="ck_transaction_type"),
         CheckConstraint(
             "status IN ('pending', 'approved', 'rejected')",
             name="ck_transaction_status",

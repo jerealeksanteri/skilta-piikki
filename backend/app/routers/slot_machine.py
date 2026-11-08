@@ -11,6 +11,7 @@ from app.database import get_db
 from app.models.app_setting import AppSetting
 from app.models.fiscal_period import FiscalPeriod
 from app.models.slot_machine_spin import SlotMachineSpin
+from app.models.transaction import Transaction
 from app.models.user import User
 from app.money import to_cents
 from app.schemas.slot_machine import (
@@ -76,7 +77,16 @@ def spin_slot_machine(
     # Spin the slot machine
     symbols, win_amount = SlotMachineService.spin(bet_amount)
 
-    # Deduct the bet and add any win in one atomic update
+    # Deduct the bet and add any win in one atomic update, recorded in the ledger
+    tx = Transaction(
+        user_id=user.id,
+        type="game",
+        amount=win_amount - bet_amount,
+        status="approved",
+        created_by_id=user.id,
+        note="Slot machine: " + " ".join(symbols),
+    )
+    db.add(tx)
     adjust_balance(db, user, win_amount - bet_amount)
 
     # Record the spin
@@ -85,6 +95,7 @@ def spin_slot_machine(
         bet_amount=bet_amount,
         win_amount=win_amount,
         symbols=json.dumps(symbols),
+        transaction=tx,
     )
     db.add(spin_record)
 

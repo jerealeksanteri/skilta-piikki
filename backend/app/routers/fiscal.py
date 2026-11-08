@@ -13,6 +13,7 @@ from app.models.user import User
 from app.money import ZERO, to_cents
 from app.schemas.fiscal import CloseResult, FiscalDebtOut, FiscalPeriodOut, FiscalPeriodStats
 from app.services.audit import record
+from app.services.ledger import record_adjustment
 from app.services.messaging import send_bulk_event_message
 
 router = APIRouter()
@@ -93,8 +94,16 @@ def close_fiscal_period(
             )
         )
 
-    # Reset only non-positive balances to 0; keep positive balances intact
-    db.query(User).filter(User.balance < 0).update({User.balance: ZERO})
+    # Reset negative balances to 0 (positive ones carry over). Each reset is an
+    # adjustment in the ledger; active members' amounts now live on as debts.
+    for user in db.query(User).filter(User.balance < 0).all():
+        moved = -user.balance
+        note = (
+            f"Fiscal period closed: {moved} € moved to your debts"
+            if user.is_active
+            else "Fiscal period closed: negative balance reset"
+        )
+        record_adjustment(db, user, moved, note, created_by_id=admin.id)
 
     # Create new fiscal period
     new_period = FiscalPeriod(started_at=now)
