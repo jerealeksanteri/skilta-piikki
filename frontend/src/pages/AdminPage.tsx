@@ -197,6 +197,12 @@ export default function AdminPage() {
         >
           🎰 Slot Machine
         </button>
+        <button
+          style={{ ...styles.paymentBtn, marginTop: '0' }}
+          onClick={() => navigate('/admin/audit-log')}
+        >
+          🧾 Audit Log
+        </button>
       </div>
 
       <div style={styles.section}>

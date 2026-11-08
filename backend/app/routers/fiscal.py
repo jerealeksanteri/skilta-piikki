@@ -12,6 +12,7 @@ from app.models.transaction import Transaction
 from app.models.user import User
 from app.money import ZERO, to_cents
 from app.schemas.fiscal import CloseResult, FiscalDebtOut, FiscalPeriodOut, FiscalPeriodStats
+from app.services.audit import record
 from app.services.messaging import send_bulk_event_message
 
 router = APIRouter()
@@ -34,7 +35,7 @@ def _debt_to_out(debt: FiscalDebt) -> FiscalDebtOut:
 
 @router.get("/fiscal-periods", response_model=list[FiscalPeriodOut])
 def list_fiscal_periods(
-    _admin: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     return db.query(FiscalPeriod).order_by(FiscalPeriod.started_at.desc()).all()
@@ -53,7 +54,7 @@ def get_current_period(
 
 @router.post("/fiscal-periods/close", response_model=CloseResult)
 def close_fiscal_period(
-    _admin: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     current = db.query(FiscalPeriod).filter(FiscalPeriod.ended_at.is_(None)).first()
@@ -70,6 +71,7 @@ def close_fiscal_period(
         .all()
     )
     debts_created = 0
+    debt_total = ZERO
     users_and_vars: list[tuple[User, dict]] = []
     for user in debtors:
         debt = FiscalDebt(
@@ -80,6 +82,7 @@ def close_fiscal_period(
         )
         db.add(debt)
         debts_created += 1
+        debt_total += debt.amount
         users_and_vars.append(
             (
                 user,
@@ -96,6 +99,14 @@ def close_fiscal_period(
     # Create new fiscal period
     new_period = FiscalPeriod(started_at=now)
     db.add(new_period)
+    record(
+        db,
+        admin,
+        "fiscal_period.close",
+        current,
+        label=f"Period from {current.started_at:%d.%m.%Y}",
+        note=f"{debts_created} debts created ({debt_total} €); negative balances reset to 0",
+    )
     db.commit()
     db.refresh(new_period)
 
@@ -113,7 +124,7 @@ def close_fiscal_period(
 @router.get("/fiscal-periods/{period_id}/stats", response_model=FiscalPeriodStats)
 def get_period_stats(
     period_id: int,
-    _admin: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     period = db.query(FiscalPeriod).filter(FiscalPeriod.id == period_id).first()
@@ -181,7 +192,7 @@ def get_period_stats(
 @router.get("/fiscal-periods/{period_id}/debts", response_model=list[FiscalDebtOut])
 def get_period_debts(
     period_id: int,
-    _admin: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     debts = (
@@ -192,7 +203,7 @@ def get_period_debts(
 
 @router.get("/fiscal-debts/pending", response_model=list[FiscalDebtOut])
 def get_all_pending_debts(
-    _admin: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     """Get all pending debt payments across all fiscal periods."""
@@ -242,7 +253,7 @@ def request_debt_payment(
 @router.put("/fiscal-debts/{debt_id}/approve", response_model=FiscalDebtOut)
 def approve_debt_payment(
     debt_id: int,
-    _admin: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     debt = db.query(FiscalDebt).filter(FiscalDebt.id == debt_id).first()
@@ -251,6 +262,14 @@ def approve_debt_payment(
     if debt.status != "payment_pending":
         raise HTTPException(status_code=400, detail="Debt payment is not pending")
 
+    record(
+        db,
+        admin,
+        "fiscal_debt.approve_payment",
+        debt,
+        label=f"Debt {debt.amount} € · {debt.user.first_name}",
+        changes={"status": {"from": debt.status, "to": "paid"}},
+    )
     debt.status = "paid"
     debt.paid_at = datetime.now(UTC)
     db.commit()
@@ -274,7 +293,7 @@ def approve_debt_payment(
 @router.put("/fiscal-debts/{debt_id}/reject", response_model=FiscalDebtOut)
 def reject_debt_payment(
     debt_id: int,
-    _admin: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     debt = db.query(FiscalDebt).filter(FiscalDebt.id == debt_id).first()
@@ -283,6 +302,14 @@ def reject_debt_payment(
     if debt.status != "payment_pending":
         raise HTTPException(status_code=400, detail="Debt payment is not pending")
 
+    record(
+        db,
+        admin,
+        "fiscal_debt.reject_payment",
+        debt,
+        label=f"Debt {debt.amount} € · {debt.user.first_name}",
+        changes={"status": {"from": debt.status, "to": "unpaid"}},
+    )
     debt.status = "unpaid"
     db.commit()
     db.refresh(debt)
@@ -305,7 +332,7 @@ def reject_debt_payment(
 @router.put("/fiscal-debts/{debt_id}/mark-paid", response_model=FiscalDebtOut)
 def mark_debt_paid(
     debt_id: int,
-    _admin: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     debt = db.query(FiscalDebt).filter(FiscalDebt.id == debt_id).first()
@@ -314,6 +341,14 @@ def mark_debt_paid(
     if debt.status == "paid":
         raise HTTPException(status_code=400, detail="Debt is already paid")
 
+    record(
+        db,
+        admin,
+        "fiscal_debt.mark_paid",
+        debt,
+        label=f"Debt {debt.amount} € · {debt.user.first_name}",
+        changes={"status": {"from": debt.status, "to": "paid"}},
+    )
     debt.status = "paid"
     debt.paid_at = datetime.now(UTC)
     db.commit()

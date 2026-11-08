@@ -1,4 +1,5 @@
 from app.models.app_setting import AppSetting
+from app.models.audit_log import AuditLog
 from app.models.fiscal_debt import FiscalDebt
 from app.models.fiscal_period import FiscalPeriod
 from app.models.message_template import MessageTemplate
@@ -12,6 +13,7 @@ from app.models.user import User
 
 __all__ = [
     "AppSetting",
+    "AuditLog",
     "FiscalDebt",
     "FiscalPeriod",
     "MessageTemplate",

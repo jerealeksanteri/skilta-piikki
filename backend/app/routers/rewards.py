@@ -17,6 +17,7 @@ from app.schemas.reward import (
     RewardUpdate,
     SchedulerStatusOut,
 )
+from app.services.audit import diff, record, snapshot
 from app.services.reports import to_naive_utc
 from app.services.reward_schedule import next_occurrence_after, utcnow
 from app.services.rewards import RewardService
@@ -102,6 +103,16 @@ def grant_reward_manually(
         granted_by_scheduler=False,
         note=data.note,
         created_by_id=admin.id,
+    )
+    record(
+        db,
+        admin,
+        "reward.grant",
+        reward,
+        label=reward.name,
+        note=f"{reward.amount} € to "
+        + ", ".join(u.first_name for u in users)
+        + (f" ({data.note})" if data.note else ""),
     )
     db.commit()
 
@@ -226,6 +237,15 @@ def create_reward(
     elif data.reward_type == "recurring":
         _start_schedule(reward, data.recurrence_frequency)
     db.add(reward)
+    db.flush()
+    record(
+        db,
+        admin,
+        "reward.create",
+        reward,
+        label=reward.name,
+        changes=diff({}, snapshot(reward, "amount", "reward_type", "recurrence_frequency", "next_grant_date")),
+    )
     db.commit()
     db.refresh(reward)
     return _reward_to_out(reward)
@@ -235,7 +255,7 @@ def create_reward(
 def update_reward(
     reward_id: int,
     data: RewardUpdate,
-    _admin: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     """Update an existing reward"""
@@ -250,6 +270,16 @@ def update_reward(
         if user_count != len(set(data.assigned_user_ids)):
             raise HTTPException(status_code=400, detail="One or more user IDs not found")
 
+    before = snapshot(
+        reward,
+        "name",
+        "description",
+        "amount",
+        "recurrence_frequency",
+        "assigned_user_ids",
+        "is_active",
+        "next_grant_date",
+    )
     if data.name is not None:
         reward.name = data.name
     if data.description is not None:
@@ -276,6 +306,21 @@ def update_reward(
                     reward.schedule_anchor, reward.recurrence_frequency, utcnow()
                 )
 
+    changes = diff(
+        before,
+        snapshot(
+            reward,
+            "name",
+            "description",
+            "amount",
+            "recurrence_frequency",
+            "assigned_user_ids",
+            "is_active",
+            "next_grant_date",
+        ),
+    )
+    if changes:
+        record(db, admin, "reward.update", reward, label=reward.name, changes=changes)
     db.commit()
     db.refresh(reward)
     return _reward_to_out(reward)
@@ -284,7 +329,7 @@ def update_reward(
 @router.delete("/rewards/{reward_id}", response_model=RewardOut)
 def delete_reward(
     reward_id: int,
-    _admin: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     """Soft delete (deactivate) a reward"""
@@ -292,6 +337,14 @@ def delete_reward(
     if not reward:
         raise HTTPException(status_code=404, detail="Reward not found")
 
+    record(
+        db,
+        admin,
+        "reward.deactivate",
+        reward,
+        label=reward.name,
+        changes={"is_active": {"from": reward.is_active, "to": False}},
+    )
     reward.is_active = False
     db.commit()
     db.refresh(reward)

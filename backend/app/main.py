@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from alembic import command
 from app.config import settings
 from app.routers import (
+    audit,
     fiscal,
     messages,
     newsletters,
@@ -53,6 +54,7 @@ app.add_middleware(
 )
 
 app.include_router(users.router, prefix="/api")
+app.include_router(audit.router, prefix="/api")
 app.include_router(products.router, prefix="/api")
 app.include_router(transactions.router, prefix="/api")
 app.include_router(fiscal.router, prefix="/api")
