@@ -7,34 +7,14 @@ import {
   deleteProduct,
 } from '../api/products';
 import type { Product } from '../types';
-import { useNavigate } from 'react-router-dom';
+import { BackButton, Button, Card, Divider, EmptyState, Loading, Section, TextField, useToast } from '../ui';
 
 const styles = {
-  section: {
-    padding: '0 16px 16px',
-  },
-  header: {
-    fontSize: '13px',
-    fontWeight: 600,
-    color: 'var(--section-header)',
-    textTransform: 'uppercase' as const,
-    padding: '16px 0 8px',
-  },
-  card: {
-    backgroundColor: 'var(--bg)',
-    borderRadius: '12px',
-    overflow: 'hidden',
-  },
   row: {
     display: 'flex',
     alignItems: 'center' as const,
     padding: '12px 16px',
     gap: '8px',
-  },
-  separator: {
-    height: '1px',
-    backgroundColor: 'var(--secondary-bg)',
-    marginLeft: '16px',
   },
   emoji: {
     fontSize: '24px',
@@ -54,84 +34,13 @@ const styles = {
     color: 'var(--hint)',
     marginTop: '2px',
   },
-  actionBtn: {
-    padding: '6px 10px',
-    borderRadius: '8px',
-    fontSize: '12px',
-    fontWeight: 600,
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--text)',
-  },
-  dangerBtn: {
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--destructive)',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '10px',
-    padding: '16px',
-    backgroundColor: 'var(--bg)',
-    borderRadius: '12px',
-  },
-  input: {
-    padding: '12px',
-    borderRadius: '10px',
-    border: '1px solid var(--secondary-bg)',
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--text)',
-    fontSize: '15px',
-    outline: 'none',
-  },
-  submitBtn: {
-    padding: '12px',
-    borderRadius: '10px',
-    fontSize: '15px',
-    fontWeight: 600,
-    backgroundColor: 'var(--btn)',
-    color: 'var(--btn-text)',
-  },
-  empty: {
-    textAlign: 'center' as const,
-    padding: '20px',
-    color: 'var(--hint)',
-    fontSize: '14px',
-  },
-  loading: {
-    textAlign: 'center' as const,
-    padding: '32px',
-    color: 'var(--hint)',
-    fontSize: '14px',
-  },
-  toast: {
-    position: 'fixed' as const,
-    bottom: '104px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    backgroundColor: 'var(--text)',
-    color: 'var(--bg)',
-    padding: '10px 20px',
-    borderRadius: '20px',
-    fontSize: '14px',
-    fontWeight: 500,
-    zIndex: 300,
-    whiteSpace: 'nowrap' as const,
-  },
-  backBtn: {
-    fontSize: '14px',
-    color: 'var(--link)',
-    backgroundColor: 'transparent',
-    padding: '8px 16px',
-    marginBottom: '8px',
-  },
 };
 
 export default function AdminProductsPage() {
   const { user: currentUser } = useUser();
-  const navigate = useNavigate();
+  const showToast = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<string | null>(null);
 
   // Add product form
   const [newName, setNewName] = useState('');
@@ -159,11 +68,6 @@ export default function AdminProductsPage() {
   useEffect(() => {
     fetchProducts();
   }, []);
-
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
 
   const handleAdd = async () => {
     if (!newName || !newPrice) return;
@@ -230,11 +134,11 @@ export default function AdminProductsPage() {
   };
 
   if (!currentUser?.is_admin) {
-    return <div style={styles.empty}>Admin access required.</div>;
+    return <EmptyState>Admin access required.</EmptyState>;
   }
 
   if (loading) {
-    return <div style={styles.loading}>Loading...</div>;
+    return <Loading />;
   }
 
   const activeProducts = products.filter((p) => p.is_active);
@@ -242,78 +146,62 @@ export default function AdminProductsPage() {
 
   return (
     <div>
-      <button style={styles.backBtn} onClick={() => navigate('/admin')}>
-        ← Back to Admin
-      </button>
-      <div style={styles.section}>
-        <div style={styles.header}>Add product</div>
-        <div style={styles.form}>
-          <input
-            style={styles.input}
-            type="text"
-            placeholder="Name"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-          />
-          <input
-            style={styles.input}
+      <BackButton />
+      <Section title="Add product">
+        <Card padded style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <TextField type="text" placeholder="Name" value={newName} onChange={(e) => setNewName(e.target.value)} />
+          <TextField
             type="number"
             step="0.01"
             placeholder="Price (€)"
             value={newPrice}
             onChange={(e) => setNewPrice(e.target.value)}
           />
-          <input
-            style={styles.input}
+          <TextField
             type="text"
             placeholder="Emoji (default: 🍺)"
             value={newEmoji}
             onChange={(e) => setNewEmoji(e.target.value)}
           />
-          <button
-            style={{
-              ...styles.submitBtn,
-              opacity: !newName || !newPrice || adding ? 0.6 : 1,
-            }}
-            onClick={handleAdd}
-            disabled={!newName || !newPrice || adding}
-          >
+          <Button onClick={handleAdd} disabled={!newName || !newPrice || adding}>
             {adding ? 'Adding...' : 'Add Product'}
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Card>
+      </Section>
 
-      <div style={styles.section}>
-        <div style={styles.header}>Active products ({activeProducts.length})</div>
-        <div style={styles.card}>
+      <Section title={`Active products (${activeProducts.length})`}>
+        <Card>
           {activeProducts.map((p, i) => (
             <div key={p.id}>
-              {i > 0 && <div style={styles.separator} />}
+              {i > 0 && <Divider />}
               {editId === p.id ? (
-                <div style={{ ...styles.row, flexWrap: 'wrap' as const, gap: '8px' }}>
-                  <input
-                    style={{ ...styles.input, flex: '0 0 40px', padding: '8px', textAlign: 'center' as const }}
+                <div style={{ ...styles.row, flexWrap: 'wrap' }}>
+                  <TextField
+                    size="sm"
+                    style={{ flex: '0 0 40px', textAlign: 'center' }}
                     value={editEmoji}
                     onChange={(e) => setEditEmoji(e.target.value)}
                   />
-                  <input
-                    style={{ ...styles.input, flex: 1, padding: '8px', minWidth: '80px' }}
+                  <TextField
+                    size="sm"
+                    style={{ flex: 1, minWidth: '80px' }}
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                   />
-                  <input
-                    style={{ ...styles.input, flex: '0 0 70px', padding: '8px' }}
+                  <TextField
+                    size="sm"
+                    style={{ flex: '0 0 70px' }}
                     type="number"
                     step="0.01"
                     value={editPrice}
                     onChange={(e) => setEditPrice(e.target.value)}
                   />
-                  <button style={{ ...styles.actionBtn, backgroundColor: '#4caf50', color: '#fff' }} onClick={handleSaveEdit}>
+                  <Button size="xs" tone="positive" onClick={handleSaveEdit}>
                     Save
-                  </button>
-                  <button style={styles.actionBtn} onClick={() => setEditId(null)}>
+                  </Button>
+                  <Button size="xs" variant="secondary" onClick={() => setEditId(null)}>
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               ) : (
                 <div style={styles.row}>
@@ -322,43 +210,40 @@ export default function AdminProductsPage() {
                     <div style={styles.name}>{p.name}</div>
                     <div style={styles.price}>{p.price.toFixed(2)} €</div>
                   </div>
-                  <button style={styles.actionBtn} onClick={() => startEdit(p)}>
+                  <Button size="xs" variant="secondary" onClick={() => startEdit(p)}>
                     Edit
-                  </button>
-                  <button style={{ ...styles.actionBtn, ...styles.dangerBtn }} onClick={() => handleDelete(p)}>
+                  </Button>
+                  <Button size="xs" variant="secondary" tone="destructive" onClick={() => handleDelete(p)}>
                     Delete
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
           ))}
-        </div>
-      </div>
+        </Card>
+      </Section>
 
       {inactiveProducts.length > 0 && (
-        <div style={styles.section}>
-          <div style={styles.header}>Inactive ({inactiveProducts.length})</div>
-          <div style={styles.card}>
+        <Section title={`Inactive (${inactiveProducts.length})`}>
+          <Card>
             {inactiveProducts.map((p, i) => (
               <div key={p.id}>
-                {i > 0 && <div style={styles.separator} />}
+                {i > 0 && <Divider />}
                 <div style={styles.row}>
                   <span style={styles.emoji}>{p.emoji}</span>
                   <div style={styles.info}>
                     <div style={{ ...styles.name, color: 'var(--hint)' }}>{p.name}</div>
                     <div style={styles.price}>{p.price.toFixed(2)} €</div>
                   </div>
-                  <button style={styles.actionBtn} onClick={() => handleReactivate(p)}>
+                  <Button size="xs" variant="secondary" onClick={() => handleReactivate(p)}>
                     Reactivate
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
-          </div>
-        </div>
+          </Card>
+        </Section>
       )}
-
-      {toast && <div style={styles.toast}>{toast}</div>}
     </div>
   );
 }

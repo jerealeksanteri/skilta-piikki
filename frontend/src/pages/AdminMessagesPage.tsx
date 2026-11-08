@@ -1,32 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { listMessageTemplates, updateMessageTemplate } from '../api/messages';
 import type { MessageTemplate } from '../types';
+import { BackButton, Button, Card, Divider, EmptyState, Loading, Section, useToast } from '../ui';
 
 const styles = {
-  section: {
-    padding: '0 16px 16px',
-  },
-  header: {
-    fontSize: '13px',
-    fontWeight: 600,
-    color: 'var(--section-header)',
-    textTransform: 'uppercase' as const,
-    padding: '16px 0 8px',
-  },
-  card: {
-    backgroundColor: 'var(--bg)',
-    borderRadius: '12px',
-    overflow: 'hidden',
-  },
   row: {
     padding: '12px 16px',
-  },
-  separator: {
-    height: '1px',
-    backgroundColor: 'var(--secondary-bg)',
-    marginLeft: '16px',
   },
   eventType: {
     fontSize: '14px',
@@ -65,47 +45,6 @@ const styles = {
     fontSize: '13px',
     color: 'var(--hint)',
   },
-  saveBtn: {
-    padding: '6px 14px',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: 600,
-    backgroundColor: 'var(--btn)',
-    color: 'var(--btn-text)',
-  },
-  empty: {
-    textAlign: 'center' as const,
-    padding: '20px',
-    color: 'var(--hint)',
-    fontSize: '14px',
-  },
-  loading: {
-    textAlign: 'center' as const,
-    padding: '32px',
-    color: 'var(--hint)',
-    fontSize: '14px',
-  },
-  backBtn: {
-    fontSize: '14px',
-    color: 'var(--link)',
-    backgroundColor: 'transparent',
-    padding: '8px 16px',
-    marginBottom: '8px',
-  },
-  toast: {
-    position: 'fixed' as const,
-    bottom: '104px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    backgroundColor: 'var(--text)',
-    color: 'var(--bg)',
-    padding: '10px 20px',
-    borderRadius: '20px',
-    fontSize: '14px',
-    fontWeight: 500,
-    zIndex: 300,
-    whiteSpace: 'nowrap' as const,
-  },
 };
 
 const EVENT_LABELS: Record<string, string> = {
@@ -136,10 +75,9 @@ const EVENT_VARIABLES: Record<string, string> = {
 
 export default function AdminMessagesPage() {
   const { user } = useUser();
-  const navigate = useNavigate();
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<string | null>(null);
+  const showToast = useToast();
   const [edits, setEdits] = useState<Record<number, { template: string; is_active: boolean }>>({});
 
   useEffect(() => {
@@ -156,10 +94,6 @@ export default function AdminMessagesPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
 
   const handleSave = async (tpl: MessageTemplate) => {
     const edit = edits[tpl.id];
@@ -177,27 +111,24 @@ export default function AdminMessagesPage() {
   };
 
   if (!user?.is_admin) {
-    return <div style={styles.empty}>Admin access required.</div>;
+    return <EmptyState>Admin access required.</EmptyState>;
   }
 
   if (loading) {
-    return <div style={styles.loading}>Loading...</div>;
+    return <Loading />;
   }
 
   return (
     <div>
-      <button style={styles.backBtn} onClick={() => navigate('/admin')}>
-        ← Back to Admin
-      </button>
-      <div style={styles.section}>
-        <div style={styles.header}>Message Templates</div>
-        <div style={styles.card}>
+      <BackButton />
+      <Section title="Message Templates">
+        <Card>
           {templates.map((tpl, i) => {
             const edit = edits[tpl.id];
             const hasChanges = edit && (edit.template !== tpl.template || edit.is_active !== tpl.is_active);
             return (
               <div key={tpl.id}>
-                {i > 0 && <div style={styles.separator} />}
+                {i > 0 && <Divider />}
                 <div style={styles.row}>
                   <div style={styles.eventType}>
                     {EVENT_LABELS[tpl.event_type] || tpl.event_type}
@@ -230,19 +161,17 @@ export default function AdminMessagesPage() {
                       Active
                     </label>
                     {hasChanges && (
-                      <button style={styles.saveBtn} onClick={() => handleSave(tpl)}>
+                      <Button size="sm" onClick={() => handleSave(tpl)}>
                         Save
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
               </div>
             );
           })}
-        </div>
-      </div>
-
-      {toast && <div style={styles.toast}>{toast}</div>}
+        </Card>
+      </Section>
     </div>
   );
 }

@@ -11,34 +11,14 @@ import {
   denyUser,
 } from '../api/users';
 import type { User } from '../types';
-import { useNavigate } from 'react-router-dom';
+import { Badge, BackButton, Button, Card, Divider, EmptyState, Loading, Section, TextField, useToast } from '../ui';
 
 const styles = {
-  section: {
-    padding: '0 16px 16px',
-  },
-  header: {
-    fontSize: '13px',
-    fontWeight: 600,
-    color: 'var(--section-header)',
-    textTransform: 'uppercase' as const,
-    padding: '16px 0 8px',
-  },
-  card: {
-    backgroundColor: 'var(--bg)',
-    borderRadius: '12px',
-    overflow: 'hidden',
-  },
   row: {
     display: 'flex',
     alignItems: 'center' as const,
     padding: '12px 16px',
     gap: '8px',
-  },
-  separator: {
-    height: '1px',
-    backgroundColor: 'var(--secondary-bg)',
-    marginLeft: '16px',
   },
   name: {
     flex: 1,
@@ -51,98 +31,13 @@ const styles = {
     color: 'var(--hint)',
     marginTop: '2px',
   },
-  badge: {
-    fontSize: '11px',
-    padding: '2px 6px',
-    borderRadius: '6px',
-    fontWeight: 600,
-  },
-  adminBadge: {
-    backgroundColor: 'var(--btn)',
-    color: 'var(--btn-text)',
-  },
-  inactiveBadge: {
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--hint)',
-  },
-  actionBtn: {
-    padding: '6px 10px',
-    borderRadius: '8px',
-    fontSize: '12px',
-    fontWeight: 600,
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--text)',
-  },
-  dangerBtn: {
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--destructive)',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '10px',
-    padding: '16px',
-    backgroundColor: 'var(--bg)',
-    borderRadius: '12px',
-  },
-  input: {
-    padding: '12px',
-    borderRadius: '10px',
-    border: '1px solid var(--secondary-bg)',
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--text)',
-    fontSize: '15px',
-    outline: 'none',
-  },
-  submitBtn: {
-    padding: '12px',
-    borderRadius: '10px',
-    fontSize: '15px',
-    fontWeight: 600,
-    backgroundColor: 'var(--btn)',
-    color: 'var(--btn-text)',
-  },
-  empty: {
-    textAlign: 'center' as const,
-    padding: '20px',
-    color: 'var(--hint)',
-    fontSize: '14px',
-  },
-  loading: {
-    textAlign: 'center' as const,
-    padding: '32px',
-    color: 'var(--hint)',
-    fontSize: '14px',
-  },
-  toast: {
-    position: 'fixed' as const,
-    bottom: '104px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    backgroundColor: 'var(--text)',
-    color: 'var(--bg)',
-    padding: '10px 20px',
-    borderRadius: '20px',
-    fontSize: '14px',
-    fontWeight: 500,
-    zIndex: 300,
-    whiteSpace: 'nowrap' as const,
-  },
-  backBtn: {
-    fontSize: '14px',
-    color: 'var(--link)',
-    backgroundColor: 'transparent',
-    padding: '8px 16px',
-    marginBottom: '8px',
-  },
 };
 
 export default function AdminUsersPage() {
   const { user: currentUser } = useUser();
-  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<string | null>(null);
+  const showToast = useToast();
 
   // Add user form
   const [telegramId, setTelegramId] = useState('');
@@ -164,10 +59,6 @@ export default function AdminUsersPage() {
     fetchUsers();
   }, []);
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
 
   const handleAddUser = async () => {
     if (!telegramId || !firstName) return;
@@ -241,11 +132,11 @@ export default function AdminUsersPage() {
   };
 
   if (!currentUser?.is_admin) {
-    return <div style={styles.empty}>Admin access required.</div>;
+    return <EmptyState>Admin access required.</EmptyState>;
   }
 
   if (loading) {
-    return <div style={styles.loading}>Loading...</div>;
+    return <Loading />;
   }
 
   const activeUsers = users.filter((u) => u.is_active);
@@ -253,45 +144,32 @@ export default function AdminUsersPage() {
 
   return (
     <div>
-      <button style={styles.backBtn} onClick={() => navigate('/admin')}>
-          ← Back to Admin
-        </button>
-      <div style={styles.section}>
-        <div style={styles.header}>Add user</div>
-        <div style={styles.form}>
-          <input
-            style={styles.input}
+      <BackButton />
+      <Section title="Add user">
+        <Card padded style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <TextField
             type="number"
             placeholder="Telegram ID"
             value={telegramId}
             onChange={(e) => setTelegramId(e.target.value)}
           />
-          <input
-            style={styles.input}
+          <TextField
             type="text"
             placeholder="First name"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
           />
-          <button
-            style={{
-              ...styles.submitBtn,
-              opacity: !telegramId || !firstName || adding ? 0.6 : 1,
-            }}
-            onClick={handleAddUser}
-            disabled={!telegramId || !firstName || adding}
-          >
+          <Button onClick={handleAddUser} disabled={!telegramId || !firstName || adding}>
             {adding ? 'Adding...' : 'Add User'}
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Card>
+      </Section>
 
-      <div style={styles.section}>
-        <div style={styles.header}>Active users ({activeUsers.length})</div>
-        <div style={styles.card}>
+      <Section title={`Active users (${activeUsers.length})`}>
+        <Card>
           {activeUsers.map((u, i) => (
             <div key={u.id}>
-              {i > 0 && <div style={styles.separator} />}
+              {i > 0 && <Divider />}
               <div style={styles.row}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={styles.name}>
@@ -301,37 +179,30 @@ export default function AdminUsersPage() {
                   <div style={styles.meta}>ID: {u.telegram_id}</div>
                 </div>
                 {u.is_admin && (
-                  <span style={{ ...styles.badge, ...styles.adminBadge }}>Admin</span>
+                  <Badge>Admin</Badge>
                 )}
                 {u.id !== currentUser.id && (
                   <>
-                    <button
-                      style={styles.actionBtn}
-                      onClick={() => handleToggleAdmin(u)}
-                    >
-                      {u.is_admin ? 'Demote' : 'Promote'}
-                    </button>
-                    <button
-                      style={{ ...styles.actionBtn, ...styles.dangerBtn }}
-                      onClick={() => handleToggleActive(u)}
-                    >
-                      Deactivate
-                    </button>
+                    <Button size="xs" variant="secondary" onClick={() => handleToggleAdmin(u)}>
+{u.is_admin ? 'Demote' : 'Promote'}
+</Button>
+                    <Button size="xs" variant="secondary" tone="destructive" onClick={() => handleToggleActive(u)}>
+Deactivate
+</Button>
                   </>
                 )}
               </div>
             </div>
           ))}
-        </div>
-      </div>
+        </Card>
+      </Section>
 
       {inactiveUsers.length > 0 && (
-        <div style={styles.section}>
-          <div style={styles.header}>Pending approval ({inactiveUsers.length})</div>
-          <div style={styles.card}>
+        <Section title={`Pending approval (${inactiveUsers.length})`}>
+          <Card>
             {inactiveUsers.map((u, i) => (
               <div key={u.id}>
-                {i > 0 && <div style={styles.separator} />}
+                {i > 0 && <Divider />}
                 <div style={styles.row}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={styles.name}>
@@ -340,44 +211,25 @@ export default function AdminUsersPage() {
                     </div>
                     <div style={styles.meta}>ID: {u.telegram_id}</div>
                   </div>
-                  <span style={{ ...styles.badge, ...styles.inactiveBadge }}>Pending</span>
-                  <button
-                    style={styles.actionBtn}
-                    onClick={() => handleToggleActive(u)}
-                  >
-                    Approve
-                  </button>
-                  <button
-                    style={{ ...styles.actionBtn, ...styles.dangerBtn }}
-                    onClick={() => handleDenyUser(u)}
-                  >
-                    Deny
-                  </button>
+                  <Badge tone="muted">Pending</Badge>
+                  <Button size="xs" variant="secondary" onClick={() => handleToggleActive(u)}>
+Approve
+</Button>
+                  <Button size="xs" variant="secondary" tone="destructive" onClick={() => handleDenyUser(u)}>
+Deny
+</Button>
                 </div>
               </div>
             ))}
-          </div>
-        </div>
+          </Card>
+        </Section>
       )}
 
-      <div style={styles.section}>
-        <button
-          style={{
-            width: '100%',
-            padding: '12px',
-            borderRadius: '10px',
-            fontSize: '15px',
-            fontWeight: 600,
-            backgroundColor: 'var(--destructive)',
-            color: '#fff',
-          }}
-          onClick={handleDeleteAll}
-        >
+      <Section>
+        <Button block tone="destructive" onClick={handleDeleteAll}>
           Deactivate All Users
-        </button>
-      </div>
-
-      {toast && <div style={styles.toast}>{toast}</div>}
+        </Button>
+      </Section>
     </div>
   );
 }

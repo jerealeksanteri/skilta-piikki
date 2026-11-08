@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getLedgerCheck, runLedgerCheck } from '../api/ledger';
 import type { LedgerCheck } from '../types';
+import { formatShortDateTime } from '../utils/date';
 
 const styles = {
   card: {
@@ -45,14 +46,6 @@ function euros(amount: number): string {
   return `${amount.toFixed(2).replace('.', ',')} €`;
 }
 
-function when(iso: string): string {
-  return new Date(iso).toLocaleString('fi-FI', {
-    day: 'numeric',
-    month: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 /** Whether every balance still equals the sum of its transactions (checked nightly). */
 export default function LedgerStatus() {
@@ -93,7 +86,7 @@ export default function LedgerStatus() {
       <div style={styles.icon}>{icon}</div>
       <div style={styles.body}>
         <div style={{ ...styles.title, color: failing ? 'var(--destructive)' : 'var(--text)' }}>{title}</div>
-        {check?.checked_at && <div style={styles.detail}>Checked {when(check.checked_at)} · runs every night</div>}
+        {check?.checked_at && <div style={styles.detail}>Checked {formatShortDateTime(check.checked_at)} · runs every night</div>}
         {check?.mismatches.map((m) => (
           <div key={m.user_id} style={styles.row}>
             {m.user_name}: balance {euros(m.balance)}, transactions {euros(m.ledger_total)} (off by{' '}

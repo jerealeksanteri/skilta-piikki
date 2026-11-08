@@ -10,6 +10,9 @@
   --section-bg: var(--tg-theme-section-bg-color, #ffffff);
   --section-header: var(--tg-theme-section-header-text-color, #3390ec);
   --subtitle: var(--tg-theme-subtitle-text-color, #999999);
+  /* App colours Telegram has no theme value for. */
+  --positive: #4caf50;
+  --warning: #ff9800;
 }
 
 * {

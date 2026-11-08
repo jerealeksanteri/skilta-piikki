@@ -9,11 +9,10 @@ import {
 } from '../api/transactions';
 import type { Transaction, User } from '../types';
 import LedgerStatus from '../components/LedgerStatus';
+import { formatDayTime } from '../utils/date';
+import { Button, Card, Divider, EmptyState, Loading, Section } from '../ui';
 
 const styles = {
-  section: {
-    padding: '0 16px 16px',
-  },
   header: {
     fontSize: '13px',
     fontWeight: 600,
@@ -21,21 +20,11 @@ const styles = {
     textTransform: 'uppercase' as const,
     padding: '16px 0 8px',
   },
-  card: {
-    backgroundColor: 'var(--bg)',
-    borderRadius: '12px',
-    overflow: 'hidden',
-  },
   row: {
     display: 'flex',
     alignItems: 'center' as const,
     padding: '12px 16px',
     gap: '12px',
-  },
-  separator: {
-    height: '1px',
-    backgroundColor: 'var(--secondary-bg)',
-    marginLeft: '16px',
   },
   name: {
     flex: 1,
@@ -64,44 +53,20 @@ const styles = {
     fontWeight: 600,
     marginRight: '8px',
   },
-  actionBtn: {
-    padding: '6px 12px',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: 600,
-  },
-  approveBtn: {
-    backgroundColor: '#4caf50',
-    color: '#fff',
-  },
-  rejectBtn: {
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--destructive)',
-  },
-  paymentBtn: {
-    display: 'block',
-    width: '100%',
-    padding: '14px',
-    borderRadius: '12px',
-    fontSize: '15px',
-    fontWeight: 600,
-    backgroundColor: 'var(--btn)',
-    color: 'var(--btn-text)',
-    margin: '16px 0',
-  },
-  empty: {
-    textAlign: 'center' as const,
-    padding: '20px',
-    color: 'var(--hint)',
-    fontSize: '14px',
-  },
-  loading: {
-    textAlign: 'center' as const,
-    padding: '32px',
-    color: 'var(--hint)',
-    fontSize: '14px',
-  },
 };
+
+const ADMIN_LINKS = [
+  { to: '/admin/payment', label: '💰 Log Cash Payment' },
+  { to: '/admin/users', label: '👥 Manage Users' },
+  { to: '/admin/products', label: '📦 Manage Products' },
+  { to: '/admin/fiscal', label: '📊 Fiscal Periods' },
+  { to: '/admin/reports', label: '📈 Purchase Reports' },
+  { to: '/admin/newsletter', label: '📣 Send Newsletter' },
+  { to: '/admin/messages', label: '💬 Message Templates' },
+  { to: '/admin/rewards', label: '🎁 Manage Rewards' },
+  { to: '/admin/slot-machine', label: '🎰 Slot Machine' },
+  { to: '/admin/audit-log', label: '🧾 Audit Log' },
+];
 
 export default function AdminPage() {
   const { user } = useUser();
@@ -127,11 +92,11 @@ export default function AdminPage() {
   }, []);
 
   if (!user?.is_admin) {
-    return <div style={styles.empty}>Admin access required.</div>;
+    return <EmptyState>Admin access required.</EmptyState>;
   }
 
   if (loading) {
-    return <div style={styles.loading}>Loading...</div>;
+    return <Loading />;
   }
 
   const handleApprove = async (txId: number) => {
@@ -146,81 +111,37 @@ export default function AdminPage() {
 
   return (
     <div>
-      <div style={styles.section}>
-        <button style={styles.paymentBtn} onClick={() => navigate('/admin/payment')}>
-          💰 Log Cash Payment
-        </button>
-        <button
-          style={{ ...styles.paymentBtn, marginTop: '0' }}
-          onClick={() => navigate('/admin/users')}
-        >
-          👥 Manage Users
-        </button>
-        <button
-          style={{ ...styles.paymentBtn, marginTop: '0' }}
-          onClick={() => navigate('/admin/products')}
-        >
-          📦 Manage Products
-        </button>
-        <button
-          style={{ ...styles.paymentBtn, marginTop: '0' }}
-          onClick={() => navigate('/admin/fiscal')}
-        >
-          📊 Fiscal Periods
-        </button>
-        <button
-          style={{ ...styles.paymentBtn, marginTop: '0' }}
-          onClick={() => navigate('/admin/reports')}
-        >
-          📈 Purchase Reports
-        </button>
-        <button
-          style={{ ...styles.paymentBtn, marginTop: '0' }}
-          onClick={() => navigate('/admin/newsletter')}
-        >
-          📣 Send Newsletter
-        </button>
-        <button
-          style={{ ...styles.paymentBtn, marginTop: '0' }}
-          onClick={() => navigate('/admin/messages')}
-        >
-          💬 Message Templates
-        </button>
-        <button
-          style={{ ...styles.paymentBtn, marginTop: '0' }}
-          onClick={() => navigate('/admin/rewards')}
-        >
-          🎁 Manage Rewards
-        </button>
-        <button
-          style={{ ...styles.paymentBtn, marginTop: '0' }}
-          onClick={() => navigate('/admin/slot-machine')}
-        >
-          🎰 Slot Machine
-        </button>
-        <button
-          style={{ ...styles.paymentBtn, marginTop: '0' }}
-          onClick={() => navigate('/admin/audit-log')}
-        >
-          🧾 Audit Log
-        </button>
-      </div>
+      <Section>
+        {ADMIN_LINKS.map((link, i) => (
+          <Button
+            key={link.to}
+            size="lg"
+            block
+            style={{ margin: i === 0 ? '16px 0' : '0 0 16px' }}
+            onClick={() => navigate(link.to)}
+          >
+            {link.label}
+          </Button>
+        ))}
+      </Section>
 
-      <div style={styles.section}>
+      <Section>
         <LedgerStatus />
-      </div>
+      </Section>
 
-      <div style={styles.section}>
+      <Section>
         <div style={styles.header}>
           Pending ({pending.length})
         </div>
         {pending.length === 0 ? (
-          <div style={{ ...styles.card, ...styles.empty }}>No pending transactions</div>
+          <Card>
+<EmptyState>No pending transactions</EmptyState>
+</Card>
         ) : (
-          <div style={styles.card}>
+          <Card>
             {pending.map((tx, i) => (
               <div key={tx.id}>
-                {i > 0 && <div style={styles.separator} />}
+                {i > 0 && <Divider />}
                 <div style={styles.row}>
                   <div style={styles.txInfo}>
                     <div style={styles.txTitle}>
@@ -235,48 +156,36 @@ export default function AdminPage() {
                         : tx.type === 'payment' && tx.created_by_name
                           ? `By ${tx.created_by_name} · `
                           : ''}
-                      {new Date(tx.created_at).toLocaleDateString('fi-FI', {
-                        day: 'numeric',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {formatDayTime(tx.created_at)}
                       {tx.note ? ` · ${tx.note}` : ''}
                     </div>
                   </div>
                   <span
                     style={{
                       ...styles.txAmount,
-                      color: tx.amount < 0 ? 'var(--destructive)' : '#4caf50',
+                      color: tx.amount < 0 ? 'var(--destructive)' : 'var(--positive)',
                     }}
                   >
                     {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)} €
                   </span>
-                  <button
-                    style={{ ...styles.actionBtn, ...styles.approveBtn }}
-                    onClick={() => handleApprove(tx.id)}
-                  >
+                  <Button size="sm" tone="positive" onClick={() => handleApprove(tx.id)}>
                     ✓
-                  </button>
-                  <button
-                    style={{ ...styles.actionBtn, ...styles.rejectBtn }}
-                    onClick={() => handleReject(tx.id)}
-                  >
+                  </Button>
+                  <Button size="sm" variant="secondary" tone="destructive" onClick={() => handleReject(tx.id)}>
                     ✕
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
-          </div>
+          </Card>
         )}
-      </div>
+      </Section>
 
-      <div style={styles.section}>
-        <div style={styles.header}>All users</div>
-        <div style={styles.card}>
+      <Section title="All users">
+        <Card>
           {users.map((u, i) => (
             <div key={u.id}>
-              {i > 0 && <div style={styles.separator} />}
+              {i > 0 && <Divider />}
               <div style={styles.row}>
                 <span style={styles.name}>
                   {u.first_name}
@@ -286,7 +195,7 @@ export default function AdminPage() {
                 <span
                   style={{
                     ...styles.balance,
-                    color: u.balance < 0 ? 'var(--destructive)' : '#4caf50',
+                    color: u.balance < 0 ? 'var(--destructive)' : 'var(--positive)',
                   }}
                 >
                   {u.balance.toFixed(2)} €
@@ -294,8 +203,8 @@ export default function AdminPage() {
               </div>
             </div>
           ))}
-        </div>
-      </div>
+        </Card>
+      </Section>
     </div>
   );
 }
