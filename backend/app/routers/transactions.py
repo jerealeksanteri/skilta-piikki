@@ -235,6 +235,20 @@ def recently_decided(
     return [_to_out(tx) for tx in DecisionService.recent(db)]
 
 
+@router.put("/transactions/{tx_id}/finish-decision", response_model=TransactionOut)
+def finish_decision(
+    tx_id: int,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Make an approval or rejection final now and tell the member straight away."""
+    tx = DecisionService.finish(db, tx_id)
+    db.commit()
+    decisions.send_notice(db, tx_id)
+    db.refresh(tx)
+    return _to_out(tx)
+
+
 @router.put("/transactions/{tx_id}/undo-decision", response_model=TransactionOut)
 def undo_decision(
     tx_id: int,

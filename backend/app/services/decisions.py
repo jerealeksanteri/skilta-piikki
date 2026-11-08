@@ -5,7 +5,8 @@ UNDO_WINDOW_SECONDS the admins can undo it from the "Just decided" list,
 which puts the item back in Pending. The user's Telegram message about the
 decision is held until the window closes, so an undone approval is never
 announced; send_due_notices() sends the held messages, also any left over
-from before a restart.
+from before a restart. An admin can also finish a decision early, which
+closes its window and sends the message straight away.
 """
 
 import logging
@@ -111,6 +112,17 @@ class DecisionService:
         return tx
 
     @staticmethod
+    def finish(db: Session, tx_id: int) -> Transaction:
+        """Close the window now; the caller commits, then calls send_notice()."""
+        tx = _locked(db, tx_id)
+        if tx.status not in _VERBS or tx.decided_until is None or now() > tx.decided_until + GRACE:
+            raise HTTPException(status_code=409, detail="This decision is already final")
+        # Past the grace period too, so an undo is refused at once (the member is
+        # about to be told) while the sender job still sees the message as due.
+        tx.decided_until = now() - GRACE - timedelta(seconds=1)
+        return tx
+
+    @staticmethod
     def recent(db: Session) -> list[Transaction]:
         """Decisions that can still be undone, newest first."""
         return (
@@ -121,13 +133,42 @@ class DecisionService:
         )
 
 
-def send_due_notices(db: Session) -> int:
-    """Send the held decision messages whose undo window has closed. Returns how many went out.
+def _claim_and_send(db: Session, tx: Transaction) -> bool:
+    """Clear the row's flag and commit, then send its message.
 
-    Each row is claimed (flag cleared and committed) before its message is
-    sent, so a crash can lose a message but never send one twice; a decision
-    undone meanwhile has no flag left to claim.
+    Claiming first means a crash can lose a message but never send one twice,
+    and a decision undone meanwhile has no flag left to claim.
     """
+    tx.notice_pending = False
+    event = NOTICE_EVENTS.get((tx.type, tx.status))
+    user = tx.user
+    amount = tx.amount
+    db.commit()
+    if not (event and user):
+        return False
+    try:
+        return send_event_message(db, event, user, {"user": user.first_name, "amount": f"{amount:.2f}"})
+    except Exception:
+        logger.exception("Failed to send %s for transaction %s", event, tx.id)
+        return False
+
+
+def send_notice(db: Session, tx_id: int) -> bool:
+    """Send one decision's held message now, if it still has one."""
+    tx = (
+        db.query(Transaction)
+        .filter(Transaction.id == tx_id, Transaction.notice_pending.is_(True))
+        .with_for_update(skip_locked=True)
+        .first()
+    )
+    if tx is None:
+        db.rollback()
+        return False
+    return _claim_and_send(db, tx)
+
+
+def send_due_notices(db: Session) -> int:
+    """Send the held decision messages whose undo window has closed. Returns how many went out."""
     sent = 0
     while True:
         tx = (
@@ -139,14 +180,5 @@ def send_due_notices(db: Session) -> int:
         )
         if tx is None:
             return sent
-        tx.notice_pending = False
-        event = NOTICE_EVENTS.get((tx.type, tx.status))
-        user = tx.user
-        amount = tx.amount
-        db.commit()
-        if event and user:
-            try:
-                if send_event_message(db, event, user, {"user": user.first_name, "amount": f"{amount:.2f}"}):
-                    sent += 1
-            except Exception:
-                logger.exception("Failed to send %s for transaction %s", event, tx.id)
+        if _claim_and_send(db, tx):
+            sent += 1

@@ -129,6 +129,7 @@ To deploy, set the new image tags in the server-config repo.
 | PUT | `/api/transactions/{id}/reject` | Reject transaction (likewise) |
 | GET | `/api/transactions/recently-decided` | Approvals and rejections that can still be undone |
 | PUT | `/api/transactions/{id}/undo-decision` | Put an approved or rejected transaction back in Pending |
+| PUT | `/api/transactions/{id}/finish-decision` | Make an approval or rejection final now and notify the user |
 | GET | `/api/fiscal-periods` | List all fiscal periods |
 | POST | `/api/fiscal-periods/close` | Close current period (creates debts, resets balances) |
 | GET | `/api/fiscal-periods/{id}/stats` | Period statistics |
