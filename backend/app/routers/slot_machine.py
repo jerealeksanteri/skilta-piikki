@@ -23,6 +23,7 @@ from app.schemas.slot_machine import (
     SlotMachineToggleRequest,
     SlotMachineTopWinner,
 )
+from app.services.audit import record
 from app.services.balance import adjust_balance
 from app.services.slot_machine import SlotMachineService
 
@@ -260,11 +261,19 @@ def get_admin_slot_machine_stats(
 @router.put("/slot-machine/admin/toggle", response_model=SlotMachineStatusResponse)
 def toggle_slot_machine(
     data: SlotMachineToggleRequest,
-    _admin: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     """Enable or disable the slot machine."""
     setting = db.query(AppSetting).filter(AppSetting.key == "slot_machine_enabled").first()
+    was_enabled = setting.value == "true" if setting else True
+    record(
+        db,
+        admin,
+        "slot_machine.toggle",
+        label="Slot machine",
+        changes={"enabled": {"from": was_enabled, "to": data.enabled}},
+    )
     if not setting:
         setting = AppSetting(
             key="slot_machine_enabled",

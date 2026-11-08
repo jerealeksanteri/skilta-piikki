@@ -6,6 +6,7 @@ from app.database import get_db
 from app.models.product import Product
 from app.models.user import User
 from app.schemas.product import ProductCreate, ProductOut, ProductUpdate
+from app.services.audit import diff, record, snapshot
 
 router = APIRouter()
 
@@ -34,11 +35,20 @@ def list_all_products(
 @router.post("/products", response_model=ProductOut)
 def create_product(
     data: ProductCreate,
-    _admin: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     product = Product(name=data.name, price=data.price, emoji=data.emoji, sort_order=data.sort_order)
     db.add(product)
+    db.flush()
+    record(
+        db,
+        admin,
+        "product.create",
+        product,
+        label=product.name,
+        changes=diff({}, snapshot(product, "name", "price", "emoji", "sort_order")),
+    )
     db.commit()
     db.refresh(product)
     return product
@@ -48,15 +58,19 @@ def create_product(
 def update_product(
     product_id: int,
     data: ProductUpdate,
-    _admin: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
+    before = snapshot(product, "name", "price", "emoji", "sort_order", "is_active")
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(product, field, value)
+    changes = diff(before, snapshot(product, "name", "price", "emoji", "sort_order", "is_active"))
+    if changes:
+        record(db, admin, "product.update", product, label=product.name, changes=changes)
 
     db.commit()
     db.refresh(product)
@@ -66,13 +80,21 @@ def update_product(
 @router.delete("/products/{product_id}")
 def delete_product(
     product_id: int,
-    _admin: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
+    record(
+        db,
+        admin,
+        "product.deactivate",
+        product,
+        label=product.name,
+        changes={"is_active": {"from": product.is_active, "to": False}},
+    )
     product.is_active = False
     db.commit()
     return {"ok": True}

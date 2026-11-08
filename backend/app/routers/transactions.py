@@ -13,6 +13,7 @@ from app.schemas.transaction import (
     TransactionOut,
     UserPaymentRequest,
 )
+from app.services.audit import diff, record, snapshot
 from app.services.balance import adjust_balance
 from app.services.messaging import send_event_message
 
@@ -91,6 +92,15 @@ def create_payment(
         created_by_id=admin.id,
     )
     db.add(tx)
+    db.flush()
+    record(
+        db,
+        admin,
+        "payment.create",
+        tx,
+        label=f"Payment {tx.amount} € · {target_user.first_name}",
+        changes=diff({}, snapshot(tx, "amount", "status", "note")),
+    )
     db.commit()
     db.refresh(tx)
     return _to_out(tx)
@@ -164,6 +174,14 @@ def approve_transaction(
         raise HTTPException(status_code=404, detail="User not found")
 
     adjust_balance(db, target_user, tx.amount)
+    record(
+        db,
+        admin,
+        "transaction.approve",
+        tx,
+        label=f"{tx.type.capitalize()} {tx.amount} € · {target_user.first_name}",
+        changes={"status": {"from": "pending", "to": "approved"}},
+    )
 
     db.commit()
     db.refresh(tx)
@@ -196,6 +214,14 @@ def reject_transaction(
 
     tx.status = "rejected"
     tx.approved_by_id = admin.id
+    record(
+        db,
+        admin,
+        "transaction.reject",
+        tx,
+        label=f"{tx.type.capitalize()} {tx.amount} € · {tx.user.first_name}",
+        changes={"status": {"from": "pending", "to": "rejected"}},
+    )
 
     db.commit()
     db.refresh(tx)

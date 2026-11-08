@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.newsletter import Newsletter
 from app.models.user import User
+from app.services.audit import record
 from app.services.telegram_bot import send_message
 from app.services.telegram_html import (
     TELEGRAM_MESSAGE_LIMIT,
@@ -65,6 +66,15 @@ class NewsletterService:
             failed_count=len(recipients) - delivered,
         )
         db.add(newsletter)
+        db.flush()
+        record(
+            db,
+            sender,
+            "newsletter.send",
+            newsletter,
+            label=f"To {audience}",
+            note=f"Delivered to {delivered} of {len(recipients)}",
+        )
         db.commit()
         db.refresh(newsletter)
         return newsletter

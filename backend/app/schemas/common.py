@@ -20,7 +20,8 @@ UtcDatetime = Annotated[datetime, AfterValidator(_as_utc)]
 _as_json_number = PlainSerializer(float, return_type=float, when_used="json")
 
 # Amounts sent in requests: at most 2 decimals, otherwise a 422 (no silent rounding).
-MoneyIn = Annotated[Decimal, Field(max_digits=10, decimal_places=2), _as_json_number]
+# Validated values are normalised to cents (1.2 -> 1.20), like the database stores them.
+MoneyIn = Annotated[Decimal, Field(max_digits=10, decimal_places=2), AfterValidator(to_cents), _as_json_number]
 
 # Amounts in responses: rounded to the cent.
 Money = Annotated[Decimal, AfterValidator(to_cents), _as_json_number]

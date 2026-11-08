@@ -8,6 +8,7 @@ from app.models.fiscal_debt import FiscalDebt
 from app.models.user import User
 from app.money import ZERO, to_cents
 from app.schemas.user import MeOut, UserBulkCreate, UserCreate, UserOut
+from app.services.audit import diff, record, snapshot
 from app.services.messaging import send_event_message
 
 router = APIRouter()
@@ -78,6 +79,15 @@ def create_user(
         added_by_id=admin.id,
     )
     db.add(user)
+    db.flush()
+    record(
+        db,
+        admin,
+        "user.create",
+        user,
+        label=user.first_name,
+        changes=diff({}, snapshot(user, "telegram_id", "first_name", "last_name", "username")),
+    )
     db.commit()
     db.refresh(user)
     return user
@@ -103,6 +113,13 @@ def bulk_create_users(
         )
         db.add(user)
         created.append(user)
+    if created:
+        record(
+            db,
+            admin,
+            "user.bulk_create",
+            note=f"Added {len(created)} members: " + ", ".join(u.first_name for u in created),
+        )
     db.commit()
     for u in created:
         db.refresh(u)
@@ -116,10 +133,17 @@ def delete_all_non_admin_users(
 ):
     users = db.query(User).filter(User.is_admin == False).all()  # noqa: E712
     count = 0
+    balance_total = sum((u.balance for u in users), ZERO)
     for user in users:
         user.is_active = False
         user.balance = ZERO
         count += 1
+    record(
+        db,
+        admin,
+        "user.reset_all",
+        note=f"Deactivated {count} non-admin members and set their balances to 0 (they totalled {balance_total} €)",
+    )
     db.commit()
     return {"deactivated": count}
 
@@ -133,6 +157,14 @@ def activate_user(
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    record(
+        db,
+        admin,
+        "user.activate",
+        user,
+        label=user.first_name,
+        changes={"is_active": {"from": user.is_active, "to": True}},
+    )
     user.is_active = True
     db.commit()
     db.refresh(user)
@@ -153,6 +185,14 @@ def deactivate_user(
         raise HTTPException(status_code=404, detail="User not found")
     if user.id == admin.id:
         raise HTTPException(status_code=400, detail="Cannot deactivate yourself")
+    record(
+        db,
+        admin,
+        "user.deactivate",
+        user,
+        label=user.first_name,
+        changes={"is_active": {"from": user.is_active, "to": False}},
+    )
     user.is_active = False
     db.commit()
     db.refresh(user)
@@ -171,6 +211,14 @@ def promote_user(
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    record(
+        db,
+        admin,
+        "user.promote",
+        user,
+        label=user.first_name,
+        changes={"is_admin": {"from": user.is_admin, "to": True}},
+    )
     user.is_admin = True
     db.commit()
     db.refresh(user)
@@ -195,6 +243,14 @@ def demote_user(
     admin_count = db.query(User).filter(User.is_admin == True, User.is_active == True).count()  # noqa: E712
     if admin_count <= 1:
         raise HTTPException(status_code=400, detail="Cannot demote the last admin")
+    record(
+        db,
+        admin,
+        "user.demote",
+        user,
+        label=user.first_name,
+        changes={"is_admin": {"from": user.is_admin, "to": False}},
+    )
     user.is_admin = False
     db.commit()
     db.refresh(user)
@@ -220,6 +276,7 @@ def deny_user(
 
     user_name = user.first_name
 
+    record(db, admin, "user.deny", user, label=user_name, note="Registration denied; the user was removed")
     # Delete the user from the database
     db.delete(user)
     db.commit()
