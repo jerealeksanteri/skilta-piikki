@@ -42,7 +42,7 @@ docker compose exec backend python -m app.dev_seed   # optional sample data
 
 Edits under `backend/` and `frontend/` reload automatically. Database migrations run when the backend starts. To start from an empty database, run `docker compose down -v`.
 
-**Tests:** `cd backend && pip install -r requirements-dev.txt && pytest`
+**Tests:** `cd backend && uv run pytest` (needs [uv](https://docs.astral.sh/uv/); it installs Python 3.12 and the dependencies on first run). Add a dependency with `uv add <package>`, a dev tool with `uv add --dev <package>`.
 
 ## Deployment
 
