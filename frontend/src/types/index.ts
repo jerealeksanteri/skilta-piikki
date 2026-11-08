@@ -40,6 +40,9 @@ export interface Transaction {
   /** Purchases only: time left to change or cancel it, and the window's full length. */
   undo_remaining_ms?: number | null;
   undo_window_ms?: number | null;
+  /** Approved / rejected by an admin: time left to undo that decision, and who made it. */
+  decision_remaining_ms?: number | null;
+  approved_by_name?: string | null;
 }
 
 export interface FiscalPeriod {

@@ -14,9 +14,9 @@ from app.schemas.transaction import (
     TransactionOut,
     UserPaymentRequest,
 )
+from app.services import decisions
 from app.services.audit import diff, record, snapshot
-from app.services.balance import adjust_balance
-from app.services.messaging import send_event_message
+from app.services.decisions import DecisionService
 from app.services.purchases import PurchaseService, remaining_ms
 
 router = APIRouter()
@@ -39,15 +39,19 @@ def _to_out(tx: Transaction) -> TransactionOut:
         product_name=tx.product.name if tx.product else None,
         user_name=tx.user.first_name if tx.user else None,
         product_emoji=tx.product.emoji if tx.product else None,
+        approved_by_name=tx.approved_by.first_name if tx.approved_by else None,
         **_undo_fields(tx),
     )
 
 
 def _undo_fields(tx: Transaction) -> dict:
-    left = remaining_ms(tx)
-    if left is None:
-        return {}
-    return {"undo_remaining_ms": left, "undo_window_ms": settings.UNDO_WINDOW_SECONDS * 1000}
+    window_ms = settings.UNDO_WINDOW_SECONDS * 1000
+    fields: dict = {}
+    if (left := remaining_ms(tx)) is not None:
+        fields |= {"undo_remaining_ms": left, "undo_window_ms": window_ms}
+    if (left := decisions.remaining_ms(tx)) is not None:
+        fields |= {"decision_remaining_ms": left, "undo_window_ms": window_ms}
+    return fields
 
 
 @router.post("/transactions/purchase", response_model=TransactionOut)
@@ -204,44 +208,9 @@ def approve_transaction(
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    tx = db.query(Transaction).filter(Transaction.id == tx_id).first()
-    if not tx:
-        raise HTTPException(status_code=404, detail="Transaction not found")
-    if tx.status != "pending":
-        raise HTTPException(status_code=400, detail="Transaction is not pending")
-
-    tx.status = "approved"
-    tx.approved_by_id = admin.id
-
-    target_user = db.query(User).filter(User.id == tx.user_id).first()
-
-    if not target_user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    adjust_balance(db, target_user, tx.amount)
-    record(
-        db,
-        admin,
-        "transaction.approve",
-        tx,
-        label=f"{tx.type.capitalize()} {tx.amount} € · {target_user.first_name}",
-        changes={"status": {"from": "pending", "to": "approved"}},
-    )
-
+    tx = DecisionService.decide(db, tx_id, admin, approve=True)
     db.commit()
     db.refresh(tx)
-
-    if tx.type == "payment":
-        send_event_message(
-            db,
-            "payment_approved",
-            target_user,
-            {
-                "user": target_user.first_name,
-                "amount": f"{tx.amount:.2f}",
-            },
-        )
-
     return _to_out(tx)
 
 
@@ -251,37 +220,43 @@ def reject_transaction(
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    tx = db.query(Transaction).filter(Transaction.id == tx_id).first()
-    if not tx:
-        raise HTTPException(status_code=404, detail="Transaction not found")
-    if tx.status != "pending":
-        raise HTTPException(status_code=400, detail="Transaction is not pending")
-
-    tx.status = "rejected"
-    tx.approved_by_id = admin.id
-    record(
-        db,
-        admin,
-        "transaction.reject",
-        tx,
-        label=f"{tx.type.capitalize()} {tx.amount} € · {tx.user.first_name}",
-        changes={"status": {"from": "pending", "to": "rejected"}},
-    )
-
+    tx = DecisionService.decide(db, tx_id, admin, approve=False)
     db.commit()
     db.refresh(tx)
+    return _to_out(tx)
 
-    if tx.type == "payment":
-        target_user = db.query(User).filter(User.id == tx.user_id).first()
-        if target_user:
-            send_event_message(
-                db,
-                "payment_rejected",
-                target_user,
-                {
-                    "user": target_user.first_name,
-                    "amount": f"{tx.amount:.2f}",
-                },
-            )
 
+@router.get("/transactions/recently-decided", response_model=list[TransactionOut])
+def recently_decided(
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Approvals and rejections that can still be undone, newest first."""
+    return [_to_out(tx) for tx in DecisionService.recent(db)]
+
+
+@router.put("/transactions/{tx_id}/finish-decision", response_model=TransactionOut)
+def finish_decision(
+    tx_id: int,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Make an approval or rejection final now and tell the member straight away."""
+    tx = DecisionService.finish(db, tx_id)
+    db.commit()
+    decisions.send_notice(db, tx_id)
+    db.refresh(tx)
+    return _to_out(tx)
+
+
+@router.put("/transactions/{tx_id}/undo-decision", response_model=TransactionOut)
+def undo_decision(
+    tx_id: int,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Put an approved or rejected item back in Pending, inside its undo window."""
+    tx = DecisionService.undo(db, tx_id, admin)
+    db.commit()
+    db.refresh(tx)
     return _to_out(tx)

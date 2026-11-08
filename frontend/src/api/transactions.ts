@@ -24,6 +24,20 @@ export function cancelPurchase(txId: number): Promise<Transaction> {
   return apiRequest<Transaction>(`/transactions/${txId}/cancel`, { method: 'POST' });
 }
 
+/** Approvals and rejections that can still be undone. */
+export function getRecentlyDecided(): Promise<Transaction[]> {
+  return apiRequest<Transaction[]>('/transactions/recently-decided');
+}
+
+export function undoDecision(txId: number): Promise<Transaction> {
+  return apiRequest<Transaction>(`/transactions/${txId}/undo-decision`, { method: 'PUT' });
+}
+
+/** Make an approval or rejection final now; the member is told straight away. */
+export function finishDecision(txId: number): Promise<Transaction> {
+  return apiRequest<Transaction>(`/transactions/${txId}/finish-decision`, { method: 'PUT' });
+}
+
 /** Close a purchase's undo window now instead of waiting it out. */
 export function settlePurchase(txId: number): Promise<Transaction> {
   return apiRequest<Transaction>(`/transactions/${txId}/settle`, { method: 'POST' });

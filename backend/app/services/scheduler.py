@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 
 from app.database import SessionLocal
 from app.models.app_setting import AppSetting
@@ -19,6 +20,7 @@ scheduler = BackgroundScheduler(timezone="UTC")
 JOB_ID = "process_recurring_rewards"
 LAST_RUN_KEY = "reward_scheduler_last_run"
 LEDGER_JOB_ID = "check_ledger"
+NOTICE_JOB_ID = "send_decision_notices"
 
 
 def _due(query, now):
@@ -166,6 +168,22 @@ def check_ledger():
         db.close()
 
 
+def send_decision_notices():
+    """Send the users' approve/reject messages whose undo window has closed."""
+    from app.services.decisions import send_due_notices
+
+    db = SessionLocal()
+    try:
+        sent = send_due_notices(db)
+        if sent:
+            logger.info("Sent %d decision message(s)", sent)
+    except Exception:
+        logger.exception("Sending decision messages failed")
+        db.rollback()
+    finally:
+        db.close()
+
+
 def start_scheduler():
     """Start the background scheduler"""
     scheduler.add_job(
@@ -185,6 +203,17 @@ def start_scheduler():
         replace_existing=True,
         misfire_grace_time=3600,
         coalesce=True,
+    )
+
+    # Every 10 s, so a message follows its 60 s undo window closely. It also
+    # sends anything held from before a restart on the first run.
+    scheduler.add_job(
+        send_decision_notices,
+        IntervalTrigger(seconds=10),
+        id=NOTICE_JOB_ID,
+        replace_existing=True,
+        coalesce=True,
+        max_instances=1,
     )
 
     scheduler.start()

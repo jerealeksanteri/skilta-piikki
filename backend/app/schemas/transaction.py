@@ -42,6 +42,9 @@ class TransactionOut(BaseModel):
     # a duration rather than a deadline, so a phone with a wrong clock still counts right.
     undo_remaining_ms: int | None = None
     undo_window_ms: int | None = None
+    # Approved / rejected by an admin: how long that decision can still be undone.
+    decision_remaining_ms: int | None = None
+    approved_by_name: str | None = None
     product_emoji: str | None = None
 
     model_config = {"from_attributes": True}
