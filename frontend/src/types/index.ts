@@ -25,7 +25,7 @@ export interface Transaction {
   id: number;
   user_id: number;
   product_id: number | null;
-  type: 'purchase' | 'payment' | 'reward';
+  type: 'purchase' | 'payment' | 'reward' | 'game' | 'adjustment';
   amount: number;
   status: 'pending' | 'approved' | 'rejected';
   approved_by_id: number | null;
@@ -192,4 +192,19 @@ export interface AuditLogPage {
 export interface AuditFilters {
   actors: { id: number; name: string }[];
   actions: string[];
+}
+
+export interface LedgerMismatch {
+  user_id: number;
+  user_name: string;
+  balance: number;
+  ledger_total: number;
+  difference: number;
+}
+
+export interface LedgerCheck {
+  /** null until the first check has run */
+  checked_at: string | null;
+  users_checked: number;
+  mismatches: LedgerMismatch[];
 }

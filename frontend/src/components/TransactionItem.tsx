@@ -47,22 +47,46 @@ const styles = {
   },
 };
 
+const SLOT_EMOJI: Record<string, string> = {
+  cherry: '🍒',
+  lemon: '🍋',
+  orange: '🍊',
+  plum: '🍇',
+  bell: '🔔',
+  seven: '7️⃣',
+};
+
+function describe(tx: Transaction): { icon: string; title: string; metaNote: string | null } {
+  switch (tx.type) {
+    case 'purchase':
+      return {
+        icon: '🍺',
+        title: `${tx.quantity > 1 ? `${tx.quantity}x ` : ''}${tx.product_name || 'Purchase'}`,
+        metaNote: tx.note,
+      };
+    case 'reward':
+      // Reward transactions carry the reward name in the note
+      return { icon: '🎁', title: tx.note || 'Reward', metaNote: null };
+    case 'game': {
+      // The note is "Slot machine: cherry lemon plum"; older spins have no symbols.
+      const reels = (tx.note ?? '').split(':')[1]?.trim().split(' ') ?? [];
+      const shown = reels.map((r) => SLOT_EMOJI[r]).filter(Boolean).join(' ');
+      return { icon: '🎰', title: 'Slot machine', metaNote: shown || null };
+    }
+    case 'adjustment':
+      return { icon: '⚖️', title: 'Balance adjustment', metaNote: tx.note };
+    default:
+      return { icon: '💰', title: 'Payment', metaNote: tx.note };
+  }
+}
+
 interface Props {
   transaction: Transaction;
   showUser?: boolean;
 }
 
 export default function TransactionItem({ transaction: tx, showUser }: Props) {
-  const isPurchase = tx.type === 'purchase';
-  const isReward = tx.type === 'reward';
-  const icon = isPurchase ? '🍺' : isReward ? '🎁' : '💰';
-  // Reward transactions carry the reward name in the note
-  const title = isPurchase
-    ? `${tx.quantity > 1 ? `${tx.quantity}x ` : ''}${tx.product_name || 'Purchase'}`
-    : isReward
-      ? tx.note || 'Reward'
-      : 'Payment';
-  const metaNote = isReward ? null : tx.note;
+  const { icon, title, metaNote } = describe(tx);
   const date = new Date(tx.created_at).toLocaleDateString('fi-FI', {
     day: 'numeric',
     month: 'short',
