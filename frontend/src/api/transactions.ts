@@ -24,6 +24,15 @@ export function cancelPurchase(txId: number): Promise<Transaction> {
   return apiRequest<Transaction>(`/transactions/${txId}/cancel`, { method: 'POST' });
 }
 
+/** Approvals and rejections that can still be undone. */
+export function getRecentlyDecided(): Promise<Transaction[]> {
+  return apiRequest<Transaction[]>('/transactions/recently-decided');
+}
+
+export function undoDecision(txId: number): Promise<Transaction> {
+  return apiRequest<Transaction>(`/transactions/${txId}/undo-decision`, { method: 'PUT' });
+}
+
 export function createPayment(
   userId: number,
   amount: number,

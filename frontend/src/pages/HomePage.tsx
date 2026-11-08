@@ -10,7 +10,7 @@ import BalanceDisplay from '../components/BalanceDisplay';
 import ProductOverlay from '../components/ProductOverlay';
 import FiscalDebtsList from '../components/FiscalDebtsList';
 import PendingPurchases from '../components/PendingPurchases';
-import { toPending, type PendingPurchase } from '../utils/pendingPurchases';
+import { toUndoItems, type UndoItem } from '../utils/undoWindow';
 import { Button, tokens, useToast } from '../ui';
 
 const fab = {
@@ -43,12 +43,12 @@ export default function HomePage() {
   const showToast = useToast();
   const [rank, setRank] = useState<number | undefined>(undefined);
   const [totalUsers, setTotalUsers] = useState<number | undefined>(undefined);
-  const [pending, setPending] = useState<PendingPurchase[]>([]);
+  const [pending, setPending] = useState<UndoItem[]>([]);
 
   /** Add or replace one purchase in the undo list, newest first. */
   const upsertPending = useCallback((tx: Transaction) => {
     setPending((prev) => {
-      const [item] = toPending([tx], Date.now(), prev);
+      const [item] = toUndoItems([tx], Date.now(), prev);
       const rest = prev.filter((p) => p.tx.id !== tx.id);
       return item ? [item, ...rest] : rest;
     });
@@ -57,7 +57,7 @@ export default function HomePage() {
   const updatePending = useCallback(
     (tx: Transaction) => {
       setPending((prev) => {
-        const [item] = toPending([tx], Date.now(), prev);
+        const [item] = toUndoItems([tx], Date.now(), prev);
         return prev.flatMap((p) => (p.tx.id !== tx.id ? [p] : item ? [item] : []));
       });
       refreshUser();
@@ -78,7 +78,7 @@ export default function HomePage() {
   useEffect(() => {
     const sync = () =>
       getUndoablePurchases()
-        .then((txs) => setPending((prev) => toPending(txs, Date.now(), prev)))
+        .then((txs) => setPending((prev) => toUndoItems(txs, Date.now(), prev)))
         .catch(console.error);
     sync();
     const onVisible = () => {

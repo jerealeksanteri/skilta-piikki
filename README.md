@@ -85,7 +85,7 @@ To deploy, set the new image tags in the server-config repo.
 | `DATABASE_URL` | SQLAlchemy database URL | `postgresql://piikki:piikki@db:5432/piikki` |
 | `ADMIN_TELEGRAM_IDS` | Comma-separated Telegram IDs to bootstrap as admins | `""` |
 | `AUTO_APPROVE_PURCHASES` | Auto-approve drink purchases | `true` |
-| `UNDO_WINDOW_SECONDS` | How long a member can change or undo a purchase | `60` |
+| `UNDO_WINDOW_SECONDS` | How long a purchase can be changed or undone by its member, and an approve/reject by an admin | `60` |
 | `CORS_ORIGINS` | Allowed CORS origins | `*` |
 | `DEV_MODE` | Skip Telegram login and only log bot messages (local dev) | `false` |
 
@@ -124,8 +124,10 @@ To deploy, set the new image tags in the server-config repo.
 | DELETE | `/api/products/{id}` | Soft-delete a product |
 | POST | `/api/transactions/payment` | Log payment for a user |
 | GET | `/api/transactions/pending` | List pending transactions |
-| PUT | `/api/transactions/{id}/approve` | Approve transaction |
-| PUT | `/api/transactions/{id}/reject` | Reject transaction |
+| PUT | `/api/transactions/{id}/approve` | Approve transaction (undoable for the undo window; the user is told after it) |
+| PUT | `/api/transactions/{id}/reject` | Reject transaction (likewise) |
+| GET | `/api/transactions/recently-decided` | Approvals and rejections that can still be undone |
+| PUT | `/api/transactions/{id}/undo-decision` | Put an approved or rejected transaction back in Pending |
 | GET | `/api/fiscal-periods` | List all fiscal periods |
 | POST | `/api/fiscal-periods/close` | Close current period (creates debts, resets balances) |
 | GET | `/api/fiscal-periods/{id}/stats` | Period statistics |

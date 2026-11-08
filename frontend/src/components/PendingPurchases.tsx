@@ -1,21 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { cancelPurchase, setPurchaseQuantity } from '../api/transactions';
 import type { Transaction } from '../types';
-import type { PendingPurchase } from '../utils/pendingPurchases';
 import { Button, Card, Divider, Section, useToast } from '../ui';
-
-const LEAVE_MS = 350;
+import type { UndoItem } from '../utils/undoWindow';
+import UndoRow from './UndoRow';
 
 const styles = {
-  row: {
-    position: 'relative' as const,
-    display: 'flex',
-    alignItems: 'center' as const,
-    gap: '12px',
-    padding: '12px 16px 15px',
-    maxHeight: '80px',
-    overflow: 'hidden',
-  },
   emoji: {
     fontSize: '24px',
     width: '32px',
@@ -53,50 +43,19 @@ const styles = {
     fontSize: '15px',
     fontWeight: 600,
   },
-  track: {
-    position: 'absolute' as const,
-    left: '16px',
-    right: '16px',
-    bottom: '6px',
-    height: '3px',
-    borderRadius: '2px',
-    backgroundColor: 'var(--secondary-bg)',
-    overflow: 'hidden',
-  },
-  bar: {
-    height: '100%',
-    transformOrigin: 'left',
-  },
 };
 
 interface RowProps {
-  item: PendingPurchase;
+  item: UndoItem;
   onUpdate: (tx: Transaction) => void;
   onRemove: (id: number) => void;
 }
 
 function PendingRow({ item, onUpdate, onRemove }: RowProps) {
-  const { tx, deadline } = item;
+  const { tx } = item;
   const showToast = useToast();
   const [busy, setBusy] = useState(false);
-  const [leaving, setLeaving] = useState(false);
-  // Where the bar starts, fixed when the row appears (a later deadline gives the row a new key).
-  const [startOffset] = useState(() => {
-    const windowMs = tx.undo_window_ms ?? 60_000;
-    return Math.max(0, windowMs - (deadline - Date.now()));
-  });
-  const windowMs = tx.undo_window_ms ?? 60_000;
-
-  useEffect(() => {
-    const leave = window.setTimeout(() => setLeaving(true), Math.max(0, deadline - Date.now()));
-    return () => window.clearTimeout(leave);
-  }, [deadline]);
-
-  useEffect(() => {
-    if (!leaving) return;
-    const done = window.setTimeout(() => onRemove(tx.id), LEAVE_MS);
-    return () => window.clearTimeout(done);
-  }, [leaving, onRemove, tx.id]);
+  const [closing, setClosing] = useState(false);
 
   const run = async (action: () => Promise<Transaction>, cancelled: boolean) => {
     setBusy(true);
@@ -110,7 +69,7 @@ function PendingRow({ item, onUpdate, onRemove }: RowProps) {
       }
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Could not change the purchase', 3000);
-      setLeaving(true);
+      setClosing(true);
     } finally {
       setBusy(false);
     }
@@ -123,13 +82,7 @@ function PendingRow({ item, onUpdate, onRemove }: RowProps) {
   const increase = () => run(() => setPurchaseQuantity(tx.id, tx.quantity + 1), false);
 
   return (
-    <div
-      className={leaving ? 'undo-leaving' : undefined}
-      style={{
-        ...styles.row,
-        ...(leaving ? { animation: `undo-leave ${LEAVE_MS}ms ease forwards`, pointerEvents: 'none' } : {}),
-      }}
-    >
+    <UndoRow item={item} onGone={onRemove} closing={closing}>
       <span style={styles.emoji}>{tx.product_emoji ?? '🍺'}</span>
       <div style={styles.info}>
         <div style={styles.name}>{tx.product_name ?? 'Purchase'}</div>
@@ -163,21 +116,12 @@ function PendingRow({ item, onUpdate, onRemove }: RowProps) {
           +
         </Button>
       </div>
-      <div style={styles.track} aria-hidden="true">
-        <div
-          style={{
-            ...styles.bar,
-            animation: `undo-drain ${windowMs}ms linear forwards`,
-            animationDelay: `-${startOffset}ms`,
-          }}
-        />
-      </div>
-    </div>
+    </UndoRow>
   );
 }
 
 interface Props {
-  items: PendingPurchase[];
+  items: UndoItem[];
   onUpdate: (tx: Transaction) => void;
   onRemove: (id: number) => void;
 }

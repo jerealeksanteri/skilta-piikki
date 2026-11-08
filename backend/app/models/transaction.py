@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, Numeric, String
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, Numeric, String, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -31,6 +31,10 @@ class Transaction(Base):
     note: Mapped[str | None] = mapped_column(String, nullable=True)
     # Purchases only: until when the member may still change or cancel it (naive UTC).
     undo_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # Admin approve/reject: until when the decision can be undone (naive UTC), and
+    # whether the user's message about it still waits for that window to close.
+    decided_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    notice_pending: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=false())
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=lambda: datetime.now(UTC))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,

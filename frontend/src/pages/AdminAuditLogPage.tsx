@@ -92,6 +92,7 @@ const ACTION_LABELS: Record<string, string> = {
   'payment.create': 'Logged payment',
   'transaction.approve': 'Approved',
   'transaction.reject': 'Rejected',
+  'transaction.undo_decision': 'Undid approve/reject',
   'product.create': 'Added product',
   'product.update': 'Edited product',
   'product.deactivate': 'Removed product',
