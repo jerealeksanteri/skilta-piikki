@@ -23,14 +23,17 @@ const styles = {
 export default function HistoryPage() {
   const location = useLocation();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Which navigation the list was loaded for: navigating here again shows
+  // "Loading..." until that visit's fetch finishes.
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const loading = loadedKey !== location.key;
 
   useEffect(() => {
-    setLoading(true);
+    const key = location.key;
     getMyTransactions()
       .then(setTransactions)
       .catch(console.error)
-      .finally(() => setLoading(false));
+      .finally(() => setLoadedKey(key));
   }, [location.key]);
 
   if (loading) {

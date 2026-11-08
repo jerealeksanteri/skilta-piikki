@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../App';
+import { useUser } from '../context/UserContext';
 import { spinSlotMachine, getSlotMachineStats, getSlotMachineStatus } from '../api/slot-machine';
 import type { SlotMachineStats } from '../api/slot-machine';
 
@@ -135,12 +135,15 @@ export default function SlotMachinePage() {
   const [enabled, setEnabled] = useState(true);
 
   useEffect(() => {
-    fetchStats();
+    getSlotMachineStats()
+      .then(setStats)
+      .catch((e) => console.error('Failed to load stats:', e));
     getSlotMachineStatus()
       .then((s) => setEnabled(s.enabled))
       .catch(() => {});
   }, []);
 
+  // Refreshes the stats after a spin.
   const fetchStats = async () => {
     try {
       const s = await getSlotMachineStats();

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../App';
+import { useUser } from '../context/UserContext';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { getNewsletterAudiences, listNewsletters, sendNewsletter } from '../api/newsletters';
 import type { Newsletter, NewsletterAudience, NewsletterAudienceCounts } from '../types';

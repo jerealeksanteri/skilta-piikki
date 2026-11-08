@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../App';
+import { useUser } from '../context/UserContext';
 import { listUsers } from '../api/users';
 import {
   getPendingTransactions,

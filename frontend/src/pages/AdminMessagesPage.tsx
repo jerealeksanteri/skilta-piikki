@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../App';
+import { useUser } from '../context/UserContext';
 import { listMessageTemplates, updateMessageTemplate } from '../api/messages';
 import type { MessageTemplate } from '../types';
 

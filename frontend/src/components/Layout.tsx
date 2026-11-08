@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useUser } from '../App';
+import { useUser } from '../context/UserContext';
 import { guardedNavigate } from '../utils/navigationGuard';
 
 const styles = {
