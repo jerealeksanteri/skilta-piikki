@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { listProducts } from '../api/products';
 import { getLeaderboard } from '../api/users';
 import { getMyDebts } from '../api/fiscal';
-import { createPurchase } from '../api/transactions';
-import type { Product, FiscalDebt } from '../types';
+import { createPurchase, getUndoablePurchases } from '../api/transactions';
+import type { Product, FiscalDebt, Transaction } from '../types';
 import BalanceDisplay from '../components/BalanceDisplay';
 import ProductOverlay from '../components/ProductOverlay';
 import FiscalDebtsList from '../components/FiscalDebtsList';
+import PendingPurchases from '../components/PendingPurchases';
+import { toPending, type PendingPurchase } from '../utils/pendingPurchases';
 import { Button, tokens, useToast } from '../ui';
 
 const fab = {
@@ -41,6 +43,50 @@ export default function HomePage() {
   const showToast = useToast();
   const [rank, setRank] = useState<number | undefined>(undefined);
   const [totalUsers, setTotalUsers] = useState<number | undefined>(undefined);
+  const [pending, setPending] = useState<PendingPurchase[]>([]);
+
+  /** Add or replace one purchase in the undo list, newest first. */
+  const upsertPending = useCallback((tx: Transaction) => {
+    setPending((prev) => {
+      const [item] = toPending([tx], Date.now(), prev);
+      const rest = prev.filter((p) => p.tx.id !== tx.id);
+      return item ? [item, ...rest] : rest;
+    });
+  }, []);
+
+  const updatePending = useCallback(
+    (tx: Transaction) => {
+      setPending((prev) => {
+        const [item] = toPending([tx], Date.now(), prev);
+        return prev.flatMap((p) => (p.tx.id !== tx.id ? [p] : item ? [item] : []));
+      });
+      refreshUser();
+    },
+    [refreshUser],
+  );
+
+  const removePending = useCallback(
+    (id: number) => {
+      setPending((prev) => prev.filter((p) => p.tx.id !== id));
+      refreshUser();
+    },
+    [refreshUser],
+  );
+
+  // The server is the source of truth: load the open purchases on start and
+  // whenever the app comes back to the foreground (timers pause in the background).
+  useEffect(() => {
+    const sync = () =>
+      getUndoablePurchases()
+        .then((txs) => setPending((prev) => toPending(txs, Date.now(), prev)))
+        .catch(console.error);
+    sync();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') sync();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
 
   const fetchDebts = () => {
     getMyDebts().then(setDebts).catch(console.error);
@@ -61,7 +107,8 @@ export default function HomePage() {
   const handlePurchase = async (product: Product, quantity: number) => {
     setPurchasing(true);
     try {
-      await createPurchase(product.id, quantity);
+      const tx = await createPurchase(product.id, quantity);
+      upsertPending(tx);
       await refreshUser();
       showToast(`${product.emoji} ${quantity > 1 ? `${quantity}x ` : ''}${product.name} logged!`, 2000);
       setShowOverlay(false);
@@ -80,6 +127,8 @@ export default function HomePage() {
         rank={rank}
         totalUsers={totalUsers}
       />
+
+      <PendingPurchases items={pending} onUpdate={updatePending} onRemove={removePending} />
 
       <FiscalDebtsList debts={debts} onUpdate={fetchDebts} />
 

@@ -64,3 +64,24 @@ input::-webkit-date-and-time-value {
   text-align: left;
   min-height: 1.2em;
 }
+
+/*
+ * Undo window for purchases (components/PendingPurchases.tsx). The bar
+ * drains over the whole window and turns amber, then red, near the end; a
+ * negative animation-delay starts it part-way after a reload. A finished row
+ * slides away.
+ */
+@keyframes undo-drain {
+  0% { transform: scaleX(1); background-color: var(--positive); }
+  70% { background-color: var(--positive); }
+  85% { background-color: var(--warning); }
+  100% { transform: scaleX(0); background-color: var(--destructive); }
+}
+
+@keyframes undo-leave {
+  to { opacity: 0; transform: translateY(12px); max-height: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .undo-leaving { animation-duration: 1ms !important; }
+}

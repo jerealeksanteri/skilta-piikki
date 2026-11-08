@@ -85,6 +85,7 @@ To deploy, set the new image tags in the server-config repo.
 | `DATABASE_URL` | SQLAlchemy database URL | `postgresql://piikki:piikki@db:5432/piikki` |
 | `ADMIN_TELEGRAM_IDS` | Comma-separated Telegram IDs to bootstrap as admins | `""` |
 | `AUTO_APPROVE_PURCHASES` | Auto-approve drink purchases | `true` |
+| `UNDO_WINDOW_SECONDS` | How long a member can change or undo a purchase | `60` |
 | `CORS_ORIGINS` | Allowed CORS origins | `*` |
 | `DEV_MODE` | Skip Telegram login and only log bot messages (local dev) | `false` |
 
@@ -95,7 +96,11 @@ To deploy, set the new image tags in the server-config repo.
 |---|---|---|
 | GET | `/api/me` | Current user info (includes fiscal debt totals) |
 | GET | `/api/products` | List active products |
-| POST | `/api/transactions/purchase` | Log a drink purchase (with quantity) |
+| POST | `/api/transactions/purchase` | Log a drink purchase (with quantity); the same drink again within the undo window adds to it |
+| GET | `/api/transactions/undoable` | User's purchases still inside the undo window |
+| PUT | `/api/transactions/{id}/quantity` | Change a purchase's quantity inside the undo window |
+| POST | `/api/transactions/{id}/cancel` | Undo a purchase inside the undo window |
+| POST | `/api/transactions/{id}/settle` | Close a purchase's undo window early |
 | POST | `/api/transactions/payment-request` | Request a payment (pending) |
 | GET | `/api/transactions/mine` | User's transaction history |
 | GET | `/api/leaderboard` | Active users ranked by balance |
