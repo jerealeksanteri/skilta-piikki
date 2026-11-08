@@ -1,7 +1,8 @@
 name: Release
 
 # Runs when a version tag is pushed, e.g. with `scripts/release.sh minor`
-# or `git tag v2.4.0 && git push origin v2.4.0`.
+# or `git tag v2.4.0 && git push origin v2.4.0`. Third-party actions are
+# pinned to commit SHAs (tag in the comment).
 on:
   push:
     tags:
@@ -16,19 +17,22 @@ env:
   IMAGE_PREFIX: ghcr.io/${{ github.repository }}
 
 jobs:
-  build-and-push:
+  # Fails within seconds if the tag skips a version or isn't on main.
+  tag:
+    name: Check tag
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      packages: write
-
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      bump: ${{ steps.version.outputs.bump }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      # Fails before anything is built if the tag skips a version or isn't on main.
-      - name: Check tag and write release notes
+      - name: Check tag and preview release notes
         id: version
         env:
           TAG: ${{ github.ref_name }}
@@ -39,35 +43,63 @@ jobs:
             --out "$RUNNER_TEMP/notes.md" >> "$GITHUB_OUTPUT"
           cat "$RUNNER_TEMP/notes.md" >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: docker/login-action@v3
+  # The same checks as on PRs: ruff, tests, frontend build, Trivy.
+  checks:
+    needs: tag
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+      security-events: write
+
+  build-and-push:
+    name: Build images and release
+    needs: [tag, checks]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    env:
+      VERSION: ${{ needs.tag.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: ./backend
           push: true
           tags: |
-            ${{ env.IMAGE_PREFIX }}-backend:${{ steps.version.outputs.version }}
+            ${{ env.IMAGE_PREFIX }}-backend:${{ env.VERSION }}
             ${{ env.IMAGE_PREFIX }}-backend:latest
 
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: ./frontend
           push: true
           tags: |
-            ${{ env.IMAGE_PREFIX }}-frontend:${{ steps.version.outputs.version }}
+            ${{ env.IMAGE_PREFIX }}-frontend:${{ env.VERSION }}
             ${{ env.IMAGE_PREFIX }}-frontend:latest
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}
-          BUMP: ${{ steps.version.outputs.bump }}
+          BUMP: ${{ needs.tag.outputs.bump }}
         run: |
+          python3 .github/scripts/release_notes.py "$TAG" \
+            --repo "${{ github.repository }}" \
+            --image-prefix "$IMAGE_PREFIX" \
+            --out "$RUNNER_TEMP/notes.md" > /dev/null
           gh release create "$TAG" \
+            --repo "${{ github.repository }}" \
             --verify-tag \
             --title "$TAG ($BUMP)" \
             --notes-file "$RUNNER_TEMP/notes.md" \

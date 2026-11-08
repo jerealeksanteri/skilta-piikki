@@ -56,6 +56,8 @@ Production runs on a single-node k3s cluster managed by Argo CD from the `server
 2. Open a PR to `main`. Give it a [conventional](https://www.conventionalcommits.org/) title such as `feat: add favourites` or `fix: round report totals`: the release notes are built from PR titles. Mark breaking changes with `!` (`feat!: …`).
 3. Merge with a merge commit and delete the branch.
 
+Every PR to `main` runs the **CI** workflow: ruff (lint and formatting) and pytest for the backend; `tsc`, eslint and a production build for the frontend; and Trivy. Trivy scans the dependencies and both Docker images, fails on leaked secrets or a CRITICAL vulnerability that has a fix, and reports all HIGH and CRITICAL findings in the repo's Security tab. Before pushing, `cd backend && uv run ruff check --fix && uv run ruff format` fixes most lint findings.
+
 ## Releasing
 
 Releases are cut from `main` by pushing a version tag:
