@@ -268,6 +268,22 @@ export default function AdminFiscalPage() {
                           </span>
                         </div>
                         <div style={styles.statRow}>
+                          <span style={styles.statLabel}>Profit</span>
+                          <span style={styles.statValue}>
+                            {periodStats.purchase_profit != null
+                              ? `${periodStats.purchase_profit.toFixed(2)} €${
+                                  periodStats.margin_pct != null ? ` (${periodStats.margin_pct} %)` : ''
+                                }`
+                              : 'cost missing'}
+                          </span>
+                        </div>
+                        {!!periodStats.cost_missing_items && (
+                          <div style={{ ...styles.statRow, paddingTop: 0, fontSize: '12px', color: 'var(--hint)' }}>
+                            {periodStats.cost_missing_items} item{periodStats.cost_missing_items === 1 ? '' : 's'} without a
+                            cost price, left out of profit
+                          </div>
+                        )}
+                        <div style={styles.statRow}>
                           <span style={styles.statLabel}>Payments</span>
                           <span style={styles.statValue}>
                             {periodStats.total_payments} ({periodStats.total_payment_amount.toFixed(2)} €)

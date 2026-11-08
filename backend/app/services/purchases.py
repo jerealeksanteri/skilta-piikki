@@ -96,6 +96,7 @@ class PurchaseService:
             created_by_id=user.id,
             created_at=current,
             undo_until=current + window(),
+            unit_cost=product.cost_price,
         )
         db.add(tx)
         if auto_approve:

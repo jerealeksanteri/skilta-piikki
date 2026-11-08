@@ -15,6 +15,7 @@ from app.schemas.fiscal import CloseResult, FiscalDebtOut, FiscalPeriodOut, Fisc
 from app.services.audit import record
 from app.services.ledger import record_adjustment
 from app.services.messaging import send_bulk_event_message
+from app.services.profit import COST_COLUMNS, Profit
 
 router = APIRouter()
 
@@ -147,6 +148,7 @@ def get_period_stats(
         db.query(
             func.count(Transaction.id),
             func.coalesce(func.sum(Transaction.amount), 0),
+            *COST_COLUMNS,
         )
         .filter(
             Transaction.type == "purchase",
@@ -184,12 +186,19 @@ def get_period_stats(
         .scalar()
     )
 
+    profit = Profit()
+    profit.add(*purchase_stats[2:])
+
     return FiscalPeriodStats(
         id=period.id,
         started_at=period.started_at,
         ended_at=period.ended_at,
         total_purchases=purchase_stats[0] or 0,
         total_purchase_amount=abs(to_cents(purchase_stats[1] or 0)),
+        purchase_cost=profit.fields()["cost"],
+        purchase_profit=profit.profit,
+        margin_pct=profit.margin_pct,
+        cost_missing_items=profit.cost_missing_items,
         total_payments=payment_stats[0] or 0,
         total_payment_amount=to_cents(payment_stats[1] or 0),
         total_debt=to_cents(total_debt or 0),

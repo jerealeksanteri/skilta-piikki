@@ -16,6 +16,7 @@ from app.models.product import Product
 from app.models.transaction import Transaction
 from app.models.user import User
 from app.money import ZERO, to_cents
+from app.services.profit import COST_COLUMNS, Profit
 
 TRANSACTION_LIST_LIMIT = 500
 
@@ -34,6 +35,7 @@ class _ProductRow:
     emoji: str | None
     items: int = 0
     amount: Decimal = ZERO
+    profit: Profit = field(default_factory=Profit)
 
 
 @dataclass
@@ -51,6 +53,7 @@ class PurchaseReportData:
     total_amount: Decimal
     by_product: list[_ProductRow]
     by_user: list[_UserRow]
+    profit: Profit
     transaction_count: int
     transactions: list[Transaction]
 
@@ -83,6 +86,7 @@ class ReportService:
                 Product.emoji,
                 items_col,
                 amount_col,
+                *COST_COLUMNS,
             )
             .join(User, User.id == Transaction.user_id)
             .outerjoin(Product, Product.id == Transaction.product_id)
@@ -98,17 +102,22 @@ class ReportService:
 
         products: dict[int | None, _ProductRow] = {}
         users: dict[int, _UserRow] = {}
-        for user_id, user_name, product_id, product_name, emoji, items, amount in grouped:
+        total_profit = Profit()
+        for user_id, user_name, product_id, product_name, emoji, items, amount, *cost in grouped:
             items, amount = int(items), to_cents(amount)
 
             prod = products.setdefault(product_id, _ProductRow(product_id, product_name, emoji))
             prod.items += items
             prod.amount += amount
+            prod.profit.add(*cost)
+            total_profit.add(*cost)
 
             usr = users.setdefault(user_id, _UserRow(user_id, user_name))
             usr.items += items
             usr.amount += amount
-            usr.products.append(_ProductRow(product_id, product_name, emoji, items, amount))
+            user_product = _ProductRow(product_id, product_name, emoji, items, amount)
+            user_product.profit.add(*cost)
+            usr.products.append(user_product)
 
         by_product = sorted(products.values(), key=lambda p: (-p.items, p.product_name or ""))
         by_user = sorted(users.values(), key=lambda u: (-u.amount, u.user_name or ""))
@@ -136,6 +145,7 @@ class ReportService:
             total_amount=sum((p.amount for p in by_product), ZERO),
             by_product=by_product,
             by_user=by_user,
+            profit=total_profit,
             transaction_count=transaction_count,
             transactions=transactions,
         )

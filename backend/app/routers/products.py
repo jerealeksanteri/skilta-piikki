@@ -5,7 +5,7 @@ from app.auth.telegram import get_current_user, require_admin
 from app.database import get_db
 from app.models.product import Product
 from app.models.user import User
-from app.schemas.product import ProductCreate, ProductOut, ProductUpdate
+from app.schemas.product import AdminProductOut, ProductCreate, ProductOut, ProductUpdate
 from app.services.audit import diff, record, snapshot
 
 router = APIRouter()
@@ -24,7 +24,7 @@ def list_products(
     )
 
 
-@router.get("/products/all", response_model=list[ProductOut])
+@router.get("/products/all", response_model=list[AdminProductOut])
 def list_all_products(
     _admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
@@ -32,13 +32,15 @@ def list_all_products(
     return db.query(Product).order_by(Product.sort_order, Product.name).all()
 
 
-@router.post("/products", response_model=ProductOut)
+@router.post("/products", response_model=AdminProductOut)
 def create_product(
     data: ProductCreate,
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    product = Product(name=data.name, price=data.price, emoji=data.emoji, sort_order=data.sort_order)
+    product = Product(
+        name=data.name, price=data.price, cost_price=data.cost_price, emoji=data.emoji, sort_order=data.sort_order
+    )
     db.add(product)
     db.flush()
     record(
@@ -47,14 +49,14 @@ def create_product(
         "product.create",
         product,
         label=product.name,
-        changes=diff({}, snapshot(product, "name", "price", "emoji", "sort_order")),
+        changes=diff({}, snapshot(product, "name", "price", "cost_price", "emoji", "sort_order")),
     )
     db.commit()
     db.refresh(product)
     return product
 
 
-@router.put("/products/{product_id}", response_model=ProductOut)
+@router.put("/products/{product_id}", response_model=AdminProductOut)
 def update_product(
     product_id: int,
     data: ProductUpdate,
@@ -65,10 +67,10 @@ def update_product(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    before = snapshot(product, "name", "price", "emoji", "sort_order", "is_active")
+    before = snapshot(product, "name", "price", "cost_price", "emoji", "sort_order", "is_active")
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(product, field, value)
-    changes = diff(before, snapshot(product, "name", "price", "emoji", "sort_order", "is_active"))
+    changes = diff(before, snapshot(product, "name", "price", "cost_price", "emoji", "sort_order", "is_active"))
     if changes:
         record(db, admin, "product.update", product, label=product.name, changes=changes)
 

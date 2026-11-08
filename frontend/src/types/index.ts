@@ -19,6 +19,8 @@ export interface Product {
   emoji: string;
   is_active: boolean;
   sort_order: number;
+  /** Admin views only: what one unit costs the guild. */
+  cost_price?: number | null;
 }
 
 export interface Transaction {
@@ -71,6 +73,10 @@ export interface FiscalPeriodStats {
   ended_at: string | null;
   total_purchases: number;
   total_purchase_amount: number;
+  purchase_cost?: number | null;
+  purchase_profit?: number | null;
+  margin_pct?: number | null;
+  cost_missing_items?: number;
   total_payments: number;
   total_payment_amount: number;
   total_debt: number;
@@ -132,6 +138,11 @@ export interface ReportProductSummary {
   emoji: string | null;
   items: number;
   amount: number;
+  /** Profit on the purchases with a known cost price; null when none had one. */
+  cost?: number | null;
+  profit?: number | null;
+  margin_pct?: number | null;
+  cost_missing_items?: number;
 }
 
 export interface ReportUserSummary {
@@ -148,6 +159,10 @@ export interface PurchaseReport {
   statuses: TransactionStatus[];
   total_items: number;
   total_amount: number;
+  total_cost?: number | null;
+  total_profit?: number | null;
+  margin_pct?: number | null;
+  cost_missing_items?: number;
   user_count: number;
   by_product: ReportProductSummary[];
   by_user: ReportUserSummary[];

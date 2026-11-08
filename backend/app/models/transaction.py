@@ -29,6 +29,9 @@ class Transaction(Base):
     created_by_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     note: Mapped[str | None] = mapped_column(String, nullable=True)
+    # Purchases only: the product's cost price per unit when it was bought, so a
+    # later cost change doesn't rewrite past profit. None = cost wasn't known.
+    unit_cost: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     # Purchases only: until when the member may still change or cancel it (naive UTC).
     undo_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     # Admin approve/reject: until when the decision can be undone (naive UTC), and

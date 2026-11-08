@@ -18,6 +18,11 @@ class FiscalPeriodStats(BaseModel):
     ended_at: UtcDatetime | None
     total_purchases: int
     total_purchase_amount: Money
+    # Profit on the period's purchases with a known cost price (see services/profit.py).
+    purchase_cost: Money | None = None
+    purchase_profit: Money | None = None
+    margin_pct: float | None = None
+    cost_missing_items: int = 0
     total_payments: int
     total_payment_amount: Money
     total_debt: Money

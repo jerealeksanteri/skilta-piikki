@@ -43,6 +43,7 @@ def purchase_report(
             emoji=p.emoji,
             items=p.items,
             amount=_money(p.amount),
+            **p.profit.fields(),
         )
 
     return PurchaseReport(
@@ -51,6 +52,10 @@ def purchase_report(
         statuses=statuses,
         total_items=data.total_items,
         total_amount=_money(data.total_amount),
+        total_cost=data.profit.fields()["cost"],
+        total_profit=data.profit.profit,
+        margin_pct=data.profit.margin_pct,
+        cost_missing_items=data.profit.cost_missing_items,
         user_count=len(data.by_user),
         by_product=[product_out(p) for p in data.by_product],
         by_user=[

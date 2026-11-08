@@ -36,6 +36,16 @@ const styles = {
   },
 };
 
+/** An empty cost field means "no cost price". */
+function costValue(text: string): number | null {
+  return text.trim() === '' ? null : parseFloat(text);
+}
+
+function priceLine(p: Product): string {
+  const price = `${p.price.toFixed(2)} €`;
+  return p.cost_price != null ? `${price} · cost ${p.cost_price.toFixed(2)} €` : `${price} · cost missing`;
+}
+
 export default function AdminProductsPage() {
   const { user: currentUser } = useUser();
   const showToast = useToast();
@@ -46,6 +56,7 @@ export default function AdminProductsPage() {
   const [newName, setNewName] = useState('');
   const [newPrice, setNewPrice] = useState('');
   const [newEmoji, setNewEmoji] = useState('');
+  const [newCost, setNewCost] = useState('');
   const [adding, setAdding] = useState(false);
 
   // Edit state
@@ -53,6 +64,7 @@ export default function AdminProductsPage() {
   const [editName, setEditName] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editEmoji, setEditEmoji] = useState('');
+  const [editCost, setEditCost] = useState('');
 
   const fetchProducts = async () => {
     try {
@@ -76,11 +88,13 @@ export default function AdminProductsPage() {
       await createProduct({
         name: newName,
         price: parseFloat(newPrice),
+        cost_price: costValue(newCost),
         emoji: newEmoji || undefined,
       });
       setNewName('');
       setNewPrice('');
       setNewEmoji('');
+      setNewCost('');
       showToast('Product added');
       fetchProducts();
     } catch (e) {
@@ -95,6 +109,7 @@ export default function AdminProductsPage() {
     setEditName(p.name);
     setEditPrice(p.price.toString());
     setEditEmoji(p.emoji);
+    setEditCost(p.cost_price != null ? p.cost_price.toString() : '');
   };
 
   const handleSaveEdit = async () => {
@@ -103,6 +118,7 @@ export default function AdminProductsPage() {
       await updateProduct(editId, {
         name: editName,
         price: parseFloat(editPrice),
+        cost_price: costValue(editCost),
         emoji: editEmoji,
       });
       setEditId(null);
@@ -158,6 +174,13 @@ export default function AdminProductsPage() {
             onChange={(e) => setNewPrice(e.target.value)}
           />
           <TextField
+            type="number"
+            step="0.01"
+            placeholder="Cost price (€, optional, admins only)"
+            value={newCost}
+            onChange={(e) => setNewCost(e.target.value)}
+          />
+          <TextField
             type="text"
             placeholder="Emoji (default: 🍺)"
             value={newEmoji}
@@ -188,14 +211,29 @@ export default function AdminProductsPage() {
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                   />
-                  <TextField
-                    size="sm"
-                    style={{ flex: '0 0 70px' }}
-                    type="number"
-                    step="0.01"
-                    value={editPrice}
-                    onChange={(e) => setEditPrice(e.target.value)}
-                  />
+                  <div style={{ display: 'flex', gap: '8px', flexBasis: '100%' }}>
+                    <div style={{ flex: 1 }}>
+                      <TextField
+                        size="sm"
+                        label="Price €"
+                        type="number"
+                        step="0.01"
+                        value={editPrice}
+                        onChange={(e) => setEditPrice(e.target.value)}
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <TextField
+                        size="sm"
+                        label="Cost price €"
+                        type="number"
+                        step="0.01"
+                        placeholder="optional"
+                        value={editCost}
+                        onChange={(e) => setEditCost(e.target.value)}
+                      />
+                    </div>
+                  </div>
                   <Button size="xs" tone="positive" onClick={handleSaveEdit}>
                     Save
                   </Button>
@@ -208,7 +246,7 @@ export default function AdminProductsPage() {
                   <span style={styles.emoji}>{p.emoji}</span>
                   <div style={styles.info}>
                     <div style={styles.name}>{p.name}</div>
-                    <div style={styles.price}>{p.price.toFixed(2)} €</div>
+                    <div style={styles.price}>{priceLine(p)}</div>
                   </div>
                   <Button size="xs" variant="secondary" onClick={() => startEdit(p)}>
                     Edit
@@ -233,7 +271,7 @@ export default function AdminProductsPage() {
                   <span style={styles.emoji}>{p.emoji}</span>
                   <div style={styles.info}>
                     <div style={{ ...styles.name, color: 'var(--hint)' }}>{p.name}</div>
-                    <div style={styles.price}>{p.price.toFixed(2)} €</div>
+                    <div style={styles.price}>{priceLine(p)}</div>
                   </div>
                   <Button size="xs" variant="secondary" onClick={() => handleReactivate(p)}>
                     Reactivate
