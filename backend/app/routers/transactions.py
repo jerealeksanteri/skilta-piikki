@@ -106,6 +106,20 @@ def cancel_purchase(
     return _to_out(tx)
 
 
+@router.post("/transactions/{tx_id}/settle", response_model=TransactionOut)
+def settle_purchase(
+    tx_id: int,
+    user: User = Depends(require_active_user),
+    db: Session = Depends(get_db),
+):
+    """Close the undo window now instead of waiting it out."""
+    tx = PurchaseService.open_for_change(db, user, tx_id)
+    PurchaseService.settle(tx)
+    db.commit()
+    db.refresh(tx)
+    return _to_out(tx)
+
+
 @router.post("/transactions/payment", response_model=TransactionOut)
 def create_payment(
     data: PaymentRequest,
@@ -219,6 +233,20 @@ def recently_decided(
 ):
     """Approvals and rejections that can still be undone, newest first."""
     return [_to_out(tx) for tx in DecisionService.recent(db)]
+
+
+@router.put("/transactions/{tx_id}/finish-decision", response_model=TransactionOut)
+def finish_decision(
+    tx_id: int,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Make an approval or rejection final now and tell the member straight away."""
+    tx = DecisionService.finish(db, tx_id)
+    db.commit()
+    decisions.send_notice(db, tx_id)
+    db.refresh(tx)
+    return _to_out(tx)
 
 
 @router.put("/transactions/{tx_id}/undo-decision", response_model=TransactionOut)

@@ -103,6 +103,7 @@ To deploy, set the new image tags in the server-config repo.
 | GET | `/api/transactions/undoable` | User's purchases still inside the undo window |
 | PUT | `/api/transactions/{id}/quantity` | Change a purchase's quantity inside the undo window |
 | POST | `/api/transactions/{id}/cancel` | Undo a purchase inside the undo window |
+| POST | `/api/transactions/{id}/settle` | Close a purchase's undo window early |
 | POST | `/api/transactions/payment-request` | Request a payment (pending) |
 | GET | `/api/transactions/mine` | User's transaction history |
 | GET | `/api/leaderboard` | Active users ranked by balance |
@@ -131,6 +132,7 @@ To deploy, set the new image tags in the server-config repo.
 | PUT | `/api/transactions/{id}/reject` | Reject transaction (likewise) |
 | GET | `/api/transactions/recently-decided` | Approvals and rejections that can still be undone |
 | PUT | `/api/transactions/{id}/undo-decision` | Put an approved or rejected transaction back in Pending |
+| PUT | `/api/transactions/{id}/finish-decision` | Make an approval or rejection final now and notify the user |
 | GET | `/api/fiscal-periods` | List all fiscal periods |
 | POST | `/api/fiscal-periods/close` | Close current period (creates debts, resets balances) |
 | GET | `/api/fiscal-periods/{id}/stats` | Period statistics |

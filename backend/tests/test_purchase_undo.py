@@ -180,3 +180,19 @@ def test_cancelled_purchases_stay_out_of_reports(db, make_user, client_as, clock
     )
 
     assert report["total_items"] == 0
+
+
+def test_settle_closes_the_window_early(db, make_user, client_as, clock, beer):
+    alice = make_user("Alice")
+    client = client_as(alice)
+    tx = _buy(client, beer)
+
+    r = client.post(f"/api/transactions/{tx['id']}/settle")
+
+    assert r.status_code == 200, r.text
+    assert (r.json()["status"], r.json()["undo_remaining_ms"]) == ("approved", None)
+    assert client.get("/api/transactions/undoable").json() == []
+    assert client.post(f"/api/transactions/{tx['id']}/cancel").status_code == 409
+    assert _buy(client, beer)["id"] != tx["id"]  # the next tap starts a new purchase
+    db.refresh(alice)
+    assert alice.balance == Decimal("-5.00")

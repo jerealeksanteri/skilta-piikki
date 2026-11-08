@@ -160,3 +160,34 @@ def test_undo_is_admin_only(client_as, clock, outbox, people):
 
     assert client_as(alice).put(f"/api/transactions/{tx_id}/undo-decision").status_code == 403
     assert client_as(alice).get("/api/transactions/recently-decided").status_code == 403
+
+
+def test_finish_sends_at_once_and_ends_the_window(db, client_as, clock, outbox, people):
+    admin, alice = people
+    tx_id = _request_payment(client_as(alice))
+    client_as(admin).put(f"/api/transactions/{tx_id}/approve")
+    clock.advance(5)
+
+    r = client_as(admin).put(f"/api/transactions/{tx_id}/finish-decision")
+
+    assert r.status_code == 200, r.text
+    assert (r.json()["status"], r.json()["decision_remaining_ms"]) == ("approved", None)
+    assert outbox == [(alice.telegram_id, "Alice: +10.00 €")]
+    assert client_as(admin).get("/api/transactions/recently-decided").json() == []
+    assert client_as(admin).put(f"/api/transactions/{tx_id}/undo-decision").status_code == 409
+    clock.advance(120)
+    assert decisions.send_due_notices(db) == 0  # not sent a second time
+    assert len(outbox) == 1
+
+
+def test_finish_without_a_message_is_fine(client_as, clock, outbox, people, make_product, monkeypatch):
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "AUTO_APPROVE_PURCHASES", False)
+    admin, alice = people
+    beer = make_product("Beer", Decimal("2.00"))
+    tx_id = client_as(alice).post("/api/transactions/purchase", json={"product_id": beer.id}).json()["id"]
+    client_as(admin).put(f"/api/transactions/{tx_id}/reject")
+
+    assert client_as(admin).put(f"/api/transactions/{tx_id}/finish-decision").status_code == 200
+    assert outbox == []

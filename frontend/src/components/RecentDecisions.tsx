@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { undoDecision } from '../api/transactions';
+import { finishDecision, undoDecision } from '../api/transactions';
 import type { Transaction } from '../types';
 import { Button, Card, Divider, Section, useToast } from '../ui';
 import type { UndoItem } from '../utils/undoWindow';
@@ -36,6 +36,19 @@ function DecisionRow({ item, onUndone, onGone }: RowProps) {
     }
   };
 
+  // Skip the rest of the wait: make it final and tell the member now.
+  const finish = async () => {
+    setBusy(true);
+    try {
+      await finishDecision(tx.id);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Could not finish', 3000);
+    } finally {
+      setBusy(false);
+      setClosing(true);
+    }
+  };
+
   return (
     <UndoRow item={item} onGone={onGone} closing={closing}>
       <span
@@ -54,6 +67,16 @@ function DecisionRow({ item, onUndone, onGone }: RowProps) {
       </div>
       <Button size="sm" variant="secondary" disabled={busy} onClick={undo}>
         Undo
+      </Button>
+      <Button
+        size="sm"
+        tone="positive"
+        style={{ width: '34px', padding: '6px 0', fontSize: '16px' }}
+        disabled={busy}
+        onClick={finish}
+        aria-label={`Make final and notify: ${title(tx)}`}
+      >
+        ✓
       </Button>
     </UndoRow>
   );
@@ -79,7 +102,7 @@ export default function RecentDecisions({ items, onUndone, onGone }: Props) {
         ))}
       </Card>
       <div style={{ fontSize: '12px', color: 'var(--hint)', padding: '6px 4px 0' }}>
-        Members are told when the minute is up.
+        Members are told when the minute is up, or at once with ✓.
       </div>
     </Section>
   );
