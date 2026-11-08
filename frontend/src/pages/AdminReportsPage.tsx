@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useUser } from '../context/UserContext';
 import { getPurchaseReport } from '../api/reports';
 import TransactionItem from '../components/TransactionItem';
+import ExportButtons from '../components/ExportButtons';
 import type { PurchaseReport, ReportProductSummary, TransactionStatus } from '../types';
 import { BackButton, Card, Chip, DateTimeField, Divider, EmptyState, Section } from '../ui';
 import { fromInputValue, toInputValue } from '../utils/date';
@@ -335,6 +336,28 @@ export default function AdminReportsPage() {
             )}
           </Section>
 
+          {start && end && (
+            <Section title="Export">
+              <ExportButtons
+                options={[
+                  {
+                    label: 'Summary',
+                    request: { kind: 'report_summary', start: start.toISOString(), end: end.toISOString(), statuses },
+                  },
+                  {
+                    label: 'Transactions',
+                    request: {
+                      kind: 'report_transactions',
+                      start: start.toISOString(),
+                      end: end.toISOString(),
+                      statuses,
+                    },
+                  },
+                ]}
+              />
+            </Section>
+          )}
+
           <Section title="By product">
             {report.by_product.length === 0 ? (
               <Card>
@@ -407,7 +430,7 @@ export default function AdminReportsPage() {
               {report.transactions_truncated && (
                 <div style={styles.note}>
                   Showing the newest {report.transactions.length} of {report.transaction_count}.
-                  Totals above include all of them.
+                  Totals above include all of them, and so does the Transactions export.
                 </div>
               )}
             </Section>

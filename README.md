@@ -143,6 +143,8 @@ To deploy, set the new image tags in the server-config repo.
 | PUT | `/api/fiscal-debts/{id}/mark-paid` | Mark debt as paid directly |
 | GET | `/api/message-templates` | List all message templates |
 | PUT | `/api/message-templates/{id}` | Update template text or active state |
+| POST | `/api/admin/exports` | Short-lived download link for a CSV export: purchase summary or transactions, fiscal periods, a period's debts; Finnish Excel or standard format |
+| GET | `/api/exports/{token}` | The CSV file behind a download link |
 
 ## License
 
