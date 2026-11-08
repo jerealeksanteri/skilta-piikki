@@ -10,6 +10,7 @@ from app.models.reward_grant import RewardGrant
 from app.models.slot_machine_spin import SlotMachineSpin
 from app.models.transaction import Transaction
 from app.models.user import User
+from app.models.user_favourite import UserFavourite
 
 __all__ = [
     "AppSetting",
@@ -24,4 +25,5 @@ __all__ = [
     "SlotMachineSpin",
     "Transaction",
     "User",
+    "UserFavourite",
 ]

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { listProducts } from '../api/products';
+import { addFavourite, getFavourites, removeFavourite } from '../api/favourites';
 import { getLeaderboard } from '../api/users';
 import { getMyDebts } from '../api/fiscal';
 import { createPurchase, getUndoablePurchases } from '../api/transactions';
@@ -44,6 +45,20 @@ export default function HomePage() {
   const [rank, setRank] = useState<number | undefined>(undefined);
   const [totalUsers, setTotalUsers] = useState<number | undefined>(undefined);
   const [pending, setPending] = useState<UndoItem[]>([]);
+  const [favouriteIds, setFavouriteIds] = useState<number[]>([]);
+
+  // Star or unstar at once; the server's answer (or the old list on failure) settles it.
+  const toggleFavourite = async (product: Product) => {
+    const wasFavourite = favouriteIds.includes(product.id);
+    const before = favouriteIds;
+    setFavouriteIds(wasFavourite ? before.filter((id) => id !== product.id) : [...before, product.id]);
+    try {
+      setFavouriteIds(await (wasFavourite ? removeFavourite(product.id) : addFavourite(product.id)));
+    } catch (e) {
+      setFavouriteIds(before);
+      showToast(e instanceof Error ? e.message : 'Could not update favourites', 3000);
+    }
+  };
 
   /** Add or replace one purchase in the undo list, newest first. */
   const upsertPending = useCallback((tx: Transaction) => {
@@ -94,6 +109,7 @@ export default function HomePage() {
 
   useEffect(() => {
     listProducts().then(setProducts).catch(console.error);
+    getFavourites().then(setFavouriteIds).catch(console.error);
     fetchDebts();
     getLeaderboard()
       .then((lb) => {
@@ -151,6 +167,8 @@ export default function HomePage() {
           onConfirm={handlePurchase}
           onClose={() => setShowOverlay(false)}
           loading={purchasing}
+          favouriteIds={favouriteIds}
+          onToggleFavourite={toggleFavourite}
         />
       )}
     </div>
