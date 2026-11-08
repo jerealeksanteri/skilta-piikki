@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
+from decimal import Decimal
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, Integer, String, Text
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -25,7 +26,7 @@ class Reward(Base):
     # Reward configuration
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    amount: Mapped[float] = mapped_column(Float, nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     reward_type: Mapped[str] = mapped_column(String, nullable=False)  # 'one_time' or 'recurring'
 
     # Recurring reward settings (NULL for one-time rewards)

@@ -1,4 +1,7 @@
 import random
+from decimal import Decimal
+
+from app.money import ZERO, to_cents
 
 
 class SlotMachineService:
@@ -28,19 +31,20 @@ class SlotMachineService:
     SYMBOLS = ["cherry", "lemon", "orange", "plum", "bell", "seven"]
     SYMBOL_WEIGHTS = [30, 25, 21, 15, 6, 3]  # Weights for each symbol
 
+    # Multiples of the bet paid for three of a kind
     PAYOUTS = {
-        "cherry": 4.0,
-        "lemon": 7.0,
-        "orange": 15.0,
-        "plum": 20.0,
-        "bell": 40.0,
-        "seven": 50.0,
+        "cherry": Decimal("4"),
+        "lemon": Decimal("7"),
+        "orange": Decimal("15"),
+        "plum": Decimal("20"),
+        "bell": Decimal("40"),
+        "seven": Decimal("50"),
     }
 
-    BET_AMOUNT = 1.0
+    BET_AMOUNT = Decimal("1.00")
 
     @classmethod
-    def spin(cls, bet_amount: float = BET_AMOUNT) -> tuple[list[str], float]:
+    def spin(cls, bet_amount: Decimal = BET_AMOUNT) -> tuple[list[str], Decimal]:
         """
         Spin the slot machine.
 
@@ -61,7 +65,7 @@ class SlotMachineService:
         return symbols, win_amount
 
     @classmethod
-    def _calculate_payout(cls, symbols: list[str], bet_amount: float) -> float:
+    def _calculate_payout(cls, symbols: list[str], bet_amount: Decimal) -> Decimal:
         """
         Calculate payout based on symbols.
 
@@ -74,16 +78,15 @@ class SlotMachineService:
         """
         # Check for 3 matching symbols
         if symbols[0] == symbols[1] == symbols[2]:
-            payout_multiplier = cls.PAYOUTS.get(symbols[0], 0)
-            return payout_multiplier * bet_amount
+            payout_multiplier = cls.PAYOUTS.get(symbols[0], Decimal("0"))
+            return to_cents(payout_multiplier * bet_amount)
 
         # Check for 2 matching symbols (return bet)
         if symbols[0] == symbols[1] or symbols[1] == symbols[2] or symbols[0] == symbols[2]:
-            return_multiplier = 1.0
-            return bet_amount * return_multiplier  # Return the bet
+            return to_cents(bet_amount)  # Return the bet
 
         # No match
-        return 0.0
+        return ZERO
 
     @classmethod
     def get_theoretical_rtp(cls) -> float:
@@ -99,7 +102,7 @@ class SlotMachineService:
         ev_three_match = 0.0
         for i, symbol in enumerate(cls.SYMBOLS):
             prob = (cls.SYMBOL_WEIGHTS[i] / total_weight) ** 3
-            payout = cls.PAYOUTS[symbol]
+            payout = float(cls.PAYOUTS[symbol])
             ev_three_match += prob * payout
 
         # Calculate expected value for 2 matching symbols (return bet)
@@ -113,13 +116,13 @@ class SlotMachineService:
             # But we need to make sure we don't double count when all 3 match
             # For simplicity: 3 * p^2 * (1-p) gives exactly 2 matches
             prob_exactly_two = 3 * (p**2) * (1 - p)
-            ev_two_match += prob_exactly_two * cls.BET_AMOUNT
+            ev_two_match += prob_exactly_two * float(cls.BET_AMOUNT)
 
         # Total expected value per spin
         total_ev = ev_three_match + ev_two_match
 
         # RTP = (Expected return / Bet amount) * 100
-        rtp = (total_ev / cls.BET_AMOUNT) * 100
+        rtp = (total_ev / float(cls.BET_AMOUNT)) * 100
 
         return rtp
 
@@ -129,8 +132,8 @@ if __name__ == "__main__":
     print(f"Theoretical RTP: {SlotMachineService.get_theoretical_rtp():.2f}%")
     print("\nSimulating 1,000,000 spins:")
 
-    total_bet = 0.0
-    total_won = 0.0
+    total_bet = ZERO
+    total_won = ZERO
 
     for _ in range(1_000_000):
         symbols, win = SlotMachineService.spin()

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from app.schemas.common import UtcDatetime
+from app.schemas.common import Money, UtcDatetime
 from app.schemas.transaction import TransactionOut
 
 
@@ -9,14 +9,14 @@ class ProductSummary(BaseModel):
     product_name: str | None
     emoji: str | None
     items: int
-    amount: float
+    amount: Money
 
 
 class UserSummary(BaseModel):
     user_id: int
     user_name: str | None
     items: int
-    amount: float
+    amount: Money
     products: list[ProductSummary]
 
 
@@ -25,7 +25,7 @@ class PurchaseReport(BaseModel):
     end: UtcDatetime
     statuses: list[str]
     total_items: int
-    total_amount: float
+    total_amount: Money
     user_count: int
     by_product: list[ProductSummary]
     by_user: list[UserSummary]

@@ -1,10 +1,12 @@
+from decimal import Decimal
+
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.models.user import User
 
 
-def adjust_balance(db: Session, user: User, delta: float) -> None:
+def adjust_balance(db: Session, user: User, delta: Decimal) -> None:
     """Add ``delta`` to the user's balance atomically.
 
     Issues ``UPDATE users SET balance = balance + :delta`` instead of writing

@@ -1,5 +1,6 @@
 import json
 from datetime import UTC, datetime
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import desc, func
@@ -11,6 +12,7 @@ from app.models.app_setting import AppSetting
 from app.models.fiscal_period import FiscalPeriod
 from app.models.slot_machine_spin import SlotMachineSpin
 from app.models.user import User
+from app.money import to_cents
 from app.schemas.slot_machine import (
     SlotMachineAdminStats,
     SlotMachineHistory,
@@ -61,7 +63,7 @@ def spin_slot_machine(
         raise HTTPException(status_code=403, detail="Slot machine is currently disabled.")
 
     bet_amount = SlotMachineService.BET_AMOUNT
-    BLACKLIST_LIMIT = -50.0
+    BLACKLIST_LIMIT = Decimal("-50.00")
 
     # Check if user has reached blacklist limit (-50€)
     if user.balance < -49:
@@ -156,9 +158,9 @@ def get_slot_machine_stats(
     )
 
     total_spins = stats.total_spins or 0
-    total_bet = stats.total_bet or 0.0
-    total_won = stats.total_won or 0.0
-    biggest_win = stats.biggest_win or 0.0
+    total_bet = to_cents(stats.total_bet or 0)
+    total_won = to_cents(stats.total_won or 0)
+    biggest_win = to_cents(stats.biggest_win or 0)
 
     return SlotMachineStats(
         total_spins=total_spins,
@@ -197,18 +199,18 @@ def get_admin_slot_machine_stats(
     stats = (
         db.query(
             func.count(SlotMachineSpin.id).label("total_spins"),
-            func.coalesce(func.sum(SlotMachineSpin.bet_amount), 0.0).label("total_bet"),
-            func.coalesce(func.sum(SlotMachineSpin.win_amount), 0.0).label("total_won"),
+            func.coalesce(func.sum(SlotMachineSpin.bet_amount), 0).label("total_bet"),
+            func.coalesce(func.sum(SlotMachineSpin.win_amount), 0).label("total_won"),
         )
         .filter(*period_filter)
         .first()
     )
 
     total_spins = stats.total_spins or 0
-    total_bet = float(stats.total_bet or 0)
-    total_won = float(stats.total_won or 0)
+    total_bet = to_cents(stats.total_bet or 0)
+    total_won = to_cents(stats.total_won or 0)
     house_profit = total_bet - total_won
-    actual_rtp = (total_won / total_bet * 100) if total_bet > 0 else 0.0
+    actual_rtp = float(total_won / total_bet * 100) if total_bet > 0 else 0.0
     theoretical_rtp = SlotMachineService.get_theoretical_rtp()
 
     # Top winners by net result (won - bet)
@@ -232,9 +234,9 @@ def get_admin_slot_machine_stats(
             user_id=w.user_id,
             user_name=w.user_name,
             total_spins=w.total_spins,
-            total_bet=float(w.total_bet),
-            total_won=float(w.total_won),
-            net_result=float(w.total_won) - float(w.total_bet),
+            total_bet=to_cents(w.total_bet),
+            total_won=to_cents(w.total_won),
+            net_result=to_cents(w.total_won) - to_cents(w.total_bet),
         )
         for w in top_winners_query
     ]

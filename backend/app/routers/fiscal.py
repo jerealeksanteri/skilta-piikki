@@ -10,6 +10,7 @@ from app.models.fiscal_debt import FiscalDebt
 from app.models.fiscal_period import FiscalPeriod
 from app.models.transaction import Transaction
 from app.models.user import User
+from app.money import ZERO, to_cents
 from app.schemas.fiscal import CloseResult, FiscalDebtOut, FiscalPeriodOut, FiscalPeriodStats
 from app.services.messaging import send_bulk_event_message
 
@@ -90,7 +91,7 @@ def close_fiscal_period(
         )
 
     # Reset only non-positive balances to 0; keep positive balances intact
-    db.query(User).filter(User.balance < 0).update({User.balance: 0.0})
+    db.query(User).filter(User.balance < 0).update({User.balance: ZERO})
 
     # Create new fiscal period
     new_period = FiscalPeriod(started_at=now)
@@ -125,7 +126,7 @@ def get_period_stats(
     purchase_stats = (
         db.query(
             func.count(Transaction.id),
-            func.coalesce(func.sum(Transaction.amount), 0.0),
+            func.coalesce(func.sum(Transaction.amount), 0),
         )
         .filter(
             Transaction.type == "purchase",
@@ -140,7 +141,7 @@ def get_period_stats(
     payment_stats = (
         db.query(
             func.count(Transaction.id),
-            func.coalesce(func.sum(Transaction.amount), 0.0),
+            func.coalesce(func.sum(Transaction.amount), 0),
         )
         .filter(
             Transaction.type == "payment",
@@ -153,12 +154,12 @@ def get_period_stats(
 
     # Debt stats
     total_debt = (
-        db.query(func.coalesce(func.sum(FiscalDebt.amount), 0.0))
+        db.query(func.coalesce(func.sum(FiscalDebt.amount), 0))
         .filter(FiscalDebt.fiscal_period_id == period_id)
         .scalar()
     )
     debt_collected = (
-        db.query(func.coalesce(func.sum(FiscalDebt.amount), 0.0))
+        db.query(func.coalesce(func.sum(FiscalDebt.amount), 0))
         .filter(FiscalDebt.fiscal_period_id == period_id, FiscalDebt.status == "paid")
         .scalar()
     )
@@ -168,12 +169,12 @@ def get_period_stats(
         started_at=period.started_at,
         ended_at=period.ended_at,
         total_purchases=purchase_stats[0] or 0,
-        total_purchase_amount=abs(float(purchase_stats[1] or 0)),
+        total_purchase_amount=abs(to_cents(purchase_stats[1] or 0)),
         total_payments=payment_stats[0] or 0,
-        total_payment_amount=float(payment_stats[1] or 0),
-        total_debt=float(total_debt or 0),
-        debt_collected=float(debt_collected or 0),
-        debt_outstanding=float(total_debt or 0) - float(debt_collected or 0),
+        total_payment_amount=to_cents(payment_stats[1] or 0),
+        total_debt=to_cents(total_debt or 0),
+        debt_collected=to_cents(debt_collected or 0),
+        debt_outstanding=to_cents(total_debt or 0) - to_cents(debt_collected or 0),
     )
 
 

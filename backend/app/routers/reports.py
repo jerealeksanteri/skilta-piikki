@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -7,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.auth.telegram import require_admin
 from app.database import get_db
 from app.models.user import User
+from app.money import to_cents
 from app.routers.transactions import _to_out
 from app.schemas.report import ProductSummary, PurchaseReport, UserSummary
 from app.services.reports import ReportService, to_naive_utc
@@ -16,8 +18,8 @@ router = APIRouter()
 Status = Literal["pending", "approved", "rejected"]
 
 
-def _money(value: float) -> float:
-    return round(value, 2)
+def _money(value: Decimal) -> Decimal:
+    return to_cents(value)
 
 
 @router.get("/admin/reports/purchases", response_model=PurchaseReport)
