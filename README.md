@@ -63,13 +63,32 @@ The database is **not exposed** outside the Docker network. Only containers on t
 docker exec -it <db_container> psql -U <POSTGRES_USER> -d <POSTGRES_DB>
 ```
 
+## Development flow
+
+`main` is the only long-lived branch and is always releasable.
+
+1. Branch off `main` (`feat/…`, `fix/…`, `chore/…`).
+2. Open a PR to `main`. Give it a [conventional](https://www.conventionalcommits.org/) title such as `feat: add favourites` or `fix: round report totals`: the release notes are built from PR titles. Mark breaking changes with `!` (`feat!: …`).
+3. Merge with a merge commit and delete the branch.
+
 ## Releasing
 
-Releases are triggered manually via GitHub Actions:
+Releases are cut from `main` by pushing a version tag:
 
-1. Go to **Actions > Release > Run workflow**
-2. Pick **patch**, **minor**, or **major**
-3. The workflow auto-increments the version tag, builds and pushes Docker images to GHCR, and creates a GitHub Release with generated notes
+```bash
+git checkout main && git pull
+scripts/release.sh patch   # or minor / major
+```
+
+The script works out the next version from the latest tag, lists the PRs going out, asks for confirmation and pushes the tag. Pushing a tag by hand (`git tag v2.4.0 && git push origin v2.4.0`) works the same way.
+
+The **Release** workflow then:
+
+1. Checks the tag is the next patch, minor or major version and is on `main`, and stops before building anything if not
+2. Builds and pushes the backend and frontend images to GHCR, tagged with the version and `latest`
+3. Creates a GitHub Release whose notes start with what the bump type means, group the PRs by type (new features, fixes, under the hood), and list any new database migrations. It warns if, for example, a patch release contains a new feature.
+
+To deploy, set the new image tags in the server-config repo.
 
 ## Environment Variables
 
