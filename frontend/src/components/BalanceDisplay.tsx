@@ -37,7 +37,7 @@ export default function BalanceDisplay({ balance, fiscalDebtTotal, rank, totalUs
       <div
         style={{
           ...styles.amount,
-          color: isNegative ? 'var(--destructive)' : '#4caf50',
+          color: isNegative ? 'var(--destructive)' : 'var(--positive)',
         }}
       >
         {isNegative ? '-' : ''}{displayAmount} €

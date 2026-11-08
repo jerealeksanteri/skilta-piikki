@@ -9,10 +9,11 @@ import type { Product, FiscalDebt } from '../types';
 import BalanceDisplay from '../components/BalanceDisplay';
 import ProductOverlay from '../components/ProductOverlay';
 import FiscalDebtsList from '../components/FiscalDebtsList';
+import { Button, tokens, useToast } from '../ui';
 
 const fab = {
   position: 'fixed' as const,
-  bottom: '104px',
+  bottom: tokens.aboveNav,
   right: '20px',
   width: '64px',
   height: '64px',
@@ -27,7 +28,7 @@ const fab = {
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
   boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
-  zIndex: 100,
+  zIndex: tokens.zIndex.nav,
 };
 
 export default function HomePage() {
@@ -37,7 +38,7 @@ export default function HomePage() {
   const [debts, setDebts] = useState<FiscalDebt[]>([]);
   const [showOverlay, setShowOverlay] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const showToast = useToast();
   const [rank, setRank] = useState<number | undefined>(undefined);
   const [totalUsers, setTotalUsers] = useState<number | undefined>(undefined);
 
@@ -62,12 +63,10 @@ export default function HomePage() {
     try {
       await createPurchase(product.id, quantity);
       await refreshUser();
-      setToast(`${product.emoji} ${quantity > 1 ? `${quantity}x ` : ''}${product.name} logged!`);
-      setTimeout(() => setToast(null), 2000);
+      showToast(`${product.emoji} ${quantity > 1 ? `${quantity}x ` : ''}${product.name} logged!`, 2000);
       setShowOverlay(false);
     } catch (e) {
-      setToast(e instanceof Error ? e.message : 'Failed to log purchase');
-      setTimeout(() => setToast(null), 3000);
+      showToast(e instanceof Error ? e.message : 'Failed to log purchase', 3000);
     } finally {
       setPurchasing(false);
     }
@@ -85,36 +84,12 @@ export default function HomePage() {
       <FiscalDebtsList debts={debts} onUpdate={fetchDebts} />
 
       <div style={{ padding: '8px 16px 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <button
-          onClick={() => navigate('/payment')}
-          style={{
-            display: 'block',
-            width: '100%',
-            padding: '14px',
-            borderRadius: '12px',
-            fontSize: '15px',
-            fontWeight: 600,
-            backgroundColor: 'var(--btn)',
-            color: 'var(--btn-text)',
-          }}
-        >
+        <Button size="lg" block onClick={() => navigate('/payment')}>
           💰 Log Payment
-        </button>
-        <button
-          onClick={() => navigate('/slot-machine')}
-          style={{
-            display: 'block',
-            width: '100%',
-            padding: '14px',
-            borderRadius: '12px',
-            fontSize: '15px',
-            fontWeight: 600,
-            backgroundColor: '#9c27b0',
-            color: '#fff',
-          }}
-        >
+        </Button>
+        <Button size="lg" block style={{ backgroundColor: '#9c27b0', color: '#fff' }} onClick={() => navigate('/slot-machine')}>
           🎰 Slot Machine
-        </button>
+        </Button>
       </div>
 
       <button style={fab} onClick={() => setShowOverlay(true)}>
@@ -128,27 +103,6 @@ export default function HomePage() {
           onClose={() => setShowOverlay(false)}
           loading={purchasing}
         />
-      )}
-
-      {toast && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '104px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            backgroundColor: 'var(--text)',
-            color: 'var(--bg)',
-            padding: '10px 20px',
-            borderRadius: '20px',
-            fontSize: '14px',
-            fontWeight: 500,
-            zIndex: 300,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {toast}
-        </div>
       )}
     </div>
   );

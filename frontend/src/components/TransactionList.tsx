@@ -1,22 +1,12 @@
 import type { Transaction } from '../types';
 import TransactionItem from './TransactionItem';
+import { Divider, EmptyState } from '../ui';
 
 const styles = {
-  empty: {
-    textAlign: 'center' as const,
-    padding: '32px 16px',
-    color: 'var(--hint)',
-    fontSize: '14px',
-  },
   list: {
     borderRadius: '12px',
     overflow: 'hidden',
     margin: '0 16px',
-  },
-  separator: {
-    height: '1px',
-    backgroundColor: 'var(--secondary-bg)',
-    marginLeft: '64px',
   },
 };
 
@@ -32,14 +22,15 @@ export default function TransactionList({
   emptyText = 'No transactions yet',
 }: Props) {
   if (transactions.length === 0) {
-    return <div style={styles.empty}>{emptyText}</div>;
+    return <EmptyState style={{ padding: '32px 16px' }}>{emptyText}</EmptyState>;
   }
 
   return (
     <div style={styles.list}>
       {transactions.map((tx, i) => (
         <div key={tx.id}>
-          {i > 0 && <div style={styles.separator} />}
+          {/* Indented past the icon column. */}
+          {i > 0 && <Divider inset={64} />}
           <TransactionItem transaction={tx} showUser={showUser} />
         </div>
       ))}

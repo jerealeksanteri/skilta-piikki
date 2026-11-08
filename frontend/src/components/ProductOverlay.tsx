@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Product } from '../types';
 import ProductGrid from './ProductGrid';
+import { Button } from '../ui';
 
 const styles = {
   overlay: {
@@ -81,24 +82,6 @@ const styles = {
     gap: '8px',
     padding: '0 16px',
   },
-  backBtn: {
-    flex: 1,
-    padding: '14px',
-    borderRadius: '12px',
-    fontSize: '15px',
-    fontWeight: 600,
-    backgroundColor: 'var(--secondary-bg)',
-    color: 'var(--text)',
-  },
-  confirmBtn: {
-    flex: 1,
-    padding: '14px',
-    borderRadius: '12px',
-    fontSize: '15px',
-    fontWeight: 600,
-    backgroundColor: 'var(--btn)',
-    color: 'var(--btn-text)',
-  },
 };
 
 interface Props {
@@ -153,16 +136,12 @@ export default function ProductOverlay({ products, onConfirm, onClose, loading }
               Total: {(selected.price * quantity).toFixed(2)} €
             </div>
             <div style={styles.buttons}>
-              <button style={styles.backBtn} onClick={handleBack} disabled={loading}>
+              <Button size="lg" variant="secondary" style={{ flex: 1 }} onClick={handleBack} disabled={loading}>
                 Back
-              </button>
-              <button
-                style={styles.confirmBtn}
-                onClick={() => onConfirm(selected, quantity)}
-                disabled={loading}
-              >
+              </Button>
+              <Button size="lg" style={{ flex: 1 }} onClick={() => onConfirm(selected, quantity)} disabled={loading}>
                 {loading ? 'Logging...' : 'Confirm'}
-              </button>
+              </Button>
             </div>
           </div>
         )}

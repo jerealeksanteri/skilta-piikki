@@ -2,33 +2,14 @@ import { useEffect, useState } from 'react';
 import { useUser } from '../context/UserContext';
 import { getLeaderboard } from '../api/users';
 import type { User } from '../types';
+import { Card, Divider, Loading, Section } from '../ui';
 
 const styles = {
-  section: {
-    padding: '0 16px 16px',
-  },
-  header: {
-    fontSize: '13px',
-    fontWeight: 600,
-    color: 'var(--section-header)',
-    textTransform: 'uppercase' as const,
-    padding: '16px 0 8px',
-  },
-  card: {
-    backgroundColor: 'var(--bg)',
-    borderRadius: '12px',
-    overflow: 'hidden',
-  },
   row: {
     display: 'flex',
     alignItems: 'center' as const,
     padding: '12px 16px',
     gap: '12px',
-  },
-  separator: {
-    height: '1px',
-    backgroundColor: 'var(--secondary-bg)',
-    marginLeft: '16px',
   },
   rank: {
     fontSize: '16px',
@@ -44,12 +25,6 @@ const styles = {
   balance: {
     fontSize: '15px',
     fontWeight: 600,
-  },
-  loading: {
-    textAlign: 'center' as const,
-    padding: '32px',
-    color: 'var(--hint)',
-    fontSize: '14px',
   },
   highlight: {
     backgroundColor: 'color-mix(in srgb, var(--btn) 10%, transparent)',
@@ -71,7 +46,7 @@ export default function LeaderboardPage() {
   }, []);
 
   if (loading) {
-    return <div style={styles.loading}>Loading...</div>;
+    return <Loading />;
   }
 
   const blacklisted = users.filter((u) => u.balance <= -50);
@@ -79,14 +54,13 @@ export default function LeaderboardPage() {
   return (
     <div>
       {blacklisted.length > 0 && (
-        <div style={styles.section}>
-          <div style={{ ...styles.header, color: 'var(--destructive)' }}>💀 Blacklist</div>
-          <div style={{ ...styles.card, border: '1px solid var(--destructive)' }}>
+        <Section title="💀 Blacklist" titleTone="destructive">
+          <Card style={{ border: '1px solid var(--destructive)' }}>
             {blacklisted.map((u, i) => {
               const isCurrentUser = u.id === currentUser?.id;
               return (
                 <div key={u.id}>
-                  {i > 0 && <div style={styles.separator} />}
+                  {i > 0 && <Divider />}
                   <div
                     style={{
                       ...styles.row,
@@ -105,18 +79,17 @@ export default function LeaderboardPage() {
                 </div>
               );
             })}
-          </div>
-        </div>
+          </Card>
+        </Section>
       )}
 
-      <div style={styles.section}>
-        <div style={styles.header}>Ranking</div>
-        <div style={styles.card}>
+      <Section title="Ranking">
+        <Card>
           {users.map((u, i) => {
             const isCurrentUser = u.id === currentUser?.id;
             return (
               <div key={u.id}>
-                {i > 0 && <div style={styles.separator} />}
+                {i > 0 && <Divider />}
                 <div
                   style={{
                     ...styles.row,
@@ -133,7 +106,7 @@ export default function LeaderboardPage() {
                   <span
                     style={{
                       ...styles.balance,
-                      color: u.balance < 0 ? 'var(--destructive)' : '#4caf50',
+                      color: u.balance < 0 ? 'var(--destructive)' : 'var(--positive)',
                     }}
                   >
                     {u.balance.toFixed(2)} €
@@ -142,8 +115,8 @@ export default function LeaderboardPage() {
               </div>
             );
           })}
-        </div>
-      </div>
+        </Card>
+      </Section>
     </div>
   );
 }

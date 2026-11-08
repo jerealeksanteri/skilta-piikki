@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { spinSlotMachine, getSlotMachineStats, getSlotMachineStatus } from '../api/slot-machine';
 import type { SlotMachineStats } from '../api/slot-machine';
+import { BackButton, useToast } from '../ui';
 
 const styles = {
   container: {
@@ -10,13 +10,6 @@ const styles = {
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column' as const,
-  },
-  backBtn: {
-    fontSize: '14px',
-    color: 'var(--link)',
-    backgroundColor: 'transparent',
-    padding: '8px 0',
-    marginBottom: '8px',
   },
   header: {
     fontSize: '24px',
@@ -48,9 +41,6 @@ const styles = {
     border: '3px solid var(--btn)',
     transition: 'transform 0.1s',
   },
-  reelSpinning: {
-    animation: 'spin 0.1s linear infinite',
-  },
   spinBtn: {
     width: '100%',
     padding: '16px',
@@ -73,7 +63,7 @@ const styles = {
     minHeight: '28px',
   },
   win: {
-    color: '#4caf50',
+    color: 'var(--positive)',
   },
   lose: {
     color: '#f44336',
@@ -100,19 +90,6 @@ const styles = {
     textAlign: 'center' as const,
     marginBottom: '16px',
   },
-  toast: {
-    position: 'fixed' as const,
-    bottom: '104px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    backgroundColor: 'var(--text)',
-    color: 'var(--bg)',
-    padding: '10px 20px',
-    borderRadius: '20px',
-    fontSize: '14px',
-    fontWeight: 500,
-    zIndex: 300,
-  },
 };
 
 const SYMBOL_EMOJIS: Record<string, string> = {
@@ -125,13 +102,12 @@ const SYMBOL_EMOJIS: Record<string, string> = {
 };
 
 export default function SlotMachinePage() {
-  const navigate = useNavigate();
   const { user, refreshUser } = useUser();
   const [symbols, setSymbols] = useState<string[]>(['cherry', 'lemon', 'orange']);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [stats, setStats] = useState<SlotMachineStats | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const showToast = useToast();
   const [enabled, setEnabled] = useState(true);
 
   useEffect(() => {
@@ -153,10 +129,6 @@ export default function SlotMachinePage() {
     }
   };
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
 
   const handleSpin = async () => {
     if (spinning || !enabled) return;
@@ -223,9 +195,9 @@ export default function SlotMachinePage() {
 
   return (
     <div style={styles.container}>
-      <button style={styles.backBtn} onClick={() => navigate('/')}>
+      <BackButton to="/" flush>
         ← Back to Home
-      </button>
+      </BackButton>
 
       <div style={styles.header}>🎰 Slot Machine 🎰</div>
 
@@ -340,7 +312,6 @@ export default function SlotMachinePage() {
         </div>
       </div>
 
-      {toast && <div style={styles.toast}>{toast}</div>}
     </div>
   );
 }

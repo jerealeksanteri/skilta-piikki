@@ -3,15 +3,12 @@ import { useLocation } from 'react-router-dom';
 import { getMyTransactions } from '../api/transactions';
 import type { Transaction } from '../types';
 import TransactionList from '../components/TransactionList';
+import { Loading, SectionHeader } from '../ui';
+
+/** The list below runs edge to edge, so the header carries the side padding. */
+const HEADER = { padding: '16px 16px 8px' };
 
 const styles = {
-  header: {
-    fontSize: '13px',
-    fontWeight: 600,
-    color: 'var(--section-header)',
-    textTransform: 'uppercase' as const,
-    padding: '16px 16px 8px',
-  },
   toggle: {
     display: 'flex',
     alignItems: 'center',
@@ -19,12 +16,6 @@ const styles = {
     padding: '0 16px 8px',
     fontSize: '14px',
     color: 'var(--hint)',
-  },
-  loading: {
-    textAlign: 'center' as const,
-    padding: '32px',
-    color: 'var(--hint)',
-    fontSize: '14px',
   },
 };
 
@@ -55,16 +46,16 @@ export default function HistoryPage() {
   if (loading) {
     return (
       <div>
-        <div style={styles.header}>Transaction history</div>
+        <SectionHeader style={HEADER}>Transaction history</SectionHeader>
         {toggle}
-        <div style={styles.loading}>Loading...</div>
+        <Loading />
       </div>
     );
   }
 
   return (
     <div>
-      <div style={styles.header}>Transaction history</div>
+      <SectionHeader style={HEADER}>Transaction history</SectionHeader>
       {toggle}
       <TransactionList
         transactions={transactions}
